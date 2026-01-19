@@ -52,7 +52,6 @@
             margin-top: 10px; border: 1px solid var(--success);
         }
 
-        /* --- EFECTO CAMPEÓN --- */
         #overlayCampeon {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center;
@@ -73,7 +72,7 @@
 <body>
 
 <div id="overlayCampeon">
-    <div style="font-size: 2rem;">🏆 ¡CAMPEÓN! 🏆</div>
+    <div style="font-size: 2rem;">🏆 ¡TENEMOS UN CAMPEÓN! 🏆</div>
     <div id="nombreCampeon" class="texto-campeon">EQUIPO</div>
     <button class="btn-cerrar-campeon" onclick="document.getElementById('overlayCampeon').style.display='none'">Cerrar</button>
 </div>
@@ -193,7 +192,8 @@
     function registrarEquipo() {
         const nombre = document.getElementById('nombreEquipo').value.trim();
         if (nombre && !datos.equipos.find(e => e.nombre === nombre)) {
-            datos.equipos.push({ nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, jugadores: [], grupo: "Sin Asignar" });
+            // Se agregaron gf (goles favor) y gc (goles contra)
+            datos.equipos.push({ nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, gf: 0, gc: 0, jugadores: [], grupo: "Sin Asignar" });
             document.getElementById('nombreEquipo').value = '';
             guardar();
         }
@@ -217,7 +217,7 @@
     function generarPlayoffs() {
         const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
         if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos registrados.`);
-        const clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts).slice(0, cantidad).sort(() => Math.random() - 0.5);
+        const clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc)).slice(0, cantidad).sort(() => Math.random() - 0.5);
         
         datos.llaves = [];
         const faseNombre = cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL";
@@ -263,7 +263,6 @@
             llave.ganador = gl > gv ? llave.local : llave.visitante;
         }
 
-        // --- LANZAR EFECTO SI ES LA GRAN FINAL ---
         if (llave.fase === "GRAN FINAL" && llave.ganador) {
             document.getElementById('nombreCampeon').innerText = llave.ganador;
             document.getElementById('overlayCampeon').style.display = 'flex';
@@ -322,7 +321,11 @@
         if (!nL || !nV || nL === nV) return;
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
+        
         eL.pj++; eV.pj++;
+        eL.gf += gL; eL.gc += gV;
+        eV.gf += gV; eV.gc += gL;
+
         if (gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; }
         else if (gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; }
         else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
@@ -368,9 +371,11 @@
         contenedor.innerHTML = '';
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))].sort();
         grupos.forEach(grupo => {
-            let html = `<h3 class="grupo-titulo">${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>Pts</th></tr></thead><tbody>`;
-            datos.equipos.filter(e => e.grupo === grupo).sort((a,b) => b.pts - a.pts).forEach(e => {
-                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td><strong>${e.pts}</strong></td></tr>`;
+            let html = `<h3 class="grupo-titulo">${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
+            // Ordenar por Puntos, luego por Diferencia de Goles
+            datos.equipos.filter(e => e.grupo === grupo).sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc)).forEach(e => {
+                const dg = (e.gf || 0) - (e.gc || 0);
+                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.gf || 0}</td><td>${e.gc || 0}</td><td>${dg > 0 ? '+'+dg : dg}</td><td><strong>${e.pts}</strong></td></tr>`;
             });
             contenedor.innerHTML += html + '</tbody></table></div>';
         });
