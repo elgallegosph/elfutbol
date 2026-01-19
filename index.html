@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro - Eliminatorias</title>
+    <title>Torneo de Fútbol Pro - Eliminatorias Progresivas</title>
     <style>
         :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
@@ -17,14 +17,14 @@
         button:hover { background: #154360; }
         .btn-sorteo { background: var(--success); }
         .btn-playoff { background: var(--playoff); font-size: 1.1rem; margin-top: 10px; }
-        .btn-playoff:hover { background: #70298d; }
         .btn-danger { background: #c0392b; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #f8f9fa; color: #333; }
+        .fase-card { background: #fdfefe; border: 1px solid #8e44ad; padding: 15px; margin-bottom: 10px; border-radius: 5px; border-left: 10px solid #8e44ad; display: flex; justify-content: space-between; align-items: center; }
+        .ganador-label { color: var(--success); font-weight: bold; font-size: 0.8rem; display: block; }
         .admin-zone { background: #fdeaea; border: 1px solid #fadbd8; padding: 15px; border-radius: 8px; margin-top: 50px; }
         .grupo-titulo { background: #2c3e50; color: white; padding: 8px; margin-top: 20px; border-radius: 4px; }
-        .fase-card { background: #fdfefe; border: 1px solid #8e44ad; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 10px solid #8e44ad; }
     </style>
 </head>
 <body>
@@ -62,21 +62,22 @@
                 <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Sorteo de Grupos</button>
             </div>
             <div>
-                <label>Generar Eliminatorias:</label>
+                <label>Iniciar Eliminatorias con:</label>
                 <select id="tipoPlayoff">
-                    <option value="2">Final (Top 2)</option>
-                    <option value="4">Semifinales (Top 4)</option>
-                    <option value="8">Cuartos (Top 8)</option>
                     <option value="16">Octavos (Top 16)</option>
+                    <option value="8">Cuartos (Top 8)</option>
+                    <option value="4">Semifinales (Top 4)</option>
+                    <option value="2">Final (Top 2)</option>
                 </select>
-                <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Finales</button>
+                <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Aleatorias</button>
             </div>
         </div>
     </section>
 
     <section id="seccionPlayoffs" style="display:none;">
-        <h2>📝 Llaves de Eliminación Directa</h2>
+        <h2>📝 Llaves y Resultados Directos</h2>
         <div id="contenedorPlayoffs"></div>
+        <button id="btnSiguienteFase" style="display:none; background: #2e4053;" onclick="avanzarSiguienteFase()">⏭️ Generar Siguiente Fase con Ganadores</button>
     </section>
 
     <section>
@@ -98,7 +99,7 @@
     </section>
 
     <section>
-        <h2>4. Marcador Final (Puntos)</h2>
+        <h2>4. Marcador Final (Fase de Grupos)</h2>
         <div style="display: flex; align-items: center; gap: 10px;">
             <select id="resLocal"></select>
             <input type="number" id="gLocal" placeholder="0" style="width: 60px;">
@@ -153,8 +154,7 @@
         const equiposMezclados = [...datos.equipos].sort(() => Math.random() - 0.5);
         datos.grupos = {};
         for (let i = 0; i < nGrupos; i++) {
-            const nombreGrupo = "Grupo " + String.fromCharCode(65 + i);
-            datos.grupos[nombreGrupo] = [];
+            datos.grupos["Grupo " + String.fromCharCode(65 + i)] = [];
         }
         equiposMezclados.forEach((eq, index) => {
             const numGrupo = index % nGrupos;
@@ -165,22 +165,57 @@
 
     function generarPlayoffs() {
         const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
-        if (datos.equipos.length < cantidad) return alert(`Necesitas al menos ${cantidad} equipos.`);
+        if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos registrados.`);
         
-        // Ordenar equipos por puntos para el sorteo de llaves
-        const clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts).slice(0, cantidad);
+        // Sorteo puramente aleatorio de los mejores clasificados
+        const clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts).slice(0, cantidad).sort(() => Math.random() - 0.5);
+        
         datos.llaves = [];
-
-        for (let i = 0; i < cantidad / 2; i++) {
-            // Emparejar 1º con último, 2º con penúltimo para mayor competitividad
+        const faseNombre = cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL";
+        
+        for (let i = 0; i < cantidad; i += 2) {
             datos.llaves.push({
                 local: clasificados[i].nombre,
-                visitante: clasificados[cantidad - 1 - i].nombre,
-                fase: cantidad === 2 ? "GRAN FINAL" : cantidad === 4 ? "SEMIFINAL" : cantidad === 8 ? "CUARTOS" : "OCTAVOS"
+                visitante: clasificados[i+1].nombre,
+                gLocal: 0, gVis: 0,
+                ganador: null,
+                fase: faseNombre
             });
         }
         guardar();
-        document.getElementById('seccionPlayoffs').style.display = 'block';
+    }
+
+    function registrarResultadoLlave(index) {
+        const gl = parseInt(document.getElementById(`llaveL_${index}`).value) || 0;
+        const gv = parseInt(document.getElementById(`llaveV_${index}`).value) || 0;
+        
+        if (gl === gv) return alert("En eliminatorias debe haber un ganador (usar penales si es necesario).");
+        
+        datos.llaves[index].gLocal = gl;
+        datos.llaves[index].gVis = gv;
+        datos.llaves[index].ganador = gl > gv ? datos.llaves[index].local : datos.llaves[index].visitante;
+        guardar();
+    }
+
+    function avanzarSiguienteFase() {
+        const ganadores = datos.llaves.filter(l => l.ganador !== null).map(l => l.ganador);
+        if (ganadores.length !== datos.llaves.length) return alert("Debes finalizar todos los partidos de esta fase.");
+        if (ganadores.length === 1) return alert("¡Ya tenemos un campeón!");
+
+        const cantidad = ganadores.length;
+        datos.llaves = [];
+        const faseNombre = cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL";
+
+        for (let i = 0; i < cantidad; i += 2) {
+            datos.llaves.push({
+                local: ganadores[i],
+                visitante: ganadores[i+1],
+                gLocal: 0, gVis: 0,
+                ganador: null,
+                fase: faseNombre
+            });
+        }
+        guardar();
     }
 
     function registrarJugador() {
@@ -213,7 +248,7 @@
         const nV = document.getElementById('resVis').value;
         const gL = parseInt(document.getElementById('gLocal').value) || 0;
         const gV = parseInt(document.getElementById('gVis').value) || 0;
-        if (nL === nV) return;
+        if (nL === nV && nL === "") return;
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
         eL.pj++; eV.pj++;
@@ -244,7 +279,6 @@
     }
 
     function actualizarInterfaces() {
-        // Selects de Equipos
         const selects = ['selectEquipoJugador', 'selectEquipoEvento', 'resLocal', 'resVis'];
         selects.forEach(id => {
             const s = document.getElementById(id);
@@ -258,7 +292,6 @@
             s.value = val;
         });
 
-        // Tablas por Grupos
         const contenedor = document.getElementById('contenedorTablas');
         contenedor.innerHTML = '';
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))].sort();
@@ -270,15 +303,27 @@
             contenedor.innerHTML += html + '</tbody></table>';
         });
 
-        // Llaves de Playoffs
         const contPlayoffs = document.getElementById('contenedorPlayoffs');
         contPlayoffs.innerHTML = '';
-        if(datos.llaves.length > 0) document.getElementById('seccionPlayoffs').style.display = 'block';
-        datos.llaves.forEach(llave => {
-            contPlayoffs.innerHTML += `<div class="fase-card"><strong>${llave.fase}:</strong> ${llave.local} vs ${llave.visitante}</div>`;
+        if(datos.llaves.length > 0) {
+            document.getElementById('seccionPlayoffs').style.display = 'block';
+            document.getElementById('btnSiguienteFase').style.display = (datos.llaves.length > 1) ? 'block' : 'none';
+        }
+
+        datos.llaves.forEach((llave, i) => {
+            contPlayoffs.innerHTML += `
+                <div class="fase-card">
+                    <div><strong>${llave.fase}</strong></div>
+                    <div>
+                        ${llave.local} <input type="number" id="llaveL_${i}" value="${llave.gLocal}" style="width:50px"> 
+                        vs 
+                        <input type="number" id="llaveV_${i}" value="${llave.gVis}" style="width:50px"> ${llave.visitante}
+                    </div>
+                    <button onclick="registrarResultadoLlave(${i})" style="width:auto; padding:5px 10px;">✔</button>
+                    ${llave.ganador ? `<span class="ganador-label"> Ganador: ${llave.ganador}</span>` : ''}
+                </div>`;
         });
 
-        // Goleadores
         const tbodyG = document.querySelector('#tablaGoleadores tbody');
         tbodyG.innerHTML = '';
         let todos = [];
