@@ -192,8 +192,10 @@
     function registrarEquipo() {
         const nombre = document.getElementById('nombreEquipo').value.trim();
         if (nombre && !datos.equipos.find(e => e.nombre === nombre)) {
-            // Se agregaron gf (goles favor) y gc (goles contra)
-            datos.equipos.push({ nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, gf: 0, gc: 0, jugadores: [], grupo: "Sin Asignar" });
+            datos.equipos.push({ 
+                nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, 
+                gf: 0, gc: 0, jugadores: [], grupo: "Sin Asignar" 
+            });
             document.getElementById('nombreEquipo').value = '';
             guardar();
         }
@@ -319,6 +321,7 @@
         const gL = parseInt(document.getElementById('gLocal').value) || 0;
         const gV = parseInt(document.getElementById('gVis').value) || 0;
         if (!nL || !nV || nL === nV) return;
+        
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
         
@@ -326,9 +329,13 @@
         eL.gf += gL; eL.gc += gV;
         eV.gf += gV; eV.gc += gL;
 
-        if (gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; }
-        else if (gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; }
-        else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
+        if (gL > gV) { 
+            eL.pg++; eL.pts += 3; eV.pp++; 
+        } else if (gV > gL) { 
+            eV.pg++; eV.pts += 3; eL.pp++; 
+        } else { 
+            eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; 
+        }
         guardar();
     }
 
@@ -371,11 +378,10 @@
         contenedor.innerHTML = '';
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))].sort();
         grupos.forEach(grupo => {
-            let html = `<h3 class="grupo-titulo">${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
-            // Ordenar por Puntos, luego por Diferencia de Goles
+            let html = `<h3 class="grupo-titulo">${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
             datos.equipos.filter(e => e.grupo === grupo).sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc)).forEach(e => {
                 const dg = (e.gf || 0) - (e.gc || 0);
-                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.gf || 0}</td><td>${e.gc || 0}</td><td>${dg > 0 ? '+'+dg : dg}</td><td><strong>${e.pts}</strong></td></tr>`;
+                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg || 0}</td><td>${e.pe || 0}</td><td>${e.pp || 0}</td><td>${e.gf || 0}</td><td>${e.gc || 0}</td><td>${dg > 0 ? '+'+dg : dg}</td><td><strong>${e.pts}</strong></td></tr>`;
             });
             contenedor.innerHTML += html + '</tbody></table></div>';
         });
