@@ -14,14 +14,15 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
         
-        /* Marcadores grandes y visibles */
+        /* Marcadores de gran tamaño */
         .input-marcador { 
             width: 80px !important; 
-            font-size: 1.4rem !important; 
+            font-size: 1.5rem !important; 
             font-weight: bold; 
             text-align: center; 
             border: 2px solid var(--primary) !important;
             background: #fff;
+            display: inline-block;
         }
 
         button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
@@ -36,24 +37,23 @@
         
         .fase-card { 
             background: #fdfefe; border: 1px solid #8e44ad; padding: 20px; 
-            margin-bottom: 15px; border-radius: 8px; border-left: 12px solid #8e44ad; 
-            display: flex; flex-direction: column; gap: 15px; 
+            margin-bottom: 15px; border-radius: 8px; border-left: 15px solid #8e44ad; 
         }
-        .llave-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
-        .equipo-vs { display: flex; align-items: center; gap: 15px; font-size: 1.1rem; font-weight: bold; }
+        .llave-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; }
+        .equipo-vs { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: bold; }
         
         .penaltis-row { 
             background: #fff4e5; padding: 15px; border-radius: 6px; 
-            display: flex; flex-wrap: wrap; align-items: center; gap: 15px; 
+            margin-top: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 15px; 
             border: 2px dashed #e67e22; 
         }
         .ganador-label { 
             background: #e8f8f5; color: var(--success); font-weight: bold; 
-            font-size: 1.1rem; padding: 10px; border-radius: 4px; text-align: center; 
-            border: 1px solid var(--success);
+            font-size: 1.2rem; padding: 10px; border-radius: 4px; text-align: center; 
+            margin-top: 10px; border: 1px solid var(--success);
         }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .llave-row { justify-content: center; } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .llave-row { justify-content: center; text-align: center; } }
     </style>
 </head>
 <body>
@@ -211,16 +211,15 @@
         guardar();
     }
 
-    // NUEVA FUNCIÓN: Solo cambia la visibilidad sin borrar lo que el usuario escribe
-    function verificarEmpate(index) {
+    // Muestra u oculta penaltis visualmente sin recargar la pantalla
+    function monitorearEmpate(index) {
         const gl = document.getElementById(`llaveL_${index}`).value;
         const gv = document.getElementById(`llaveV_${index}`).value;
-        const panelPenales = document.getElementById(`panelPenales_${index}`);
-        
-        if (gl !== "" && gv !== "" && gl === gv) {
-            panelPenales.style.display = "flex";
+        const panel = document.getElementById(`panelPenales_${index}`);
+        if (gl !== "" && gv !== "" && parseInt(gl) === parseInt(gv)) {
+            panel.style.display = "flex";
         } else {
-            panelPenales.style.display = "none";
+            panel.style.display = "none";
         }
     }
 
@@ -234,7 +233,7 @@
         if (gl === gv) {
             const pl = parseInt(document.getElementById(`penL_${index}`).value) || 0;
             const pv = parseInt(document.getElementById(`penV_${index}`).value) || 0;
-            if (pl === pv) return alert("Debe haber un ganador en penaltis.");
+            if (pl === pv) return alert("En caso de empate en los 90', debe definirse en penaltis.");
             datos.llaves[index].pLocal = pl;
             datos.llaves[index].pVis = pv;
             datos.llaves[index].ganador = pl > pv ? datos.llaves[index].local : datos.llaves[index].visitante;
@@ -249,7 +248,7 @@
     function avanzarSiguienteFase() {
         const ganadores = datos.llaves.filter(l => l.ganador !== null).map(l => l.ganador);
         if (ganadores.length !== datos.llaves.length) return alert("Finalice todos los partidos.");
-        if (ganadores.length === 1) return alert("¡Campeón coronado!");
+        if (ganadores.length === 1) return alert("¡Tenemos un campeón!");
 
         const cantidad = ganadores.length;
         datos.llaves = [];
@@ -278,10 +277,10 @@
     function registrarEvento() {
         const eqNombre = document.getElementById('selectEquipoEvento').value;
         const jNombre = document.getElementById('selectJugadorEvento').value;
-        const tipo = document.getElementById('tipoEvento').value;
         const equipo = datos.equipos.find(e => e.nombre === eqNombre);
         const jugador = equipo?.jugadores.find(j => j.nombre === jNombre);
         if (jugador) {
+            const tipo = document.getElementById('tipoEvento').value;
             if (tipo === 'gol') jugador.goles++;
             else if (tipo === 'amarilla') jugador.amarillas++;
             else if (tipo === 'roja') jugador.rojas++;
@@ -358,31 +357,31 @@
         }
 
         datos.llaves.forEach((llave, i) => {
-            const esEmpate = (llave.gLocal === llave.gVis && llave.ganador !== null);
+            const esEmpateReglamentario = (llave.gLocal === llave.gVis);
             contPlayoffs.innerHTML += `
                 <div class="fase-card">
                     <div class="llave-row">
-                        <div style="font-size: 1.2rem; color: #8e44ad;"><strong>${llave.fase}</strong></div>
+                        <div style="font-size: 1.1rem; color: #8e44ad;"><strong>${llave.fase}</strong></div>
                         <div class="equipo-vs">
                             <span>${llave.local}</span>
-                            <input type="number" id="llaveL_${i}" class="input-marcador" value="${llave.gLocal}" oninput="verificarEmpate(${i})"> 
+                            <input type="number" id="llaveL_${i}" class="input-marcador" value="${llave.gLocal}" oninput="monitorearEmpate(${i})"> 
                             <span>—</span>
-                            <input type="number" id="llaveV_${i}" class="input-marcador" value="${llave.gVis}" oninput="verificarEmpate(${i})">
+                            <input type="number" id="llaveV_${i}" class="input-marcador" value="${llave.gVis}" oninput="monitorearEmpate(${i})">
                             <span>${llave.visitante}</span>
                         </div>
                         <button onclick="registrarResultadoLlave(${i})" style="width:auto; padding:10px 20px; background:var(--success)">Confirmar</button>
                     </div>
                     
-                    <div id="panelPenales_${i}" class="penaltis-row" style="display: ${llave.ganador && llave.gLocal === llave.gVis ? 'flex' : 'none'};">
-                        <strong>⚠️ PENALTIS:</strong> 
+                    <div id="panelPenales_${i}" class="penaltis-row" style="display: ${esEmpateReglamentario ? 'flex' : 'none'};">
+                        <strong>⚽ PENALTIS:</strong> 
                         <div style="display:flex; align-items:center; gap:10px;">
-                            ${llave.local} <input type="number" id="penL_${i}" class="input-marcador" style="width:60px !important" value="${llave.pLocal}"> 
+                            ${llave.local} <input type="number" id="penL_${i}" class="input-marcador" style="width:65px !important" value="${llave.pLocal}"> 
                             - 
-                            <input type="number" id="penV_${i}" class="input-marcador" style="width:60px !important" value="${llave.pVis}"> ${llave.visitante}
+                            <input type="number" id="penV_${i}" class="input-marcador" style="width:65px !important" value="${llave.pVis}"> ${llave.visitante}
                         </div>
                     </div>
 
-                    ${llave.ganador ? `<div class="ganador-label">🥇 AVANZA: ${llave.ganador} ${llave.pLocal !== llave.pVis ? '(Penaltis)' : ''}</div>` : ''}
+                    ${llave.ganador ? `<div class="ganador-label">🥇 AVANZA: ${llave.ganador} ${llave.pLocal !== llave.pVis ? '(vía Penaltis)' : ''}</div>` : ''}
                 </div>`;
         });
 
