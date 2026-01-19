@@ -8,18 +8,21 @@
         :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
         header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .container { max-width: 1000px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         section { margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
         h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
         button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
         button:hover { background: #154360; }
+        .btn-danger { background: #c0392b; margin-top: 20px; }
+        .btn-danger:hover { background: #922b21; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #f8f9fa; color: #333; }
         .card-y { color: #b7950b; font-weight: bold; }
         .card-r { color: #cb4335; font-weight: bold; }
+        .admin-zone { background: #fdeaea; border: 1px solid #fadbd8; padding: 15px; border-radius: 8px; margin-top: 50px; }
     </style>
 </head>
 <body>
@@ -48,7 +51,7 @@
         <h2>2. Registrar Goles y Tarjetas</h2>
         <div class="grid">
             <div>
-                <label>Seleccionar Equipo:</label>
+                <label>Equipo:</label>
                 <select id="selectEquipoEvento" onchange="actualizarSelectJugadoresEvento()"></select>
                 <label>Jugador:</label>
                 <select id="selectJugadorEvento"></select>
@@ -96,6 +99,12 @@
             <tbody></tbody>
         </table>
     </section>
+
+    <div class="admin-zone">
+        <h3 style="color: #922b21; margin-top: 0;">⚠️ Zona de Administración</h3>
+        <p style="font-size: 0.8rem; color: #666;">Esta acción borrará todos los equipos, jugadores y estadísticas del torneo.</p>
+        <button class="btn-danger" onclick="reiniciarTorneo()">REINICIAR TODO EL TORNEO</button>
+    </div>
 </div>
 
 <script>
@@ -130,16 +139,14 @@
         const eqNombre = document.getElementById('selectEquipoEvento').value;
         const jNombre = document.getElementById('selectJugadorEvento').value;
         const tipo = document.getElementById('tipoEvento').value;
-        
         const equipo = datos.equipos.find(e => e.nombre === eqNombre);
+        if (!equipo) return;
         const jugador = equipo.jugadores.find(j => j.nombre === jNombre);
-
         if (jugador) {
             if (tipo === 'gol') jugador.goles++;
             else if (tipo === 'amarilla') jugador.amarillas++;
             else if (tipo === 'roja') jugador.rojas++;
             guardar();
-            alert("Evento registrado");
         }
     }
 
@@ -148,17 +155,27 @@
         const nV = document.getElementById('resVis').value;
         const gL = parseInt(document.getElementById('gLocal').value) || 0;
         const gV = parseInt(document.getElementById('gVis').value) || 0;
-
         if (nL === nV) return;
-
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
-
         eL.pj++; eV.pj++;
         if (gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; }
         else if (gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; }
         else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
         guardar();
+    }
+
+    function reiniciarTorneo() {
+        const password = prompt("Introduce la contraseña de administrador para borrar todo:");
+        if (password === "admin123") {
+            if (confirm("¿Estás seguro? Esta acción no se puede deshacer.")) {
+                datos = { equipos: [] };
+                guardar();
+                alert("Torneo reiniciado con éxito.");
+            }
+        } else {
+            alert("Contraseña incorrecta.");
+        }
     }
 
     function actualizarSelectJugadoresEvento() {
@@ -188,35 +205,21 @@
             s.value = valAnterior;
         });
 
-        // Tabla Posiciones
         const tbodyP = document.querySelector('#tablaPosiciones tbody');
         tbodyP.innerHTML = '';
         [...datos.equipos].sort((a,b) => b.pts - a.pts).forEach(e => {
             tbodyP.innerHTML += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td><td><strong>${e.pts}</strong></td></tr>`;
         });
 
-        // Tabla Goleadores
         const tbodyG = document.querySelector('#tablaGoleadores tbody');
         tbodyG.innerHTML = '';
-        let todosLosJugadores = [];
-        datos.equipos.forEach(e => {
-            e.jugadores.forEach(j => {
-                todosLosJugadores.push({...j, equipoNombre: e.nombre});
-            });
-        });
-
-        todosLosJugadores.sort((a,b) => b.goles - a.goles).forEach(j => {
-            tbodyG.innerHTML += `<tr>
-                <td>${j.nombre}</td>
-                <td>${j.equipoNombre}</td>
-                <td><strong>${j.goles}</strong></td>
-                <td class="card-y">${j.amarillas}</td>
-                <td class="card-r">${j.rojas}</td>
-            </tr>`;
+        let todos = [];
+        datos.equipos.forEach(e => e.jugadores.forEach(j => todos.push({...j, eq: e.nombre})));
+        todos.sort((a,b) => b.goles - a.goles).forEach(j => {
+            tbodyG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td><strong>${j.goles}</strong></td><td class="card-y">${j.amarillas}</td><td class="card-r">${j.rojas}</td></tr>`;
         });
     }
 
-    // Carga inicial
     actualizarInterfaces();
     actualizarSelectJugadoresEvento();
 </script>
