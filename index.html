@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro</title>
+    <title>Torneo de Fútbol Pro - Grupos</title>
     <style>
-        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; }
+        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --success: #27ae60; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
         header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .container { max-width: 1000px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -15,25 +15,24 @@
         input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
         button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
         button:hover { background: #154360; }
+        .btn-draw { background: var(--success); font-size: 1.1rem; }
         .btn-danger { background: #c0392b; margin-top: 20px; }
-        .btn-danger:hover { background: #922b21; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; margin-bottom: 20px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #f8f9fa; color: #333; }
-        .card-y { color: #b7950b; font-weight: bold; }
-        .card-r { color: #cb4335; font-weight: bold; }
+        .group-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .admin-zone { background: #fdeaea; border: 1px solid #fadbd8; padding: 15px; border-radius: 8px; margin-top: 50px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🏆 Gestión de Campeonato y Estadísticas</h1>
+    <h1>🏆 Torneo Pro: Grupos y Estadísticas</h1>
 </header>
 
 <div class="container">
     <section>
-        <h2>1. Equipos y Plantillas</h2>
+        <h2>1. Inscripción de Equipos</h2>
         <div class="grid">
             <div>
                 <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
@@ -47,68 +46,64 @@
         </div>
     </section>
 
+    <section id="seccionSorteo">
+        <h2>2. Sorteo de Grupos</h2>
+        <p>Selecciona en cuántos grupos dividir los equipos registrados:</p>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="numGrupos" style="width: 100px;">
+                <option value="2">2</option>
+                <option value="4">4</option>
+            </select>
+            <button class="btn-draw" onclick="realizarSorteo()">🎲 Realizar Sorteo Aleatorio</button>
+        </div>
+        <div id="contenedorGrupos" class="group-container" style="margin-top: 20px;"></div>
+    </section>
+
     <section>
-        <h2>2. Registrar Goles y Tarjetas</h2>
+        <h2>3. Registrar Resultados y Eventos</h2>
         <div class="grid">
             <div>
-                <label>Equipo:</label>
-                <select id="selectEquipoEvento" onchange="actualizarSelectJugadoresEvento()"></select>
-                <label>Jugador:</label>
-                <select id="selectJugadorEvento"></select>
+                <select id="resLocal"></select>
+                <input type="number" id="gLocal" placeholder="Goles Local">
             </div>
             <div>
-                <label>Acción:</label>
-                <select id="tipoEvento">
-                    <option value="gol">⚽ Gol</option>
-                    <option value="amarilla">🟨 Tarjeta Amarilla</option>
-                    <option value="roja">🟥 Tarjeta Roja</option>
-                </select>
-                <button onclick="registrarEvento()">Registrar Acción</button>
+                <select id="resVis"></select>
+                <input type="number" id="gVis" placeholder="Goles Visitante">
             </div>
         </div>
-    </section>
-
-    <section>
-        <h2>3. Marcador Final (Puntos)</h2>
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <select id="resLocal"></select>
-            <input type="number" id="gLocal" placeholder="0" style="width: 60px;">
-            <span>vs</span>
-            <input type="number" id="gVis" placeholder="0" style="width: 60px;">
-            <select id="resVis"></select>
-            <button onclick="cargarResultadoFinal()">Finalizar Partido</button>
+        <button onclick="cargarResultadoFinal()">Guardar Resultado del Partido</button>
+        
+        <div style="margin-top: 15px; padding: 10px; background: #eee;">
+            <label>Evento Individual:</label>
+            <select id="selectEquipoEvento" onchange="actualizarSelectJugadoresEvento()"></select>
+            <select id="selectJugadorEvento"></select>
+            <select id="tipoEvento">
+                <option value="gol">⚽ Gol</option>
+                <option value="amarilla">🟨 Amarilla</option>
+                <option value="roja">🟥 Roja</option>
+            </select>
+            <button onclick="registrarEvento()" style="width: auto;">Registrar</button>
         </div>
     </section>
 
     <section>
-        <h2>📊 Tabla de Posiciones</h2>
-        <table id="tablaPosiciones">
-            <thead>
-                <tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>Pts</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </section>
-
-    <section>
-        <h2>🔥 Máximos Anotadores y Disciplina</h2>
+        <h2>🔥 Tabla de Goleadores</h2>
         <table id="tablaGoleadores">
             <thead>
-                <tr><th>Jugador</th><th>Equipo</th><th>⚽ Goles</th><th>🟨 Amarillas</th><th>🟥 Rojas</th></tr>
+                <tr><th>Jugador</th><th>Equipo</th><th>⚽</th><th>🟨</th><th>🟥</th></tr>
             </thead>
             <tbody></tbody>
         </table>
     </section>
 
     <div class="admin-zone">
-        <h3 style="color: #922b21; margin-top: 0;">⚠️ Zona de Administración</h3>
-        <p style="font-size: 0.8rem; color: #666;">Esta acción borrará todos los equipos, jugadores y estadísticas del torneo.</p>
+        <h3>⚠️ Administración</h3>
         <button class="btn-danger" onclick="reiniciarTorneo()">REINICIAR TODO EL TORNEO</button>
     </div>
 </div>
 
 <script>
-    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [] };
+    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], grupos: {} };
 
     function guardar() {
         localStorage.setItem('torneo_data', JSON.stringify(datos));
@@ -135,13 +130,29 @@
         }
     }
 
+    function realizarSorteo() {
+        if (datos.equipos.length < 2) return alert("Necesitas al menos 2 equipos.");
+        const numG = parseInt(document.getElementById('numGrupos').value);
+        const mezclados = [...datos.equipos].sort(() => Math.random() - 0.5);
+        
+        datos.grupos = {};
+        for (let i = 0; i < numG; i++) {
+            datos.grupos[`Grupo ${String.fromCharCode(65 + i)}`] = [];
+        }
+
+        mezclados.forEach((eq, index) => {
+            const grupoKey = `Grupo ${String.fromCharCode(65 + (index % numG))}`;
+            datos.grupos[grupoKey].push(eq.nombre);
+        });
+        guardar();
+    }
+
     function registrarEvento() {
         const eqNombre = document.getElementById('selectEquipoEvento').value;
         const jNombre = document.getElementById('selectJugadorEvento').value;
         const tipo = document.getElementById('tipoEvento').value;
         const equipo = datos.equipos.find(e => e.nombre === eqNombre);
-        if (!equipo) return;
-        const jugador = equipo.jugadores.find(j => j.nombre === jNombre);
+        const jugador = equipo?.jugadores.find(j => j.nombre === jNombre);
         if (jugador) {
             if (tipo === 'gol') jugador.goles++;
             else if (tipo === 'amarilla') jugador.amarillas++;
@@ -156,6 +167,7 @@
         const gL = parseInt(document.getElementById('gLocal').value) || 0;
         const gV = parseInt(document.getElementById('gVis').value) || 0;
         if (nL === nV) return;
+
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
         eL.pj++; eV.pj++;
@@ -166,15 +178,9 @@
     }
 
     function reiniciarTorneo() {
-        const password = prompt("Introduce la contraseña de administrador para borrar todo:");
-        if (password === "admin123") {
-            if (confirm("¿Estás seguro? Esta acción no se puede deshacer.")) {
-                datos = { equipos: [] };
-                guardar();
-                alert("Torneo reiniciado con éxito.");
-            }
-        } else {
-            alert("Contraseña incorrecta.");
+        if (prompt("Clave admin:") === "admin123") {
+            datos = { equipos: [], grupos: {} };
+            guardar();
         }
     }
 
@@ -183,46 +189,52 @@
         const equipo = datos.equipos.find(e => e.nombre === eqNombre);
         const selectJ = document.getElementById('selectJugadorEvento');
         selectJ.innerHTML = '';
-        if (equipo) {
-            equipo.jugadores.forEach(j => {
-                let opt = document.createElement('option');
-                opt.value = j.nombre; opt.textContent = j.nombre;
-                selectJ.appendChild(opt);
-            });
-        }
+        equipo?.jugadores.forEach(j => {
+            let opt = document.createElement('option');
+            opt.value = j.nombre; opt.textContent = j.nombre;
+            selectJ.appendChild(opt);
+        });
     }
 
     function actualizarInterfaces() {
-        const sEquipos = [document.getElementById('selectEquipoJugador'), document.getElementById('selectEquipoEvento'), document.getElementById('resLocal'), document.getElementById('resVis')];
-        sEquipos.forEach(s => {
-            const valAnterior = s.value;
+        // Actualizar Selects
+        const selects = ['selectEquipoJugador', 'selectEquipoEvento', 'resLocal', 'resVis'];
+        selects.forEach(id => {
+            const s = document.getElementById(id);
+            const val = s.value;
             s.innerHTML = '';
             datos.equipos.forEach(e => {
                 let opt = document.createElement('option');
                 opt.value = e.nombre; opt.textContent = e.nombre;
                 s.appendChild(opt);
             });
-            s.value = valAnterior;
+            s.value = val;
         });
 
-        const tbodyP = document.querySelector('#tablaPosiciones tbody');
-        tbodyP.innerHTML = '';
-        [...datos.equipos].sort((a,b) => b.pts - a.pts).forEach(e => {
-            tbodyP.innerHTML += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td><td><strong>${e.pts}</strong></td></tr>`;
+        // Dibujar Grupos y sus Tablas
+        const contGrupos = document.getElementById('contenedorGrupos');
+        contGrupos.innerHTML = '';
+        Object.keys(datos.grupos).forEach(nombreGrupo => {
+            let html = `<div><h3>${nombreGrupo}</h3><table><tr><th>Equipo</th><th>Pts</th></tr>`;
+            datos.grupos[nombreGrupo].forEach(eqNombre => {
+                const eq = datos.equipos.find(e => e.nombre === eqNombre);
+                html += `<tr><td>${eq.nombre}</td><td>${eq.pts}</td></tr>`;
+            });
+            html += `</table></div>`;
+            contGrupos.innerHTML += html;
         });
 
+        // Goleadores
         const tbodyG = document.querySelector('#tablaGoleadores tbody');
         tbodyG.innerHTML = '';
         let todos = [];
         datos.equipos.forEach(e => e.jugadores.forEach(j => todos.push({...j, eq: e.nombre})));
-        todos.sort((a,b) => b.goles - a.goles).forEach(j => {
-            tbodyG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td><strong>${j.goles}</strong></td><td class="card-y">${j.amarillas}</td><td class="card-r">${j.rojas}</td></tr>`;
+        todos.sort((a,b) => b.goles - a.goles).slice(0, 10).forEach(j => {
+            tbodyG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`;
         });
     }
 
     actualizarInterfaces();
-    actualizarSelectJugadoresEvento();
 </script>
-
 </body>
 </html>
