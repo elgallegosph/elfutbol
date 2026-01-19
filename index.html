@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro</title>
+    <title>Torneo de Fútbol Pro - Eliminatorias</title>
     <style>
-        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; }
+        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
         header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .container { max-width: 1000px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -15,23 +15,22 @@
         input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
         button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
         button:hover { background: #154360; }
-        .btn-sorteo { background: var(--success); margin-top: 10px; font-size: 1.1rem; }
-        .btn-sorteo:hover { background: #1e8449; }
+        .btn-sorteo { background: var(--success); }
+        .btn-playoff { background: var(--playoff); font-size: 1.1rem; margin-top: 10px; }
+        .btn-playoff:hover { background: #70298d; }
         .btn-danger { background: #c0392b; margin-top: 20px; }
-        .btn-danger:hover { background: #922b21; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #f8f9fa; color: #333; }
-        .card-y { color: #b7950b; font-weight: bold; }
-        .card-r { color: #cb4335; font-weight: bold; }
         .admin-zone { background: #fdeaea; border: 1px solid #fadbd8; padding: 15px; border-radius: 8px; margin-top: 50px; }
         .grupo-titulo { background: #2c3e50; color: white; padding: 8px; margin-top: 20px; border-radius: 4px; }
+        .fase-card { background: #fdfefe; border: 1px solid #8e44ad; padding: 10px; margin-bottom: 10px; border-radius: 5px; border-left: 10px solid #8e44ad; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🏆 Gestión de Campeonato y Estadísticas</h1>
+    <h1>🏆 Gestión de Campeonato y Eliminatorias</h1>
 </header>
 
 <div class="container">
@@ -51,7 +50,7 @@
     </section>
 
     <section>
-        <h2>2. Sorteo de Grupos</h2>
+        <h2>2. Sorteo y Fase Final</h2>
         <div class="grid">
             <div>
                 <label>Número de grupos:</label>
@@ -60,25 +59,34 @@
                     <option value="2">2 Grupos</option>
                     <option value="4">4 Grupos</option>
                 </select>
+                <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Sorteo de Grupos</button>
             </div>
             <div>
-                <label>&nbsp;</label>
-                <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Realizar Sorteo</button>
+                <label>Generar Eliminatorias:</label>
+                <select id="tipoPlayoff">
+                    <option value="2">Final (Top 2)</option>
+                    <option value="4">Semifinales (Top 4)</option>
+                    <option value="8">Cuartos (Top 8)</option>
+                    <option value="16">Octavos (Top 16)</option>
+                </select>
+                <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Finales</button>
             </div>
         </div>
+    </section>
+
+    <section id="seccionPlayoffs" style="display:none;">
+        <h2>📝 Llaves de Eliminación Directa</h2>
+        <div id="contenedorPlayoffs"></div>
     </section>
 
     <section>
         <h2>3. Registrar Goles y Tarjetas</h2>
         <div class="grid">
             <div>
-                <label>Equipo:</label>
                 <select id="selectEquipoEvento" onchange="actualizarSelectJugadoresEvento()"></select>
-                <label>Jugador:</label>
                 <select id="selectJugadorEvento"></select>
             </div>
             <div>
-                <label>Acción:</label>
                 <select id="tipoEvento">
                     <option value="gol">⚽ Gol</option>
                     <option value="amarilla">🟨 Tarjeta Amarilla</option>
@@ -103,30 +111,27 @@
 
     <section>
         <h2>📊 Clasificación por Grupos</h2>
-        <div id="contenedorTablas">
-            </div>
+        <div id="contenedorTablas"></div>
     </section>
 
     <section>
-        <h2>🔥 Máximos Anotadores y Disciplina</h2>
+        <h2>🔥 Goleadores</h2>
         <table id="tablaGoleadores">
             <thead>
-                <tr><th>Jugador</th><th>Equipo</th><th>⚽ Goles</th><th>🟨 Amarillas</th><th>🟥 Rojas</th></tr>
+                <tr><th>Jugador</th><th>Equipo</th><th>⚽</th><th>🟨</th><th>🟥</th></tr>
             </thead>
             <tbody></tbody>
         </table>
     </section>
 
     <div class="admin-zone">
-        <h3 style="color: #922b21; margin-top: 0;">⚠️ Zona de Administración</h3>
-        <p style="font-size: 0.8rem; color: #666;">Esta acción borrará todos los equipos, jugadores y estadísticas del torneo.</p>
+        <h3>⚠️ Administración</h3>
         <button class="btn-danger" onclick="reiniciarTorneo()">REINICIAR TODO EL TORNEO</button>
     </div>
 </div>
 
 <script>
-    // Se añade 'grupos' al objeto inicial de datos
-    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], grupos: {} };
+    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], grupos: {}, llaves: [] };
 
     function guardar() {
         localStorage.setItem('torneo_data', JSON.stringify(datos));
@@ -136,7 +141,6 @@
     function registrarEquipo() {
         const nombre = document.getElementById('nombreEquipo').value.trim();
         if (nombre && !datos.equipos.find(e => e.nombre === nombre)) {
-            // Se añade propiedad 'grupo' al equipo
             datos.equipos.push({ nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, jugadores: [], grupo: "Sin Asignar" });
             document.getElementById('nombreEquipo').value = '';
             guardar();
@@ -147,22 +151,36 @@
         if (datos.equipos.length === 0) return alert("Registra equipos primero.");
         const nGrupos = parseInt(document.getElementById('cantidadGrupos').value);
         const equiposMezclados = [...datos.equipos].sort(() => Math.random() - 0.5);
-        
-        datos.grupos = {}; // Reiniciar grupos
-        
+        datos.grupos = {};
         for (let i = 0; i < nGrupos; i++) {
             const nombreGrupo = "Grupo " + String.fromCharCode(65 + i);
             datos.grupos[nombreGrupo] = [];
         }
-
         equiposMezclados.forEach((eq, index) => {
             const numGrupo = index % nGrupos;
-            const nombreGrupo = "Grupo " + String.fromCharCode(65 + numGrupo);
-            eq.grupo = nombreGrupo;
+            eq.grupo = "Grupo " + String.fromCharCode(65 + numGrupo);
         });
-
         guardar();
-        alert("¡Sorteo realizado con éxito!");
+    }
+
+    function generarPlayoffs() {
+        const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
+        if (datos.equipos.length < cantidad) return alert(`Necesitas al menos ${cantidad} equipos.`);
+        
+        // Ordenar equipos por puntos para el sorteo de llaves
+        const clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts).slice(0, cantidad);
+        datos.llaves = [];
+
+        for (let i = 0; i < cantidad / 2; i++) {
+            // Emparejar 1º con último, 2º con penúltimo para mayor competitividad
+            datos.llaves.push({
+                local: clasificados[i].nombre,
+                visitante: clasificados[cantidad - 1 - i].nombre,
+                fase: cantidad === 2 ? "GRAN FINAL" : cantidad === 4 ? "SEMIFINAL" : cantidad === 8 ? "CUARTOS" : "OCTAVOS"
+            });
+        }
+        guardar();
+        document.getElementById('seccionPlayoffs').style.display = 'block';
     }
 
     function registrarJugador() {
@@ -181,8 +199,7 @@
         const jNombre = document.getElementById('selectJugadorEvento').value;
         const tipo = document.getElementById('tipoEvento').value;
         const equipo = datos.equipos.find(e => e.nombre === eqNombre);
-        if (!equipo) return;
-        const jugador = equipo.jugadores.find(j => j.nombre === jNombre);
+        const jugador = equipo?.jugadores.find(j => j.nombre === jNombre);
         if (jugador) {
             if (tipo === 'gol') jugador.goles++;
             else if (tipo === 'amarilla') jugador.amarillas++;
@@ -207,15 +224,10 @@
     }
 
     function reiniciarTorneo() {
-        const password = prompt("Introduce la contraseña de administrador para borrar todo:");
-        if (password === "admin123") {
-            if (confirm("¿Estás seguro? Esta acción no se puede deshacer.")) {
-                datos = { equipos: [], grupos: {} };
-                guardar();
-                alert("Torneo reiniciado con éxito.");
-            }
-        } else {
-            alert("Contraseña incorrecta.");
+        if (prompt("Clave:") === "admin123") {
+            datos = { equipos: [], grupos: {}, llaves: [] };
+            guardar();
+            location.reload();
         }
     }
 
@@ -224,52 +236,46 @@
         const equipo = datos.equipos.find(e => e.nombre === eqNombre);
         const selectJ = document.getElementById('selectJugadorEvento');
         selectJ.innerHTML = '';
-        if (equipo) {
-            equipo.jugadores.forEach(j => {
-                let opt = document.createElement('option');
-                opt.value = j.nombre; opt.textContent = j.nombre;
-                selectJ.appendChild(opt);
-            });
-        }
+        equipo?.jugadores.forEach(j => {
+            let opt = document.createElement('option');
+            opt.value = j.nombre; opt.textContent = j.nombre;
+            selectJ.appendChild(opt);
+        });
     }
 
     function actualizarInterfaces() {
-        const sEquipos = [document.getElementById('selectEquipoJugador'), document.getElementById('selectEquipoEvento'), document.getElementById('resLocal'), document.getElementById('resVis')];
-        sEquipos.forEach(s => {
-            const valAnterior = s.value;
+        // Selects de Equipos
+        const selects = ['selectEquipoJugador', 'selectEquipoEvento', 'resLocal', 'resVis'];
+        selects.forEach(id => {
+            const s = document.getElementById(id);
+            const val = s.value;
             s.innerHTML = '';
             datos.equipos.forEach(e => {
                 let opt = document.createElement('option');
                 opt.value = e.nombre; opt.textContent = e.nombre;
                 s.appendChild(opt);
             });
-            s.value = valAnterior;
+            s.value = val;
         });
 
-        // Clasificación por Grupos
+        // Tablas por Grupos
         const contenedor = document.getElementById('contenedorTablas');
         contenedor.innerHTML = '';
+        const grupos = [...new Set(datos.equipos.map(e => e.grupo))].sort();
+        grupos.forEach(grupo => {
+            let html = `<h3 class="grupo-titulo">${grupo}</h3><table><thead><tr><th>Equipo</th><th>PJ</th><th>Pts</th></tr></thead><tbody>`;
+            datos.equipos.filter(e => e.grupo === grupo).sort((a,b) => b.pts - a.pts).forEach(e => {
+                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td><strong>${e.pts}</strong></td></tr>`;
+            });
+            contenedor.innerHTML += html + '</tbody></table>';
+        });
 
-        // Obtener lista de grupos únicos
-        const gruposExistentes = [...new Set(datos.equipos.map(e => e.grupo))].sort();
-
-        gruposExistentes.forEach(grupo => {
-            const divGrupo = document.createElement('div');
-            divGrupo.innerHTML = `<h3 class="grupo-titulo">${grupo}</h3>`;
-            const tabla = document.createElement('table');
-            tabla.innerHTML = `<thead><tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>Pts</th></tr></thead>`;
-            const tbody = document.createElement('tbody');
-
-            datos.equipos
-                .filter(e => e.grupo === grupo)
-                .sort((a,b) => b.pts - a.pts)
-                .forEach(e => {
-                    tbody.innerHTML += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td><td><strong>${e.pts}</strong></td></tr>`;
-                });
-            
-            tabla.appendChild(tbody);
-            divGrupo.appendChild(tabla);
-            contenedor.appendChild(divGrupo);
+        // Llaves de Playoffs
+        const contPlayoffs = document.getElementById('contenedorPlayoffs');
+        contPlayoffs.innerHTML = '';
+        if(datos.llaves.length > 0) document.getElementById('seccionPlayoffs').style.display = 'block';
+        datos.llaves.forEach(llave => {
+            contPlayoffs.innerHTML += `<div class="fase-card"><strong>${llave.fase}:</strong> ${llave.local} vs ${llave.visitante}</div>`;
         });
 
         // Goleadores
@@ -278,13 +284,11 @@
         let todos = [];
         datos.equipos.forEach(e => e.jugadores.forEach(j => todos.push({...j, eq: e.nombre})));
         todos.sort((a,b) => b.goles - a.goles).forEach(j => {
-            tbodyG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td><strong>${j.goles}</strong></td><td class="card-y">${j.amarillas}</td><td class="card-r">${j.rojas}</td></tr>`;
+            tbodyG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`;
         });
     }
 
     actualizarInterfaces();
-    actualizarSelectJugadoresEvento();
 </script>
-
 </body>
 </html>
