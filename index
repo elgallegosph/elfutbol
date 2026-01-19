@@ -1,1 +1,31 @@
-# elfutbol
+import streamlit as st
+import pandas as pd
+
+st.title("🏆 Gestión de Campeonato de Fútbol")
+
+# Sidebar para navegación
+menu = ["Inicio", "Registrar Equipos", "Tabla de Posiciones", "Resultados"]
+choice = st.sidebar.selectbox("Menú", menu)
+
+if choice == "Inicio":
+    st.write("Bienvenido al gestor del torneo. Usa el menú lateral para empezar.")
+
+elif choice == "Registrar Equipos":
+    st.subheader("Añadir nuevo equipo")
+    nombre_equipo = st.text_input("Nombre del equipo")
+    if st.button("Guardar Equipo"):
+        st.success(f"Equipo {nombre_equipo} registrado con éxito.")
+
+elif choice == "Tabla de Posiciones":
+    st.subheader("Clasificación Actual")
+    # Ejemplo de datos
+    datos = {
+        "Equipo": ["Leones FC", "Águilas Real", "Tiburones"],
+        "PJ": [3, 3, 3],
+        "PG": [2, 1, 0],
+        "PE": [1, 1, 1],
+        "PP": [0, 1, 2],
+        "Pts": [7, 4, 1]
+    }
+    df = pd.DataFrame(datos)
+    st.table(df.sort_values(by="Pts", ascending=False))
