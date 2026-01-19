@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro - Eliminatorias con Penaltis</title>
+    <title>Torneo de Fútbol Pro - Gestión de Eliminatorias</title>
     <style>
         :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
@@ -14,13 +14,14 @@
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
         
-        input[type="number"] { 
-            width: 75px !important; 
-            font-size: 1.2rem; 
+        /* Marcadores grandes y visibles */
+        .input-marcador { 
+            width: 80px !important; 
+            font-size: 1.4rem !important; 
             font-weight: bold; 
             text-align: center; 
-            padding: 8px;
-            border: 2px solid var(--primary);
+            border: 2px solid var(--primary) !important;
+            background: #fff;
         }
 
         button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
@@ -34,46 +35,25 @@
         th { background: #f8f9fa; color: #333; }
         
         .fase-card { 
-            background: #fdfefe; 
-            border: 1px solid #8e44ad; 
-            padding: 20px; 
-            margin-bottom: 15px; 
-            border-radius: 8px; 
-            border-left: 12px solid #8e44ad; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px; 
+            background: #fdfefe; border: 1px solid #8e44ad; padding: 20px; 
+            margin-bottom: 15px; border-radius: 8px; border-left: 12px solid #8e44ad; 
+            display: flex; flex-direction: column; gap: 15px; 
         }
         .llave-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
-        .equipo-vs { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 500; }
+        .equipo-vs { display: flex; align-items: center; gap: 15px; font-size: 1.1rem; font-weight: bold; }
         
         .penaltis-row { 
-            background: #fff4e5; 
-            padding: 12px; 
-            border-radius: 6px; 
-            display: flex; 
-            flex-wrap: wrap;
-            align-items: center; 
-            gap: 15px; 
-            font-size: 1rem; 
+            background: #fff4e5; padding: 15px; border-radius: 6px; 
+            display: flex; flex-wrap: wrap; align-items: center; gap: 15px; 
             border: 2px dashed #e67e22; 
         }
         .ganador-label { 
-            background: #e8f8f5; 
-            color: var(--success); 
-            font-weight: bold; 
-            font-size: 1rem; 
-            padding: 8px; 
-            border-radius: 4px;
-            text-align: center;
+            background: #e8f8f5; color: var(--success); font-weight: bold; 
+            font-size: 1.1rem; padding: 10px; border-radius: 4px; text-align: center; 
+            border: 1px solid var(--success);
         }
-        .admin-zone { background: #fdeaea; border: 1px solid #fadbd8; padding: 15px; border-radius: 8px; margin-top: 50px; }
-        .grupo-titulo { background: #2c3e50; color: white; padding: 8px; margin-top: 20px; border-radius: 4px; }
-        
-        @media (max-width: 600px) {
-            .grid { grid-template-columns: 1fr; }
-            .llave-row { justify-content: center; text-align: center; }
-        }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .llave-row { justify-content: center; } }
     </style>
 </head>
 <body>
@@ -151,9 +131,9 @@
         <h2>4. Marcador Final (Fase de Grupos)</h2>
         <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px;">
             <select id="resLocal" style="width: auto; min-width: 150px;"></select>
-            <input type="number" id="gLocal" placeholder="0">
-            <span style="font-weight: bold; font-size: 1.2rem;">VS</span>
-            <input type="number" id="gVis" placeholder="0">
+            <input type="number" id="gLocal" class="input-marcador" placeholder="0">
+            <span style="font-weight: bold;">VS</span>
+            <input type="number" id="gVis" class="input-marcador" placeholder="0">
             <select id="resVis" style="width: auto; min-width: 150px;"></select>
             <button onclick="cargarResultadoFinal()" style="width: auto; padding: 12px 25px;">Finalizar Partido</button>
         </div>
@@ -224,15 +204,24 @@
         
         for (let i = 0; i < cantidad; i += 2) {
             datos.llaves.push({
-                local: clasificados[i].nombre,
-                visitante: clasificados[i+1].nombre,
-                gLocal: 0, gVis: 0,
-                pLocal: 0, pVis: 0,
-                ganador: null,
-                fase: faseNombre
+                local: clasificados[i].nombre, visitante: clasificados[i+1].nombre,
+                gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, fase: faseNombre
             });
         }
         guardar();
+    }
+
+    // NUEVA FUNCIÓN: Solo cambia la visibilidad sin borrar lo que el usuario escribe
+    function verificarEmpate(index) {
+        const gl = document.getElementById(`llaveL_${index}`).value;
+        const gv = document.getElementById(`llaveV_${index}`).value;
+        const panelPenales = document.getElementById(`panelPenales_${index}`);
+        
+        if (gl !== "" && gv !== "" && gl === gv) {
+            panelPenales.style.display = "flex";
+        } else {
+            panelPenales.style.display = "none";
+        }
     }
 
     function registrarResultadoLlave(index) {
@@ -242,18 +231,14 @@
         datos.llaves[index].gLocal = gl;
         datos.llaves[index].gVis = gv;
 
-        // Lógica corregida: Solo hay penaltis si gl === gv
         if (gl === gv) {
             const pl = parseInt(document.getElementById(`penL_${index}`).value) || 0;
             const pv = parseInt(document.getElementById(`penV_${index}`).value) || 0;
-            
-            if (pl === pv) return alert("El partido terminó en empate. Registre un ganador en penaltis.");
-            
+            if (pl === pv) return alert("Debe haber un ganador en penaltis.");
             datos.llaves[index].pLocal = pl;
             datos.llaves[index].pVis = pv;
             datos.llaves[index].ganador = pl > pv ? datos.llaves[index].local : datos.llaves[index].visitante;
         } else {
-            // Si no hay empate, se resetean penaltis y se asigna ganador directo
             datos.llaves[index].pLocal = 0;
             datos.llaves[index].pVis = 0;
             datos.llaves[index].ganador = gl > gv ? datos.llaves[index].local : datos.llaves[index].visitante;
@@ -263,8 +248,8 @@
 
     function avanzarSiguienteFase() {
         const ganadores = datos.llaves.filter(l => l.ganador !== null).map(l => l.ganador);
-        if (ganadores.length !== datos.llaves.length) return alert("Debes finalizar todos los partidos.");
-        if (ganadores.length === 1) return alert("¡Torneo finalizado! Felicidades al campeón.");
+        if (ganadores.length !== datos.llaves.length) return alert("Finalice todos los partidos.");
+        if (ganadores.length === 1) return alert("¡Campeón coronado!");
 
         const cantidad = ganadores.length;
         datos.llaves = [];
@@ -273,8 +258,7 @@
         for (let i = 0; i < cantidad; i += 2) {
             datos.llaves.push({
                 local: ganadores[i], visitante: ganadores[i+1],
-                gLocal: 0, gVis: 0, pLocal: 0, pVis: 0,
-                ganador: null, fase: faseNombre
+                gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, fase: faseNombre
             });
         }
         guardar();
@@ -321,7 +305,7 @@
     }
 
     function reiniciarTorneo() {
-        if (prompt("Clave de administrador:") === "admin123") {
+        if (prompt("Clave admin:") === "admin123") {
             datos = { equipos: [], grupos: {}, llaves: [] };
             guardar();
             location.reload();
@@ -344,6 +328,7 @@
         const selects = ['selectEquipoJugador', 'selectEquipoEvento', 'resLocal', 'resVis'];
         selects.forEach(id => {
             const s = document.getElementById(id);
+            if (!s) return;
             const val = s.value;
             s.innerHTML = '';
             datos.equipos.forEach(e => {
@@ -373,34 +358,31 @@
         }
 
         datos.llaves.forEach((llave, i) => {
-            // El bloque de penaltis solo se muestra si el marcador es empate
-            const hayEmpate = (llave.gLocal === llave.gVis);
-
+            const esEmpate = (llave.gLocal === llave.gVis && llave.ganador !== null);
             contPlayoffs.innerHTML += `
                 <div class="fase-card">
                     <div class="llave-row">
                         <div style="font-size: 1.2rem; color: #8e44ad;"><strong>${llave.fase}</strong></div>
                         <div class="equipo-vs">
                             <span>${llave.local}</span>
-                            <input type="number" id="llaveL_${i}" value="${llave.gLocal}" onchange="actualizarInterfaces()"> 
-                            <span style="color:#ccc;">—</span>
-                            <input type="number" id="llaveV_${i}" value="${llave.gVis}" onchange="actualizarInterfaces()">
+                            <input type="number" id="llaveL_${i}" class="input-marcador" value="${llave.gLocal}" oninput="verificarEmpate(${i})"> 
+                            <span>—</span>
+                            <input type="number" id="llaveV_${i}" class="input-marcador" value="${llave.gVis}" oninput="verificarEmpate(${i})">
                             <span>${llave.visitante}</span>
                         </div>
                         <button onclick="registrarResultadoLlave(${i})" style="width:auto; padding:10px 20px; background:var(--success)">Confirmar</button>
                     </div>
                     
-                    ${hayEmpate ? `
-                    <div class="penaltis-row">
-                        <strong>⚠️ DESEMPATE POR PENALTIS:</strong> 
+                    <div id="panelPenales_${i}" class="penaltis-row" style="display: ${llave.ganador && llave.gLocal === llave.gVis ? 'flex' : 'none'};">
+                        <strong>⚠️ PENALTIS:</strong> 
                         <div style="display:flex; align-items:center; gap:10px;">
-                            ${llave.local} <input type="number" id="penL_${i}" value="${llave.pLocal}"> 
+                            ${llave.local} <input type="number" id="penL_${i}" class="input-marcador" style="width:60px !important" value="${llave.pLocal}"> 
                             - 
-                            <input type="number" id="penV_${i}" value="${llave.pVis}"> ${llave.visitante}
+                            <input type="number" id="penV_${i}" class="input-marcador" style="width:60px !important" value="${llave.pVis}"> ${llave.visitante}
                         </div>
-                    </div>` : ''}
+                    </div>
 
-                    ${llave.ganador ? `<div class="ganador-label">🥇 AVANZA: ${llave.ganador} ${llave.pLocal > 0 || llave.pVis > 0 ? '(vía Penaltis)' : ''}</div>` : ''}
+                    ${llave.ganador ? `<div class="ganador-label">🥇 AVANZA: ${llave.ganador} ${llave.pLocal !== llave.pVis ? '(Penaltis)' : ''}</div>` : ''}
                 </div>`;
         });
 
