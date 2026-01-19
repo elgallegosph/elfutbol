@@ -3,126 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Campeonato - Fútbol</title>
+    <title>Torneo de Fútbol Pro</title>
     <style>
-        :root { --primary: #05a; --secondary: #f4f4f4; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--secondary); }
-        header { background: var(--primary); color: white; padding: 1rem; text-align: center; }
-        .container { max-width: 900px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        section { margin-bottom: 30px; border-bottom: 1px solid #ddd; padding-bottom: 20px; }
-        h2 { color: var(--primary); }
-        input, select, button { padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: var(--primary); color: white; cursor: pointer; border: none; }
-        button:hover { opacity: 0.9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background: #eee; }
+        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
+        header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .container { max-width: 1000px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        section { margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+        h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #154360; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #f8f9fa; color: #333; }
+        .card-y { color: #b7950b; font-weight: bold; }
+        .card-r { color: #cb4335; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🏆 Panel de Control - Torneo de Fútbol</h1>
+    <h1>🏆 Gestión de Campeonato y Estadísticas</h1>
 </header>
 
 <div class="container">
     <section>
-        <h2>1. Registro de Equipos y Jugadores</h2>
-        <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
-        <input type="text" id="nombreJugador" placeholder="Jugador Estrella">
-        <button onclick="registrarEquipo()">Registrar Equipo</button>
+        <h2>1. Equipos y Plantillas</h2>
+        <div class="grid">
+            <div>
+                <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
+                <button onclick="registrarEquipo()">Crear Equipo</button>
+            </div>
+            <div>
+                <select id="selectEquipoJugador"></select>
+                <input type="text" id="nombreJugador" placeholder="Nombre del Jugador">
+                <button onclick="registrarJugador()">Inscribir Jugador</button>
+            </div>
+        </div>
     </section>
 
     <section>
-        <h2>2. Cargar Resultado</h2>
-        <select id="selectLocal"></select>
-        <input type="number" id="golesLocal" placeholder="0" style="width: 50px;">
-        vs
-        <input type="number" id="golesVisitante" placeholder="0" style="width: 50px;">
-        <select id="selectVisitante"></select>
-        <button onclick="cargarResultado()">Guardar Partido</button>
+        <h2>2. Registrar Goles y Tarjetas</h2>
+        <div class="grid">
+            <div>
+                <label>Seleccionar Equipo:</label>
+                <select id="selectEquipoEvento" onchange="actualizarSelectJugadoresEvento()"></select>
+                <label>Jugador:</label>
+                <select id="selectJugadorEvento"></select>
+            </div>
+            <div>
+                <label>Acción:</label>
+                <select id="tipoEvento">
+                    <option value="gol">⚽ Gol</option>
+                    <option value="amarilla">🟨 Tarjeta Amarilla</option>
+                    <option value="roja">🟥 Tarjeta Roja</option>
+                </select>
+                <button onclick="registrarEvento()">Registrar Acción</button>
+            </div>
+        </div>
     </section>
 
     <section>
-        <h2>3. Clasificación</h2>
+        <h2>3. Marcador Final (Puntos)</h2>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <select id="resLocal"></select>
+            <input type="number" id="gLocal" placeholder="0" style="width: 60px;">
+            <span>vs</span>
+            <input type="number" id="gVis" placeholder="0" style="width: 60px;">
+            <select id="resVis"></select>
+            <button onclick="cargarResultadoFinal()">Finalizar Partido</button>
+        </div>
+    </section>
+
+    <section>
+        <h2>📊 Tabla de Posiciones</h2>
         <table id="tablaPosiciones">
             <thead>
-                <tr>
-                    <th>Equipo</th>
-                    <th>PJ</th>
-                    <th>PG</th>
-                    <th>PE</th>
-                    <th>PP</th>
-                    <th>Pts</th>
-                </tr>
+                <tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>Pts</th></tr>
             </thead>
-            <tbody>
-                </tbody>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>🔥 Máximos Anotadores y Disciplina</h2>
+        <table id="tablaGoleadores">
+            <thead>
+                <tr><th>Jugador</th><th>Equipo</th><th>⚽ Goles</th><th>🟨 Amarillas</th><th>🟥 Rojas</th></tr>
+            </thead>
+            <tbody></tbody>
         </table>
     </section>
 </div>
 
 <script>
-    let equipos = [];
+    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [] };
+
+    function guardar() {
+        localStorage.setItem('torneo_data', JSON.stringify(datos));
+        actualizarInterfaces();
+    }
 
     function registrarEquipo() {
-        const nombre = document.getElementById('nombreEquipo').value;
-        if (nombre && !equipos.find(e => e.nombre === nombre)) {
-            equipos.push({ nombre: nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0 });
-            actualizarSelects();
-            actualizarTabla();
+        const nombre = document.getElementById('nombreEquipo').value.trim();
+        if (nombre && !datos.equipos.find(e => e.nombre === nombre)) {
+            datos.equipos.push({ nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, jugadores: [] });
             document.getElementById('nombreEquipo').value = '';
-            alert("Equipo registrado con éxito");
+            guardar();
         }
     }
 
-    function actualizarSelects() {
-        const selects = [document.getElementById('selectLocal'), document.getElementById('selectVisitante')];
-        selects.forEach(s => {
-            s.innerHTML = '';
-            equipos.forEach(e => {
+    function registrarJugador() {
+        const eqNombre = document.getElementById('selectEquipoJugador').value;
+        const jNombre = document.getElementById('nombreJugador').value.trim();
+        const equipo = datos.equipos.find(e => e.nombre === eqNombre);
+        if (equipo && jNombre) {
+            equipo.jugadores.push({ nombre: jNombre, goles: 0, amarillas: 0, rojas: 0 });
+            document.getElementById('nombreJugador').value = '';
+            guardar();
+        }
+    }
+
+    function registrarEvento() {
+        const eqNombre = document.getElementById('selectEquipoEvento').value;
+        const jNombre = document.getElementById('selectJugadorEvento').value;
+        const tipo = document.getElementById('tipoEvento').value;
+        
+        const equipo = datos.equipos.find(e => e.nombre === eqNombre);
+        const jugador = equipo.jugadores.find(j => j.nombre === jNombre);
+
+        if (jugador) {
+            if (tipo === 'gol') jugador.goles++;
+            else if (tipo === 'amarilla') jugador.amarillas++;
+            else if (tipo === 'roja') jugador.rojas++;
+            guardar();
+            alert("Evento registrado");
+        }
+    }
+
+    function cargarResultadoFinal() {
+        const nL = document.getElementById('resLocal').value;
+        const nV = document.getElementById('resVis').value;
+        const gL = parseInt(document.getElementById('gLocal').value) || 0;
+        const gV = parseInt(document.getElementById('gVis').value) || 0;
+
+        if (nL === nV) return;
+
+        let eL = datos.equipos.find(e => e.nombre === nL);
+        let eV = datos.equipos.find(e => e.nombre === nV);
+
+        eL.pj++; eV.pj++;
+        if (gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; }
+        else if (gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; }
+        else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
+        guardar();
+    }
+
+    function actualizarSelectJugadoresEvento() {
+        const eqNombre = document.getElementById('selectEquipoEvento').value;
+        const equipo = datos.equipos.find(e => e.nombre === eqNombre);
+        const selectJ = document.getElementById('selectJugadorEvento');
+        selectJ.innerHTML = '';
+        if (equipo) {
+            equipo.jugadores.forEach(j => {
                 let opt = document.createElement('option');
-                opt.value = e.nombre;
-                opt.innerHTML = e.nombre;
+                opt.value = j.nombre; opt.textContent = j.nombre;
+                selectJ.appendChild(opt);
+            });
+        }
+    }
+
+    function actualizarInterfaces() {
+        const sEquipos = [document.getElementById('selectEquipoJugador'), document.getElementById('selectEquipoEvento'), document.getElementById('resLocal'), document.getElementById('resVis')];
+        sEquipos.forEach(s => {
+            const valAnterior = s.value;
+            s.innerHTML = '';
+            datos.equipos.forEach(e => {
+                let opt = document.createElement('option');
+                opt.value = e.nombre; opt.textContent = e.nombre;
                 s.appendChild(opt);
             });
+            s.value = valAnterior;
         });
-    }
 
-    function cargarResultado() {
-        const loc = document.getElementById('selectLocal').value;
-        const vis = document.getElementById('selectVisitante').value;
-        const gL = parseInt(document.getElementById('golesLocal').value) || 0;
-        const gV = parseInt(document.getElementById('golesVisitante').value) || 0;
+        // Tabla Posiciones
+        const tbodyP = document.querySelector('#tablaPosiciones tbody');
+        tbodyP.innerHTML = '';
+        [...datos.equipos].sort((a,b) => b.pts - a.pts).forEach(e => {
+            tbodyP.innerHTML += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td><td><strong>${e.pts}</strong></td></tr>`;
+        });
 
-        if (loc === vis) return alert("No pueden jugar contra sí mismos");
+        // Tabla Goleadores
+        const tbodyG = document.querySelector('#tablaGoleadores tbody');
+        tbodyG.innerHTML = '';
+        let todosLosJugadores = [];
+        datos.equipos.forEach(e => {
+            e.jugadores.forEach(j => {
+                todosLosJugadores.push({...j, equipoNombre: e.nombre});
+            });
+        });
 
-        let eLocal = equipos.find(e => e.nombre === loc);
-        let eVis = equipos.find(e => e.nombre === vis);
-
-        eLocal.pj++; eVis.pj++;
-
-        if (gL > gV) { eLocal.pg++; eLocal.pts += 3; eVis.pp++; }
-        else if (gL < gV) { eVis.pg++; eVis.pts += 3; eLocal.pp++; }
-        else { eLocal.pe++; eVis.pe++; eLocal.pts += 1; eVis.pts += 1; }
-
-        actualizarTabla();
-    }
-
-    function actualizarTabla() {
-        const tbody = document.querySelector('#tablaPosiciones tbody');
-        tbody.innerHTML = '';
-        equipos.sort((a, b) => b.pts - a.pts).forEach(e => {
-            tbody.innerHTML += `<tr>
-                <td>${e.nombre}</td>
-                <td>${e.pj}</td>
-                <td>${e.pg}</td>
-                <td>${e.pe}</td>
-                <td>${e.pp}</td>
-                <td><strong>${e.pts}</strong></td>
+        todosLosJugadores.sort((a,b) => b.goles - a.goles).forEach(j => {
+            tbodyG.innerHTML += `<tr>
+                <td>${j.nombre}</td>
+                <td>${j.equipoNombre}</td>
+                <td><strong>${j.goles}</strong></td>
+                <td class="card-y">${j.amarillas}</td>
+                <td class="card-r">${j.rojas}</td>
             </tr>`;
         });
     }
+
+    // Carga inicial
+    actualizarInterfaces();
+    actualizarSelectJugadoresEvento();
 </script>
 
 </body>
