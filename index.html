@@ -320,10 +320,17 @@
         const nV = document.getElementById('resVis').value;
         const gL = parseInt(document.getElementById('gLocal').value) || 0;
         const gV = parseInt(document.getElementById('gVis').value) || 0;
+        
         if (!nL || !nV || nL === nV) return;
         
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
+
+        // VALIDACIÓN DE GRUPO: Solo partidos entre miembros del mismo grupo
+        if (eL.grupo !== eV.grupo) {
+            alert(`Error: El equipo ${eL.nombre} (${eL.grupo}) no puede jugar contra ${eV.nombre} (${eV.grupo}). Solo se permiten partidos entre equipos del mismo grupo.`);
+            return;
+        }
         
         eL.pj++; eV.pj++;
         eL.gf += gL; eL.gc += gV;
