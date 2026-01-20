@@ -118,7 +118,6 @@
 </header>
 
 <div class="container">
-    
     <section>
         <h2>1. Equipos y Plantillas</h2>
         <div class="grid">
@@ -319,18 +318,15 @@
         
         const mensaje = encodeURIComponent(`📢 *RECORDATORIO DE PARTIDO*\n\n⚽ *${localNom}* vs *${visitanteNom}*\n📅 Fecha: ${fechaFormateada}\n\n¡Los esperamos puntuales! 🏆`);
         
-        // Obtenemos ambos números
         const telLocal = eqLocal.whatsapp;
         const telVis = eqVis.whatsapp;
 
         if(!telLocal && !telVis) return alert("Ninguno de los dos equipos tiene número de WhatsApp registrado.");
 
-        // Intentar enviar al local
         if(telLocal) {
             window.open(`https://api.whatsapp.com/send?phone=${telLocal}&text=${mensaje}`, '_blank');
         }
 
-        // Intentar enviar al visitante con un pequeño retraso para evitar bloqueo de popups
         if(telVis) {
             setTimeout(() => {
                 window.open(`https://api.whatsapp.com/send?phone=${telVis}&text=${mensaje}`, '_blank');
@@ -538,10 +534,10 @@
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))].sort();
         grupos.forEach(grupo => {
             if(grupo === "Sin Asignar") return;
-            let html = `<h3>${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>Pts</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>`;
+            let html = `<h3>${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>Pts</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>`;
             datos.equipos.filter(e => e.grupo === grupo).sort((a,b) => b.pts - a.pts || (b.gf-b.gc)-(a.gf-a.gc)).forEach(e => {
                 const dg = e.gf - e.gc;
-                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td><strong>${e.pts}</strong></td><td>${e.gf}</td><td>${e.gc}</td><td>${dg>0?'+'+dg:dg}</td></tr>`;
+                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td><td><strong>${e.pts}</strong></td><td>${e.gf}</td><td>${e.gc}</td><td>${dg>0?'+'+dg:dg}</td></tr>`;
             });
             contenedor.innerHTML += html + '</tbody></table></div>';
         });
