@@ -474,8 +474,19 @@
     }
 
     function reiniciarTorneo() {
-        if(prompt("PIN ADMIN:") === "1234") { if(confirm("¿Borrar todo?")) { localStorage.clear(); location.reload(); } }
+    if(prompt("PIN ADMIN:") === "1234") { 
+        if(confirm("¿Borrar todo el torneo? Esta acción no se puede deshacer.")) { 
+            // 1. Limpiamos los datos localmente
+            datos = { equipos: [], llaves: [], calendario: [] };
+            
+            // 2. Enviamos el objeto vacío al Excel para que se limpie
+            guardar().then(() => {
+                localStorage.clear();
+                location.reload(); 
+            });
+        } 
     }
+}
     
     actualizarInterfaces();
 </script>
