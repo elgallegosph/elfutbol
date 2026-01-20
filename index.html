@@ -30,14 +30,16 @@
         .card-plantilla { background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .card-plantilla:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
-        .equipo-header span.nombre-clic { cursor: pointer; flex-grow: 1; }
+        .nombre-click { cursor: pointer; flex: 1; display: flex; align-items: center; gap: 5px; }
         .equipo-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; cursor: pointer; }
         .jugadores-lista { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: white; }
         .card-plantilla.active .jugadores-lista { max-height: 500px; padding-bottom: 5px; }
         .jugador-item { padding: 8px 12px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .jugador-nombre-edit { cursor: pointer; transition: color 0.2s; }
-        .jugador-nombre-edit:hover { color: var(--accent); text-decoration: underline; }
-        .jugador-stats { display: flex; gap: 6px; font-weight: bold; }
+        .jugador-nombre { cursor: pointer; transition: 0.2s; flex: 1; }
+        .jugador-nombre:hover { color: var(--accent); }
+        .jugador-stats { display: flex; gap: 6px; font-weight: bold; align-items: center; }
+        .btn-delete { background: none; color: #ccc; width: auto; padding: 0 5px; margin: 0; border: none; font-size: 12px; }
+        .btn-delete:hover { color: var(--accent); }
 
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
@@ -93,7 +95,7 @@
 
 <div class="container">
     <section>
-        <h2>1. Equipos y Plantillas (Haz clic para editar)</h2>
+        <h2>1. Equipos y Plantillas</h2>
         <div class="grid">
             <div>
                 <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
@@ -184,7 +186,6 @@
 
 <script>
     let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], llaves: [], calendario: [] };
-    let ultimoModificado = null; 
 
     function guardar() { localStorage.setItem('torneo_data', JSON.stringify(datos)); actualizarInterfaces(); }
 
@@ -197,56 +198,64 @@
         }
     }
 
-    // --- NUEVAS FUNCIONES DE EDICIÓN ---
-    function editarEquipo(nombreOriginal) {
-        const equipo = datos.equipos.find(e => e.nombre === nombreOriginal);
-        if(!equipo) return;
-        
-        const nuevoNombre = prompt("Nuevo nombre del equipo:", equipo.nombre);
-        const nuevoTel = prompt("Nuevo WhatsApp (solo números):", equipo.whatsapp);
-        
-        if(nuevoNombre && nuevoNombre.trim() !== "") {
-            const nombreExiste = datos.equipos.find(e => e.nombre === nuevoNombre.trim() && e.nombre !== nombreOriginal);
-            if(nombreExiste) return alert("Ese nombre de equipo ya existe.");
-            
-            // Actualizar en calendario
-            datos.calendario.forEach(p => {
-                if(p.local === nombreOriginal) p.local = nuevoNombre.trim();
-                if(p.visitante === nombreOriginal) p.visitante = nuevoNombre.trim();
-            });
-            // Actualizar en llaves
-            datos.llaves.forEach(l => {
-                if(l.local === nombreOriginal) l.local = nuevoNombre.trim();
-                if(l.visitante === nombreOriginal) l.visitante = nuevoNombre.trim();
-                if(l.ganador === nombreOriginal) l.ganador = nuevoNombre.trim();
-            });
-            
-            equipo.nombre = nuevoNombre.trim();
-        }
-        
-        if(nuevoTel !== null) equipo.whatsapp = nuevoTel.trim();
-        guardar();
-    }
-
-    function editarJugador(nombreEquipo, nombreJugadorOriginal) {
-        const equipo = datos.equipos.find(e => e.nombre === nombreEquipo);
-        const jugador = equipo?.jugadores.find(j => j.nombre === nombreJugadorOriginal);
-        if(!jugador) return;
-        
-        const nuevoNombre = prompt("Editar nombre del jugador:", jugador.nombre);
-        if(nuevoNombre && nuevoNombre.trim() !== "") {
-            jugador.nombre = nuevoNombre.trim();
-            guardar();
-        }
-    }
-    // ----------------------------------
-
     function registrarJugador() {
         const eqNom = document.getElementById('selectEquipoJugador').value;
         const e = datos.equipos.find(x => x.nombre === eqNom);
         const n = document.getElementById('nombreJugador').value.trim();
         if(e && n) { e.jugadores.push({ nombre: n, goles:0, amarillas:0, rojas:0 }); document.getElementById('nombreJugador').value=''; guardar(); }
     }
+
+    // --- FUNCIONES DE EDICIÓN Y ELIMINACIÓN ---
+    function modificarEquipo(nombreOriginal) {
+        const eq = datos.equipos.find(e => e.nombre === nombreOriginal);
+        if(!eq) return;
+        const nuevoNombre = prompt("Nuevo nombre del equipo:", eq.nombre);
+        const nuevoWA = prompt("Nuevo WhatsApp del delegado:", eq.whatsapp);
+        
+        if(nuevoNombre && nuevoNombre.trim() !== "") {
+            const tempNombre = nuevoNombre.trim();
+            // Actualizar referencias en el sistema
+            datos.calendario.forEach(p => {
+                if(p.local === nombreOriginal) p.local = tempNombre;
+                if(p.visitante === nombreOriginal) p.visitante = tempNombre;
+            });
+            datos.llaves.forEach(l => {
+                if(l.local === nombreOriginal) l.local = tempNombre;
+                if(l.visitante === nombreOriginal) l.visitante = tempNombre;
+                if(l.ganador === nombreOriginal) l.ganador = tempNombre;
+            });
+            eq.nombre = tempNombre;
+        }
+        if(nuevoWA !== null) eq.whatsapp = nuevoWA.trim();
+        guardar();
+    }
+
+    function eliminarEquipo(nombre) {
+        if(confirm(`¿Eliminar equipo "${nombre}" y todos sus jugadores?`)) {
+            datos.equipos = datos.equipos.filter(e => e.nombre !== nombre);
+            guardar();
+        }
+    }
+
+    function modificarJugador(eqNom, jugNom) {
+        const eq = datos.equipos.find(e => e.nombre === eqNom);
+        const jug = eq?.jugadores.find(j => j.nombre === jugNom);
+        if(!jug) return;
+        const nuevoNombre = prompt("Editar nombre del jugador:", jug.nombre);
+        if(nuevoNombre && nuevoNombre.trim() !== "") {
+            jug.nombre = nuevoNombre.trim();
+            guardar();
+        }
+    }
+
+    function eliminarJugador(eqNom, jugNom) {
+        if(confirm(`¿Eliminar a ${jugNom}?`)) {
+            const eq = datos.equipos.find(e => e.nombre === eqNom);
+            eq.jugadores = eq.jugadores.filter(j => j.nombre !== jugNom);
+            guardar();
+        }
+    }
+    // ------------------------------------------
 
     function realizarSorteo() {
         const nG = parseInt(document.getElementById('cantidadGrupos').value);
@@ -445,20 +454,28 @@
             const listaJugadores = e.jugadores.length > 0 
                 ? e.jugadores.map(j => `
                     <div class="jugador-item">
-                        <span class="jugador-nombre-edit" onclick="editarJugador('${e.nombre}', '${j.nombre}')">👤 ${j.nombre}</span>
+                        <span class="jugador-nombre" onclick="modificarJugador('${e.nombre}', '${j.nombre}')">👤 ${j.nombre}</span>
                         <div class="jugador-stats">
                             <span title="Goles">⚽ ${j.goles}</span>
-                            <span style="color:#f1c40f" title="Amarillas">🟨 ${j.amarillas}</span>
-                            <span style="color:#e74c3c" title="Rojas">🟥 ${j.rojas}</span>
+                            <span style="color:#f1c40f">🟨 ${j.amarillas}</span>
+                            <span style="color:#e74c3c">🟥 ${j.rojas}</span>
+                            <button class="btn-delete" onclick="eliminarJugador('${e.nombre}', '${j.nombre}')">×</button>
                         </div>
                     </div>`).join('')
-                : '<div class="jugador-item" style="color:gray; font-style:italic;">Sin jugadores inscritos</div>';
+                : '<div class="jugador-item" style="color:gray; font-style:italic;">Sin jugadores</div>';
 
             cPL.innerHTML += `
                 <div class="card-plantilla">
                     <div class="equipo-header">
-                        <span class="nombre-clic" onclick="editarEquipo('${e.nombre}')">${e.nombre} ✏️</span>
-                        <span class="equipo-badge" onclick="this.parentElement.parentElement.classList.toggle('active')">${e.jugadores.length} Jgs ▼</span>
+                        <div class="nombre-click" onclick="modificarEquipo('${e.nombre}')">
+                            ${e.nombre} ✏️
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <button class="btn-delete" onclick="eliminarEquipo('${e.nombre}')" style="color:red">🗑️</button>
+                            <span class="equipo-badge" onclick="this.parentElement.parentElement.parentElement.classList.toggle('active')">
+                                ${e.jugadores.length} Jgs ▼
+                            </span>
+                        </div>
                     </div>
                     <div class="jugadores-lista">
                         ${listaJugadores}
