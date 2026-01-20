@@ -239,6 +239,10 @@
 
     function realizarSorteo() {
         if (datos.equipos.length < 2) return alert("Registra al menos 2 equipos.");
+        
+        // PREGUNTA: ¿Una vuelta o Ida y Vuelta?
+        const idaYVuelta = confirm("¿Deseas que los partidos sean de IDA Y VUELTA? (Presiona 'Cancelar' para una sola vuelta)");
+
         const nGrupos = parseInt(document.getElementById('cantidadGrupos').value);
         const equiposMezclados = [...datos.equipos].sort(() => Math.random() - 0.5);
         
@@ -260,9 +264,16 @@
             const eqsEnGrupo = datos.equipos.filter(e => e.grupo === g);
             for (let i = 0; i < eqsEnGrupo.length; i++) {
                 for (let j = i + 1; j < eqsEnGrupo.length; j++) {
+                    // Ida
                     datos.calendario.push({
                         grupo: g, local: eqsEnGrupo[i].nombre, visitante: eqsEnGrupo[j].nombre, jugado: false
                     });
+                    // Vuelta (si se eligió)
+                    if (idaYVuelta) {
+                        datos.calendario.push({
+                            grupo: g, local: eqsEnGrupo[j].nombre, visitante: eqsEnGrupo[i].nombre, jugado: false
+                        });
+                    }
                 }
             }
         });
@@ -278,6 +289,12 @@
     }
 
     function generarPlayoffs() {
+        // HABILITACIÓN: Verificar si terminó la fase de grupos
+        const partidosPendientes = datos.calendario.filter(p => !p.jugado);
+        if (datos.calendario.length > 0 && partidosPendientes.length > 0) {
+            return alert(`No se pueden generar playoffs. Aún faltan ${partidosPendientes.length} partidos por jugar en la fase de grupos.`);
+        }
+
         const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
         if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos registrados.`);
 
@@ -435,11 +452,13 @@
         
         if (!nL || !nV || nL === nV) return;
         
+        // Buscar el partido en el calendario para evitar duplicados
+        const part = datos.calendario.find(p => !p.jugado && p.local === nL && p.visitante === nV);
+        if (!part) return alert("Este partido no existe en el calendario o ya fue jugado.");
+        
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
 
-        if (eL.grupo !== eV.grupo) return alert(`Error: Los equipos son de grupos diferentes.`);
-        
         eL.pj++; eV.pj++;
         eL.gf += gL; eL.gc += gV;
         eV.gf += gV; eV.gc += gL;
@@ -448,8 +467,7 @@
         else if (gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } 
         else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
 
-        const part = datos.calendario.find(p => (p.local === nL && p.visitante === nV) || (p.local === nV && p.visitante === nL));
-        if (part) part.jugado = true;
+        part.jugado = true;
         guardar();
     }
 
