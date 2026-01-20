@@ -273,32 +273,66 @@
         window.scrollTo({ top: document.getElementById('resLocal').offsetTop - 100, behavior: 'smooth' });
     }
 
-    // LÓGICA PROFESIONAL DE PLAYOFFS (BOMBO 1 VS BOMBO 2)
+    // LÓGICA PROFESIONAL DE PLAYOFFS CON CRUCE ALEATORIO ENTRE GRUPOS
     function generarPlayoffs() {
         const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
         if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos registrados.`);
 
-        // Ordenar por mérito deportivo real: Puntos > Diferencia Goles > Goles Favor
-        const clasificados = [...datos.equipos]
-            .sort((a, b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf)
-            .slice(0, cantidad);
-
-        datos.llaves = [];
-        const faseNombre = cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL";
-
-        // Emparejamiento: 1º vs Último clasificado, 2º vs Penúltimo...
-        let locales = clasificados.slice(0, cantidad / 2);
-        let visitantes = clasificados.slice(cantidad / 2).reverse();
-
-        for (let i = 0; i < locales.length; i++) {
-            datos.llaves.push({
-                local: locales[i].nombre, 
-                visitante: visitantes[i].nombre,
-                gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, fase: faseNombre
-            });
-        }
+        const gruposUnicos = [...new Set(datos.equipos.map(e => e.grupo))].filter(g => g !== "Sin Asignar");
         
-        // Sorteo de orden de las llaves
+        let primeros = [];
+        let segundos = [];
+
+        // Obtener 1º y 2º de cada grupo
+        gruposUnicos.forEach(g => {
+            const clasificados = datos.equipos.filter(e => e.grupo === g)
+                .sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf);
+            if(clasificados[0]) primeros.push(clasificados[0]);
+            if(clasificados[1]) segundos.push(clasificados[1]);
+        });
+
+        // Completar cupos si es necesario (para Liga Única o mejores terceros)
+        let poolGeneral = [...datos.equipos]
+            .sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf);
+        
+        let clasificadosFinales = [];
+
+        // Lógica de cruce aleatorio: Intentar 1º vs 2º de grupos distintos
+        if (gruposUnicos.length > 1 && primeros.length >= cantidad/2) {
+            primeros = primeros.sort(() => Math.random() - 0.5);
+            segundos = segundos.sort(() => Math.random() - 0.5);
+            
+            datos.llaves = [];
+            for (let i = 0; i < cantidad / 2; i++) {
+                let local = primeros[i];
+                // Intentar buscar un 2º que no sea del mismo grupo
+                let indexVis = segundos.findIndex(s => s.grupo !== local.grupo);
+                if (indexVis === -1) indexVis = 0;
+                
+                let visitante = segundos.splice(indexVis, 1)[0];
+                
+                datos.llaves.push({
+                    local: local.nombre, visitante: visitante.nombre,
+                    gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, 
+                    fase: cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL"
+                });
+            }
+        } else {
+            // Si es liga única o pocos grupos, usar tabla general (1º vs último clasificado)
+            let top = poolGeneral.slice(0, cantidad);
+            let locales = top.slice(0, cantidad / 2);
+            let visitantes = top.slice(cantidad / 2).reverse();
+            
+            datos.llaves = [];
+            for (let i = 0; i < locales.length; i++) {
+                datos.llaves.push({
+                    local: locales[i].nombre, visitante: visitantes[i].nombre,
+                    gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null,
+                    fase: cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL"
+                });
+            }
+        }
+
         datos.llaves.sort(() => Math.random() - 0.5);
         guardar();
     }
