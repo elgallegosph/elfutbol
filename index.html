@@ -140,8 +140,13 @@
 
     <section>
         <h2>6. Eliminatorias</h2>
-        <select id="tipoPlayoff"><option value="16">Octavos</option><option value="8">Cuartos</option><option value="4">Semis</option><option value="2">Final</option></select>
-        <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Iniciar Playoffs</button>
+        <select id="tipoPlayoff">
+            <option value="16">Octavos (16 Equipos)</option>
+            <option value="8">Cuartos (8 Equipos)</option>
+            <option value="4">Semis (4 Equipos)</option>
+            <option value="2">Final (2 Equipos)</option>
+        </select>
+        <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Iniciar Playoffs (Sorteo Pro)</button>
         <div id="seccionPlayoffs" style="display:none; margin-top: 20px;">
             <div id="contenedorPlayoffs"></div>
             <button id="btnSiguienteFase" style="display:none; background: #2c3e50;" onclick="avanzarSiguienteFase()">Generar Siguiente Ronda</button>
@@ -220,17 +225,29 @@
         p.jugado = true; guardar();
     }
 
+    // REGLA FUTBOL: Los mejores vs los peores de la clasificación
     function generarPlayoffs() {
         const pendientes = datos.calendario.filter(p => !p.jugado).length;
-        if(pendientes > 0) return alert(`No puedes iniciar playoffs. Faltan ${pendientes} partidos por jugar en grupos.`);
+        if(pendientes > 0) return alert(`Termina la liga. Faltan ${pendientes} partidos.`);
         
         const cant = parseInt(document.getElementById('tipoPlayoff').value);
         if(datos.equipos.length < cant) return alert("No hay suficientes equipos registrados.");
         
-        let top = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf-b.gc) - (a.gf-a.gc)).slice(0, cant);
+        // Ordenar por puntos y diferencia de gol
+        let clasificados = [...datos.equipos]
+            .sort((a,b) => b.pts - a.pts || (b.gf-b.gc) - (a.gf-a.gc))
+            .slice(0, cant);
+        
         datos.llaves = [];
-        for (let i=0; i<top.length/2; i++) {
-            datos.llaves.push({ local: top[i].nombre, visitante: top[top.length-1-i].nombre, gL:0, gV:0, pL:0, pV:0, ganador:null, fase: cant==16?"OCTAVOS":cant==8?"CUARTOS":cant==4?"SEMIS":"GRAN FINAL" });
+        const faseNombre = cant==16?"OCTAVOS":cant==8?"CUARTOS":cant==4?"SEMIS":"GRAN FINAL";
+        
+        // Emparejamiento cruzado: 1 vs 16, 2 vs 15, 3 vs 14...
+        for (let i = 0; i < clasificados.length / 2; i++) {
+            datos.llaves.push({ 
+                local: clasificados[i].nombre, 
+                visitante: clasificados[clasificados.length - 1 - i].nombre, 
+                gL:0, gV:0, pL:0, pV:0, ganador:null, fase: faseNombre 
+            });
         }
         guardar();
     }
@@ -251,7 +268,7 @@
             l.pL = pl; l.pV = pv; l.ganador = pl > pv ? l.local : l.visitante;
         } else { 
             l.ganador = gl > gv ? l.local : l.visitante; 
-            l.pL = 0; l.pV = 0; // Resetea penaltis si no hay empate
+            l.pL = 0; l.pV = 0;
         }
         
         if(l.fase === "GRAN FINAL" && l.ganador) {
@@ -262,6 +279,20 @@
             document.getElementById('nombreGoleador').innerText = `${goleador.nombre} (${goleador.eq})`;
             document.getElementById('golesGoleador').innerText = `${goleador.goles} GOLES`;
             document.getElementById('overlayFinal').style.display='flex';
+        }
+        guardar();
+    }
+
+    function avanzarSiguienteFase() {
+        const ganadores = datos.llaves.filter(x => x.ganador).map(x => x.ganador);
+        if(ganadores.length < datos.llaves.length) return alert("Faltan resultados.");
+        
+        datos.llaves = [];
+        const f = ganadores.length == 8 ? "CUARTOS" : ganadores.length == 4 ? "SEMIS" : "GRAN FINAL";
+        
+        // Emparejar ganadores: Ganador Llave 1 vs Ganador Llave 2, etc.
+        for (let i=0; i < ganadores.length; i+=2) {
+            datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f });
         }
         guardar();
     }
@@ -304,7 +335,6 @@
         const cP = document.getElementById('contenedorPlayoffs'); cP.innerHTML = '';
         if(datos.llaves.length > 0) document.getElementById('seccionPlayoffs').style.display = 'block';
         datos.llaves.forEach((l, i) => {
-            // Se muestra el panel de penaltis si hay empate o si ya hay registros de penaltis previos
             const displayPen = (l.gL === l.gV && (l.gL !== 0 || l.ganador || l.pL !== 0 || l.pV !== 0)) ? 'flex' : 'none';
             cP.innerHTML += `<div class="fase-card">
                 <div class="llave-row">
@@ -355,15 +385,6 @@
         });
     }
 
-    function avanzarSiguienteFase() {
-        const gs = datos.llaves.filter(x => x.ganador).map(x => x.ganador);
-        if(gs.length < datos.llaves.length) return alert("Completa todos los resultados de la ronda actual.");
-        datos.llaves = [];
-        const f = gs.length == 8 ? "CUARTOS" : gs.length == 4 ? "SEMIS" : "GRAN FINAL";
-        for (let i=0; i<gs.length; i+=2) datos.llaves.push({ local: gs[i], visitante: gs[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f });
-        guardar();
-    }
-
     function enviarWhatsApp(l, v, id) {
         const p = datos.calendario.find(x => x.id == id);
         if(!p.fecha) return alert("Asigna fecha primero.");
@@ -377,19 +398,14 @@
                 window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank');
             }, 1000);
         }
-        if(!eqL.whatsapp && !eqV.whatsapp) alert("Ninguno de los dos equipos tiene número registrado.");
     }
 
     function reiniciarTorneo() {
-        const pin = prompt("Por seguridad, ingresa el PIN de administrador para BORRAR TODO el torneo:");
-        // El PIN por defecto es 1234. Puedes cambiarlo aquí abajo.
+        const pin = prompt("PIN de ADMIN para borrar:");
         if(pin === "1234") {
-            if(confirm("¿Estás SEGURO de borrar todos los datos definitivamente? Esta acción no se puede deshacer.")) {
-                localStorage.clear();
-                location.reload();
-            }
+            if(confirm("¿Borrar todo?")) { localStorage.clear(); location.reload(); }
         } else {
-            alert("PIN Incorrecto. Solo el administrador puede reiniciar el torneo.");
+            alert("Acceso denegado.");
         }
     }
     
