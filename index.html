@@ -95,7 +95,10 @@
 
     <section>
         <h2>2. Sorteo y Calendario</h2>
-        <select id="cantidadGrupos"><option value="1">Liga Única</option><option value="2">2 Grupos</option><option value="4">4 Grupos</option></select>
+        <div class="grid">
+            <select id="cantidadGrupos"><option value="1">Liga Única</option><option value="2">2 Grupos</option><option value="4">4 Grupos</option></select>
+            <select id="tipoCalendario"><option value="1">Solo Ida</option><option value="2">Ida y Vuelta</option></select>
+        </div>
         <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Sortear y Generar</button>
         <div id="seccionCalendario" style="display:none; margin-top: 20px;"><div id="contenedorCalendario"></div></div>
     </section>
@@ -181,19 +184,25 @@
 
     function realizarSorteo() {
         const nG = parseInt(document.getElementById('cantidadGrupos').value);
+        const tipo = parseInt(document.getElementById('tipoCalendario').value);
         if(datos.equipos.length < 2) return alert("Registra al menos 2 equipos.");
+        
         const mezel = [...datos.equipos].sort(() => Math.random() - 0.5);
         datos.calendario = [];
         mezel.forEach((e, i) => {
             e.grupo = "Grupo " + String.fromCharCode(65 + (i % nG));
             e.pj=0; e.pg=0; e.pe=0; e.pp=0; e.pts=0; e.gf=0; e.gc=0;
         });
+
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))];
         grupos.forEach(g => {
             const eqs = datos.equipos.filter(e => e.grupo === g);
             for (let i=0; i<eqs.length; i++) {
                 for (let j=i+1; j<eqs.length; j++) {
-                    datos.calendario.push({ id: Date.now()+Math.random(), grupo: g, local: eqs[i].nombre, visitante: eqs[j].nombre, jugado: false, fecha: "" });
+                    datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[i].nombre, visitante: eqs[j].nombre, jugado: false, fecha: "" });
+                    if(tipo === 2) {
+                        datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[j].nombre, visitante: eqs[i].nombre, jugado: false, fecha: "" });
+                    }
                 }
             }
         });
@@ -204,7 +213,7 @@
         const nL = document.getElementById('resLocal').value, nV = document.getElementById('resVis').value;
         const gL = parseInt(document.getElementById('gLocal').value)||0, gV = parseInt(document.getElementById('gVis').value)||0;
         const p = datos.calendario.find(x => !x.jugado && x.local === nL && x.visitante === nV);
-        if(!p) return alert("Selecciona un partido pendiente.");
+        if(!p) return alert("No hay partido pendiente entre estos equipos.");
         let eL = datos.equipos.find(e => e.nombre === nL), eV = datos.equipos.find(e => e.nombre === nV);
         eL.pj++; eV.pj++; eL.gf += gL; eL.gc += gV; eV.gf += gV; eV.gc += gL;
         if(gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; } else if(gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
@@ -212,8 +221,12 @@
     }
 
     function generarPlayoffs() {
+        const pendientes = datos.calendario.filter(p => !p.jugado).length;
+        if(pendientes > 0) return alert(`No puedes iniciar playoffs. Faltan ${pendientes} partidos por jugar en grupos.`);
+        
         const cant = parseInt(document.getElementById('tipoPlayoff').value);
-        if(datos.equipos.length < cant) return alert("No hay suficientes equipos.");
+        if(datos.equipos.length < cant) return alert("No hay suficientes equipos registrados.");
+        
         let top = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf-b.gc) - (a.gf-a.gc)).slice(0, cant);
         datos.llaves = [];
         for (let i=0; i<top.length/2; i++) {
@@ -233,16 +246,16 @@
         const l = datos.llaves[i]; l.gL = gl; l.gV = gv;
         if(gl === gv) {
             const pl = parseInt(document.getElementById(`pL_${i}`).value)||0, pv = parseInt(document.getElementById(`pV_${i}`).value)||0;
-            if(pl === pv) return alert("Debe haber un ganador en penaltis.");
+            if(pl === pv) return alert("En eliminatorias debe haber un ganador (revisa penaltis).");
             l.pL = pl; l.pV = pv; l.ganador = pl > pv ? l.local : l.visitante;
         } else { l.ganador = gl > gv ? l.local : l.visitante; }
         
         if(l.fase === "GRAN FINAL" && l.ganador) {
             let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
             jA.sort((a,b) => b.goles - a.goles);
-            const goleador = jA[0] || { nombre: "Sin registros", goles: 0, eq: "" };
+            const goleador = jA[0] || { nombre: "---", goles: 0, eq: "" };
             document.getElementById('nombreCampeon').innerText = l.ganador;
-            document.getElementById('nombreGoleador').innerText = `${goleador.nombre} ${goleador.eq ? '('+goleador.eq+')' : ''}`;
+            document.getElementById('nombreGoleador').innerText = `${goleador.nombre} (${goleador.eq})`;
             document.getElementById('golesGoleador').innerText = `${goleador.goles} GOLES`;
             document.getElementById('overlayFinal').style.display='flex';
         }
@@ -339,7 +352,7 @@
 
     function avanzarSiguienteFase() {
         const gs = datos.llaves.filter(x => x.ganador).map(x => x.ganador);
-        if(gs.length < datos.llaves.length) return alert("Completa todos los resultados.");
+        if(gs.length < datos.llaves.length) return alert("Completa todos los resultados de la ronda actual.");
         datos.llaves = [];
         const f = gs.length == 8 ? "CUARTOS" : gs.length == 4 ? "SEMIS" : "GRAN FINAL";
         for (let i=0; i<gs.length; i+=2) datos.llaves.push({ local: gs[i], visitante: gs[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f });
@@ -354,7 +367,7 @@
         if(tL) window.open(`https://api.whatsapp.com/send?phone=${tL}&text=${msg}`, '_blank');
     }
 
-    function reiniciarTorneo() { if(confirm("¿Borrar todos los datos?")) { localStorage.clear(); location.reload(); } }
+    function reiniciarTorneo() { if(confirm("¿Borrar todos los datos definitivamente?")) { localStorage.clear(); location.reload(); } }
     
     actualizarInterfaces();
 </script>
