@@ -29,9 +29,8 @@
         .fase-card { background: #fdfefe; border: 1px solid #8e44ad; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 10px solid #8e44ad; }
         .llave-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
         
-        .penaltis-row { background: #fff4e5; padding: 10px; border-radius: 6px; margin-top: 10px; display: flex; align-items: center; gap: 10px; border: 1px dashed #e67e22; }
+        .penaltis-row { background: #fff4e5; padding: 10px; border-radius: 6px; margin-top: 10px; display: none; align-items: center; gap: 10px; border: 1px dashed #e67e22; }
 
-        /* Efectos de Campeón */
         .overlay-final {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center;
@@ -191,25 +190,35 @@
     }
 
     function monitorearEmpate(i) {
-        const gl = document.getElementById(`llL_${i}`).value, gv = document.getElementById(`llV_${i}`).value;
-        document.getElementById(`penPanel_${i}`).style.display = (gl!=="" && gv!=="" && parseInt(gl)===parseInt(gv)) ? "flex" : "none";
+        const glInput = document.getElementById(`llL_${i}`).value;
+        const gvInput = document.getElementById(`llV_${i}`).value;
+        const gl = parseInt(glInput);
+        const gv = parseInt(gvInput);
+        const panel = document.getElementById(`penPanel_${i}`);
+        
+        if (!isNaN(gl) && !isNaN(gv) && gl === gv) {
+            panel.style.display = "flex";
+        } else {
+            panel.style.display = "none";
+        }
     }
 
     function registrarResultadoLlave(i) {
         const gl = parseInt(document.getElementById(`llL_${i}`).value)||0, gv = parseInt(document.getElementById(`llV_${i}`).value)||0;
         const l = datos.llaves[i]; l.gL = gl; l.gV = gv;
+        
         if(gl === gv) {
             const pl = parseInt(document.getElementById(`pL_${i}`).value)||0, pv = parseInt(document.getElementById(`pV_${i}`).value)||0;
-            if(pl === pv) return alert("Define penaltis.");
+            if(pl === pv) return alert("En caso de empate en goles, debe haber un ganador en penaltis.");
             l.pL = pl; l.pV = pv; l.ganador = pl > pv ? l.local : l.visitante;
-        } else { l.ganador = gl > gv ? l.local : l.visitante; }
+        } else { 
+            l.ganador = gl > gv ? l.local : l.visitante; 
+        }
         
         if(l.fase === "GRAN FINAL" && l.ganador) {
-            // Cálculos para el efecto de campeón
             let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
             jA.sort((a,b) => b.goles - a.goles);
             const goleador = jA[0] || { nombre: "---", goles: 0, eq: "---" };
-            
             document.getElementById('nombreCampeon').innerText = l.ganador;
             document.getElementById('nombreGoleador').innerText = `${goleador.nombre} (${goleador.eq})`;
             document.getElementById('golesGoleador').innerText = `${goleador.goles} GOLES`;
@@ -220,7 +229,8 @@
 
     function actualizarInterfaces() {
         ['selectEquipoJugador','selectEquipoEvento','resLocal','resVis'].forEach(id => {
-            const s = document.getElementById(id); const val = s.value; s.innerHTML = '';
+            const s = document.getElementById(id); if(!s) return;
+            const val = s.value; s.innerHTML = '';
             datos.equipos.forEach(e => { let o = document.createElement('option'); o.value = e.nombre; o.textContent = e.nombre; s.appendChild(o); });
             s.value = val;
         });
@@ -251,13 +261,14 @@
         const cP = document.getElementById('contenedorPlayoffs'); cP.innerHTML = '';
         if(datos.llaves.length > 0) document.getElementById('seccionPlayoffs').style.display = 'block';
         datos.llaves.forEach((l, i) => {
+            const displayPen = (l.gL === l.gV && (l.gL !== 0 || l.ganador)) ? 'flex' : 'none';
             cP.innerHTML += `<div class="fase-card">
                 <div class="llave-row">
                     <strong>${l.fase}</strong>
                     <div>${l.local} <input type="number" id="llL_${i}" class="input-marcador" value="${l.gL}" oninput="monitorearEmpate(${i})"> vs <input type="number" id="llV_${i}" class="input-marcador" value="${l.gV}" oninput="monitorearEmpate(${i})"> ${l.visitante}</div>
                     <button onclick="registrarResultadoLlave(${i})" style="width:auto; padding:5px 15px; background:var(--success);">OK</button>
                 </div>
-                <div id="penPanel_${i}" class="penaltis-row" style="display: ${l.gL===l.gV && (l.gL!==0 || l.ganador) ? 'flex' : 'none'}">
+                <div id="penPanel_${i}" class="penaltis-row" style="display: ${displayPen}">
                     🏆 PENALTIS: <input type="number" id="pL_${i}" class="input-marcador" value="${l.pL}"> - <input type="number" id="pV_${i}" class="input-marcador" value="${l.pV}">
                 </div>
                 ${l.ganador ? `<div class="ganador-label" style="color:var(--success); font-weight:bold; margin-top:5px;">🥇 AVANZA: ${l.ganador}</div>` : ''}
@@ -265,7 +276,6 @@
         });
         document.getElementById('btnSiguienteFase').style.display = (datos.llaves.length > 1) ? 'block' : 'none';
 
-        // Goleadores Filtrados (Solo los que tienen datos)
         const tbG = document.querySelector('#tablaGoleadores tbody');
         let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
         const activos = jA.filter(j => j.goles > 0 || j.amarillas > 0 || j.rojas > 0);
