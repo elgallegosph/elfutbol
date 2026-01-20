@@ -66,6 +66,14 @@
         @keyframes entrada { from { opacity: 0; transform: translateY(-100px); } to { opacity: 1; transform: translateY(0); } }
         .btn-cerrar-campeon { background: #e74c3c; width: auto; padding: 10px 30px; margin-top: 20px; font-size: 1.2rem; }
 
+        /* Estilos para el Calendario */
+        .calendario-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85rem;
+        }
+        .calendario-item:hover { background: #f9f9f9; }
+        .btn-cargar { background: #3498db; width: auto; padding: 5px 10px; font-size: 0.7rem; }
+
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .texto-campeon { font-size: 2.5rem; } }
     </style>
 </head>
@@ -107,7 +115,7 @@
                     <option value="2">2 Grupos</option>
                     <option value="4">4 Grupos</option>
                 </select>
-                <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Sorteo de Grupos</button>
+                <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Sorteo y Generar Calendario</button>
             </div>
             <div>
                 <label>Iniciar Eliminatorias con:</label>
@@ -120,6 +128,11 @@
                 <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Aleatorias</button>
             </div>
         </div>
+    </section>
+
+    <section id="seccionCalendario" style="display:none;">
+        <h2>📅 Calendario de Partidos (Fase de Grupos)</h2>
+        <div id="contenedorCalendario" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
     </section>
 
     <section id="seccionPlayoffs" style="display:none;">
@@ -182,7 +195,7 @@
 </div>
 
 <script>
-    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], grupos: {}, llaves: [] };
+    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], grupos: {}, llaves: [], calendario: [] };
 
     function guardar() {
         localStorage.setItem('torneo_data', JSON.stringify(datos));
@@ -202,18 +215,48 @@
     }
 
     function realizarSorteo() {
-        if (datos.equipos.length === 0) return alert("Registra equipos primero.");
+        if (datos.equipos.length < 2) return alert("Registra al menos 2 equipos.");
         const nGrupos = parseInt(document.getElementById('cantidadGrupos').value);
         const equiposMezclados = [...datos.equipos].sort(() => Math.random() - 0.5);
+        
         datos.grupos = {};
+        datos.calendario = []; // Reiniciar calendario
+
         for (let i = 0; i < nGrupos; i++) {
             datos.grupos["Grupo " + String.fromCharCode(65 + i)] = [];
         }
+
         equiposMezclados.forEach((eq, index) => {
             const numGrupo = index % nGrupos;
-            eq.grupo = "Grupo " + String.fromCharCode(65 + numGrupo);
+            const nombreGrupo = "Grupo " + String.fromCharCode(65 + numGrupo);
+            eq.grupo = nombreGrupo;
         });
+
+        // GENERACIÓN AUTOMÁTICA DE CALENDARIO
+        const gruposNombres = Object.keys(datos.grupos);
+        gruposNombres.forEach(g => {
+            const eqsEnGrupo = datos.equipos.filter(e => e.grupo === g);
+            for (let i = 0; i < eqsEnGrupo.length; i++) {
+                for (let j = i + 1; j < eqsEnGrupo.length; j++) {
+                    datos.calendario.push({
+                        grupo: g,
+                        local: eqsEnGrupo[i].nombre,
+                        visitante: eqsEnGrupo[j].nombre,
+                        jugado: false
+                    });
+                }
+            }
+        });
+
         guardar();
+    }
+
+    function cargarEnMarcador(local, visitante) {
+        document.getElementById('resLocal').value = local;
+        document.getElementById('resVis').value = visitante;
+        document.getElementById('gLocal').value = 0;
+        document.getElementById('gVis').value = 0;
+        window.scrollTo({ top: document.getElementById('resLocal').offsetTop - 100, behavior: 'smooth' });
     }
 
     function generarPlayoffs() {
@@ -326,9 +369,8 @@
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
 
-        // VALIDACIÓN DE GRUPO: Solo partidos entre miembros del mismo grupo
         if (eL.grupo !== eV.grupo) {
-            alert(`Error: El equipo ${eL.nombre} (${eL.grupo}) no puede jugar contra ${eV.nombre} (${eV.grupo}). Solo se permiten partidos entre equipos del mismo grupo.`);
+            alert(`Error: Los equipos son de grupos diferentes.`);
             return;
         }
         
@@ -343,12 +385,17 @@
         } else { 
             eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; 
         }
+
+        // Marcar partido como jugado en calendario si existe
+        const part = datos.calendario.find(p => (p.local === nL && p.visitante === nV) || (p.local === nV && p.visitante === nL));
+        if (part) part.jugado = true;
+
         guardar();
     }
 
     function reiniciarTorneo() {
         if (prompt("Clave admin:") === "admin123") {
-            datos = { equipos: [], grupos: {}, llaves: [] };
+            datos = { equipos: [], grupos: {}, llaves: [], calendario: [] };
             guardar();
             location.reload();
         }
@@ -380,6 +427,20 @@
             });
             s.value = val;
         });
+
+        // ACTUALIZAR CALENDARIO VISUAL
+        const contCal = document.getElementById('contenedorCalendario');
+        contCal.innerHTML = '';
+        if (datos.calendario && datos.calendario.length > 0) {
+            document.getElementById('seccionCalendario').style.display = 'block';
+            datos.calendario.forEach(p => {
+                contCal.innerHTML += `
+                <div class="calendario-item" style="opacity: ${p.jugado ? '0.5' : '1'}">
+                    <span><strong>${p.grupo}:</strong> ${p.local} vs ${p.visitante}</span>
+                    ${p.jugado ? '<span>✅</span>' : `<button class="btn-cargar" onclick="cargarEnMarcador('${p.local}', '${p.visitante}')">Cargar</button>`}
+                </div>`;
+            });
+        }
 
         const contenedor = document.getElementById('contenedorTablas');
         contenedor.innerHTML = '';
