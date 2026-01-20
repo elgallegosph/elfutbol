@@ -68,11 +68,17 @@
         .btn-cerrar-final { background: #e74c3c; width: auto; padding: 10px 30px; margin-top: 20px; font-size: 1.2rem; }
 
         .calendario-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85rem;
+            display: grid;
+            grid-template-columns: 1fr 180px 100px;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            gap: 10px;
         }
         .calendario-item:hover { background: #f9f9f9; }
-        .btn-cargar { background: #3498db; width: auto; padding: 5px 10px; font-size: 0.7rem; }
+        .input-fecha { padding: 5px; font-size: 0.8rem; border: 1px solid #ccc; border-radius: 3px; }
+        .btn-cargar { background: #3498db; width: auto; padding: 5px 10px; font-size: 0.75rem; }
 
         .lista-plantilla {
             display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;
@@ -83,7 +89,11 @@
         .card-plantilla h4 { margin: 0 0 5px 0; color: var(--primary); font-size: 0.9rem; border-bottom: 1px solid #ddd; }
         .card-plantilla ul { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .texto-dorado { font-size: 2.2rem; } }
+        @media (max-width: 600px) { 
+            .grid { grid-template-columns: 1fr; } 
+            .texto-dorado { font-size: 2.2rem; } 
+            .calendario-item { grid-template-columns: 1fr; text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -139,7 +149,8 @@
         
         <div id="seccionCalendario" style="display:none; margin-top: 20px;">
             <h3>📅 Calendario de Partidos (Fase de Grupos)</h3>
-            <div id="contenedorCalendario" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
+            <p style="font-size: 0.8rem; color: #666;">* Las fechas se guardan automáticamente al cambiarlas.</p>
+            <div id="contenedorCalendario" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
         </div>
     </section>
 
@@ -239,9 +250,7 @@
 
     function realizarSorteo() {
         if (datos.equipos.length < 2) return alert("Registra al menos 2 equipos.");
-        
-        // PREGUNTA: ¿Una vuelta o Ida y Vuelta?
-        const idaYVuelta = confirm("¿Deseas que los partidos sean de IDA Y VUELTA? (Presiona 'Cancelar' para una sola vuelta)");
+        const idaYVuelta = confirm("¿Deseas que los partidos sean de IDA Y VUELTA?");
 
         const nGrupos = parseInt(document.getElementById('cantidadGrupos').value);
         const equiposMezclados = [...datos.equipos].sort(() => Math.random() - 0.5);
@@ -255,29 +264,39 @@
 
         equiposMezclados.forEach((eq, index) => {
             const numGrupo = index % nGrupos;
-            const nombreGrupo = "Grupo " + String.fromCharCode(65 + numGrupo);
-            eq.grupo = nombreGrupo;
+            eq.grupo = "Grupo " + String.fromCharCode(65 + numGrupo);
         });
 
-        const gruposNombres = Object.keys(datos.grupos);
-        gruposNombres.forEach(g => {
+        const gruposExistentes = [...new Set(datos.equipos.map(e => e.grupo))];
+        gruposExistentes.forEach(g => {
+            if(g === "Sin Asignar") return;
             const eqsEnGrupo = datos.equipos.filter(e => e.grupo === g);
             for (let i = 0; i < eqsEnGrupo.length; i++) {
                 for (let j = i + 1; j < eqsEnGrupo.length; j++) {
-                    // Ida
                     datos.calendario.push({
-                        grupo: g, local: eqsEnGrupo[i].nombre, visitante: eqsEnGrupo[j].nombre, jugado: false
+                        id: Date.now() + Math.random(),
+                        grupo: g, local: eqsEnGrupo[i].nombre, visitante: eqsEnGrupo[j].nombre, 
+                        jugado: false, fecha: "" 
                     });
-                    // Vuelta (si se eligió)
                     if (idaYVuelta) {
                         datos.calendario.push({
-                            grupo: g, local: eqsEnGrupo[j].nombre, visitante: eqsEnGrupo[i].nombre, jugado: false
+                            id: Date.now() + Math.random(),
+                            grupo: g, local: eqsEnGrupo[j].nombre, visitante: eqsEnGrupo[i].nombre, 
+                            jugado: false, fecha: "" 
                         });
                     }
                 }
             }
         });
         guardar();
+    }
+
+    function actualizarFechaPartido(id, nuevaFecha) {
+        const part = datos.calendario.find(p => p.id == id);
+        if(part) {
+            part.fecha = nuevaFecha;
+            localStorage.setItem('torneo_data', JSON.stringify(datos));
+        }
     }
 
     function cargarEnMarcador(local, visitante) {
@@ -289,64 +308,25 @@
     }
 
     function generarPlayoffs() {
-        // HABILITACIÓN: Verificar si terminó la fase de grupos
         const partidosPendientes = datos.calendario.filter(p => !p.jugado);
         if (datos.calendario.length > 0 && partidosPendientes.length > 0) {
-            return alert(`No se pueden generar playoffs. Aún faltan ${partidosPendientes.length} partidos por jugar en la fase de grupos.`);
+            return alert(`Aún faltan ${partidosPendientes.length} partidos por jugar.`);
         }
 
         const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
-        if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos registrados.`);
+        if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos.`);
 
-        const gruposUnicos = [...new Set(datos.equipos.map(e => e.grupo))].filter(g => g !== "Sin Asignar");
+        let poolGeneral = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc));
+        let top = poolGeneral.slice(0, cantidad);
         
-        let primeros = [];
-        let segundos = [];
-
-        gruposUnicos.forEach(g => {
-            const clasificados = datos.equipos.filter(e => e.grupo === g)
-                .sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf);
-            if(clasificados[0]) primeros.push(clasificados[0]);
-            if(clasificados[1]) segundos.push(clasificados[1]);
-        });
-
-        let poolGeneral = [...datos.equipos]
-            .sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf);
-        
-        if (gruposUnicos.length > 1 && primeros.length >= cantidad/2) {
-            primeros = primeros.sort(() => Math.random() - 0.5);
-            segundos = segundos.sort(() => Math.random() - 0.5);
-            
-            datos.llaves = [];
-            for (let i = 0; i < cantidad / 2; i++) {
-                let local = primeros[i];
-                let indexVis = segundos.findIndex(s => s.grupo !== local.grupo);
-                if (indexVis === -1) indexVis = 0;
-                
-                let visitante = segundos.splice(indexVis, 1)[0];
-                
-                datos.llaves.push({
-                    local: local.nombre, visitante: visitante.nombre,
-                    gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, 
-                    fase: cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL"
-                });
-            }
-        } else {
-            let top = poolGeneral.slice(0, cantidad);
-            let locales = top.slice(0, cantidad / 2);
-            let visitantes = top.slice(cantidad / 2).reverse();
-            
-            datos.llaves = [];
-            for (let i = 0; i < locales.length; i++) {
-                datos.llaves.push({
-                    local: locales[i].nombre, visitante: visitantes[i].nombre,
-                    gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null,
-                    fase: cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL"
-                });
-            }
+        datos.llaves = [];
+        for (let i = 0; i < top.length / 2; i++) {
+            datos.llaves.push({
+                local: top[i].nombre, visitante: top[top.length - 1 - i].nombre,
+                gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null,
+                fase: cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL"
+            });
         }
-
-        datos.llaves.sort(() => Math.random() - 0.5);
         guardar();
     }
 
@@ -365,81 +345,67 @@
         const gl = parseInt(document.getElementById(`llaveL_${index}`).value) || 0;
         const gv = parseInt(document.getElementById(`llaveV_${index}`).value) || 0;
         const llave = datos.llaves[index];
-        
-        llave.gLocal = gl;
-        llave.gVis = gv;
+        llave.gLocal = gl; llave.gVis = gv;
 
         if (gl === gv) {
             const pl = parseInt(document.getElementById(`penL_${index}`).value) || 0;
             const pv = parseInt(document.getElementById(`penV_${index}`).value) || 0;
-            if (pl === pv) return alert("Debe haber un ganador en penaltis.");
-            llave.pLocal = pl;
-            llave.pVis = pv;
+            if (pl === pv) return alert("Empate en penaltis no permitido.");
+            llave.pLocal = pl; llave.pVis = pv;
             llave.ganador = pl > pv ? llave.local : llave.visitante;
         } else {
-            llave.pLocal = 0;
-            llave.pVis = 0;
             llave.ganador = gl > gv ? llave.local : llave.visitante;
         }
 
-        if (llave.fase === "GRAN FINAL" && llave.ganador) {
-            mostrarPremiacion(llave.ganador);
-        }
+        if (llave.fase === "GRAN FINAL" && llave.ganador) mostrarPremiacion(llave.ganador);
         guardar();
     }
 
     function mostrarPremiacion(campeonNombre) {
-        let todosJugadores = [];
-        datos.equipos.forEach(e => e.jugadores.forEach(j => todosJugadores.push({...j, eq: e.nombre})));
-        todosJugadores.sort((a,b) => b.goles - a.goles);
-        
-        const goleador = todosJugadores[0] || { nombre: "N/A", goles: 0, eq: "" };
-
+        let todos = [];
+        datos.equipos.forEach(e => e.jugadores.forEach(j => todos.push({...j, eq: e.nombre})));
+        todos.sort((a,b) => b.goles - a.goles);
+        const gol = todos[0] || { nombre: "N/A", goles: 0, eq: "" };
         document.getElementById('nombreCampeon').innerText = campeonNombre;
-        document.getElementById('nombreGoleador').innerText = goleador.nombre + " (" + goleador.eq + ")";
-        document.getElementById('golesGoleador').innerText = goleador.goles + " GOLES";
+        document.getElementById('nombreGoleador').innerText = `${gol.nombre} (${gol.eq})`;
+        document.getElementById('golesGoleador').innerText = `${gol.goles} GOLES`;
         document.getElementById('overlayFinal').style.display = 'flex';
     }
 
     function avanzarSiguienteFase() {
-        const ganadores = datos.llaves.filter(l => l.ganador !== null).map(l => l.ganador);
-        if (ganadores.length !== datos.llaves.length) return alert("Finalice todos los partidos.");
-        if (ganadores.length === 1) return;
-
+        const ganadores = datos.llaves.filter(l => l.ganador).map(l => l.ganador);
+        if (ganadores.length !== datos.llaves.length) return alert("Complete todos los partidos.");
         const cantidad = ganadores.length;
+        if (cantidad < 2) return;
         datos.llaves = [];
-        const faseNombre = cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL";
-
+        const fase = cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL";
         for (let i = 0; i < cantidad; i += 2) {
-            datos.llaves.push({
-                local: ganadores[i], visitante: ganadores[i+1],
-                gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, fase: faseNombre
-            });
+            datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, fase });
         }
         guardar();
     }
 
     function registrarJugador() {
-        const eqNombre = document.getElementById('selectEquipoJugador').value;
-        const jNombre = document.getElementById('nombreJugador').value.trim();
-        const equipo = datos.equipos.find(e => e.nombre === eqNombre);
-        if (equipo && jNombre) {
-            equipo.jugadores.push({ nombre: jNombre, goles: 0, amarillas: 0, rojas: 0 });
+        const eq = document.getElementById('selectEquipoJugador').value;
+        const nom = document.getElementById('nombreJugador').value.trim();
+        const equipo = datos.equipos.find(e => e.nombre === eq);
+        if (equipo && nom) {
+            equipo.jugadores.push({ nombre: nom, goles: 0, amarillas: 0, rojas: 0 });
             document.getElementById('nombreJugador').value = '';
             guardar();
         }
     }
 
     function registrarEvento() {
-        const eqNombre = document.getElementById('selectEquipoEvento').value;
-        const jNombre = document.getElementById('selectJugadorEvento').value;
-        const equipo = datos.equipos.find(e => e.nombre === eqNombre);
-        const jugador = equipo?.jugadores.find(j => j.nombre === jNombre);
-        if (jugador) {
+        const eq = document.getElementById('selectEquipoEvento').value;
+        const jNom = document.getElementById('selectJugadorEvento').value;
+        const equipo = datos.equipos.find(e => e.nombre === eq);
+        const jug = equipo?.jugadores.find(j => j.nombre === jNom);
+        if (jug) {
             const tipo = document.getElementById('tipoEvento').value;
-            if (tipo === 'gol') jugador.goles++;
-            else if (tipo === 'amarilla') jugador.amarillas++;
-            else if (tipo === 'roja') jugador.rojas++;
+            if (tipo === 'gol') jug.goles++;
+            else if (tipo === 'amarilla') jug.amarillas++;
+            else if (tipo === 'roja') jug.rojas++;
             guardar();
         }
     }
@@ -449,24 +415,15 @@
         const nV = document.getElementById('resVis').value;
         const gL = parseInt(document.getElementById('gLocal').value) || 0;
         const gV = parseInt(document.getElementById('gVis').value) || 0;
-        
-        if (!nL || !nV || nL === nV) return;
-        
-        // Buscar el partido en el calendario para evitar duplicados
         const part = datos.calendario.find(p => !p.jugado && p.local === nL && p.visitante === nV);
-        if (!part) return alert("Este partido no existe en el calendario o ya fue jugado.");
+        if (!part) return alert("Partido no válido.");
         
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
-
-        eL.pj++; eV.pj++;
-        eL.gf += gL; eL.gc += gV;
-        eV.gf += gV; eV.gc += gL;
-
+        eL.pj++; eV.pj++; eL.gf += gL; eL.gc += gV; eV.gf += gV; eV.gc += gL;
         if (gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; } 
         else if (gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } 
         else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
-
         part.jugado = true;
         guardar();
     }
@@ -480,20 +437,19 @@
     }
 
     function actualizarSelectJugadoresEvento() {
-        const eqNombre = document.getElementById('selectEquipoEvento').value;
-        const equipo = datos.equipos.find(e => e.nombre === eqNombre);
-        const selectJ = document.getElementById('selectJugadorEvento');
-        selectJ.innerHTML = '';
+        const eq = document.getElementById('selectEquipoEvento').value;
+        const equipo = datos.equipos.find(e => e.nombre === eq);
+        const sel = document.getElementById('selectJugadorEvento');
+        sel.innerHTML = '';
         equipo?.jugadores.forEach(j => {
             let opt = document.createElement('option');
             opt.value = j.nombre; opt.textContent = j.nombre;
-            selectJ.appendChild(opt);
+            sel.appendChild(opt);
         });
     }
 
     function actualizarInterfaces() {
-        const selects = ['selectEquipoJugador', 'selectEquipoEvento', 'resLocal', 'resVis'];
-        selects.forEach(id => {
+        ['selectEquipoJugador', 'selectEquipoEvento', 'resLocal', 'resVis'].forEach(id => {
             const s = document.getElementById(id);
             if (!s) return;
             const val = s.value;
@@ -523,6 +479,8 @@
                 contCal.innerHTML += `
                 <div class="calendario-item" style="opacity: ${p.jugado ? '0.5' : '1'}">
                     <span><strong>${p.grupo}:</strong> ${p.local} vs ${p.visitante}</span>
+                    <input type="datetime-local" class="input-fecha" value="${p.fecha || ''}" 
+                           onchange="actualizarFechaPartido(${p.id}, this.value)" ${p.jugado ? 'disabled' : ''}>
                     ${p.jugado ? '<span>✅</span>' : `<button class="btn-cargar" onclick="cargarEnMarcador('${p.local}', '${p.visitante}')">Cargar</button>`}
                 </div>`;
             });
@@ -532,10 +490,11 @@
         contenedor.innerHTML = '';
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))].sort();
         grupos.forEach(grupo => {
-            let html = `<h3 class="grupo-titulo">${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
-            datos.equipos.filter(e => e.grupo === grupo).sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc)).forEach(e => {
-                const dg = (e.gf || 0) - (e.gc || 0);
-                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg || 0}</td><td>${e.pe || 0}</td><td>${e.pp || 0}</td><td>${e.gf || 0}</td><td>${e.gc || 0}</td><td>${dg > 0 ? '+'+dg : dg}</td><td><strong>${e.pts}</strong></td></tr>`;
+            if(grupo === "Sin Asignar") return;
+            let html = `<h3>${grupo}</h3><div style="overflow-x:auto;"><table><thead><tr><th>Equipo</th><th>PJ</th><th>Pts</th><th>GF</th><th>GC</th><th>DG</th></tr></thead><tbody>`;
+            datos.equipos.filter(e => e.grupo === grupo).sort((a,b) => b.pts - a.pts || (b.gf-b.gc)-(a.gf-a.gc)).forEach(e => {
+                const dg = e.gf - e.gc;
+                html += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td><strong>${e.pts}</strong></td><td>${e.gf}</td><td>${e.gc}</td><td>${dg>0?'+'+dg:dg}</td></tr>`;
             });
             contenedor.innerHTML += html + '</tbody></table></div>';
         });
@@ -548,46 +507,30 @@
         }
 
         datos.llaves.forEach((llave, i) => {
-            const esEmpateReglamentario = (llave.gLocal === llave.gVis);
             contPlayoffs.innerHTML += `
                 <div class="fase-card">
                     <div class="llave-row">
-                        <div style="font-size: 1.1rem; color: #8e44ad;"><strong>${llave.fase}</strong></div>
+                        <strong>${llave.fase}</strong>
                         <div class="equipo-vs">
-                            <span>${llave.local}</span>
-                            <input type="number" id="llaveL_${i}" class="input-marcador" value="${llave.gLocal}" oninput="monitorearEmpate(${i})"> 
-                            <span>—</span>
-                            <input type="number" id="llaveV_${i}" class="input-marcador" value="${llave.gVis}" oninput="monitorearEmpate(${i})">
-                            <span>${llave.visitante}</span>
+                            ${llave.local} <input type="number" id="llaveL_${i}" class="input-marcador" value="${llave.gLocal}" oninput="monitorearEmpate(${i})">
+                            — <input type="number" id="llaveV_${i}" class="input-marcador" value="${llave.gVis}" oninput="monitorearEmpate(${i})"> ${llave.visitante}
                         </div>
                         <button onclick="registrarResultadoLlave(${i})" style="width:auto; padding:10px 20px; background:var(--success)">Confirmar</button>
                     </div>
-                    <div id="panelPenales_${i}" class="penaltis-row" style="display: ${esEmpateReglamentario ? 'flex' : 'none'};">
+                    <div id="panelPenales_${i}" class="penaltis-row" style="display: ${llave.gLocal === llave.gVis && (llave.gLocal!==0 || llave.ganador) ? 'flex' : 'none'};">
                         <strong>⚽ PENALTIS:</strong> 
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            ${llave.local} <input type="number" id="penL_${i}" class="input-marcador" style="width:65px !important" value="${llave.pLocal}"> 
-                            - 
-                            <input type="number" id="penV_${i}" class="input-marcador" style="width:65px !important" value="${llave.pVis}"> ${llave.visitante}
-                        </div>
+                        ${llave.local} <input type="number" id="penL_${i}" class="input-marcador" style="width:60px !important" value="${llave.pLocal}">
+                        - <input type="number" id="penV_${i}" class="input-marcador" style="width:60px !important" value="${llave.pVis}"> ${llave.visitante}
                     </div>
-                    ${llave.ganador ? `<div class="ganador-label">🥇 AVANZA: ${llave.ganador} ${llave.pLocal !== llave.pVis ? '(vía Penaltis)' : ''}</div>` : ''}
+                    ${llave.ganador ? `<div class="ganador-label">🥇 AVANZA: ${llave.ganador}</div>` : ''}
                 </div>`;
         });
 
         const tbodyG = document.querySelector('#tablaGoleadores tbody');
-        tbodyG.innerHTML = '';
         let todos = [];
         datos.equipos.forEach(e => e.jugadores.forEach(j => todos.push({...j, eq: e.nombre})));
-        
         const activos = todos.filter(j => j.goles > 0 || j.amarillas > 0 || j.rojas > 0);
-        
-        activos.sort((a,b) => b.goles - a.goles).forEach(j => {
-            tbodyG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`;
-        });
-        
-        if (activos.length === 0) {
-            tbodyG.innerHTML = '<tr><td colspan="5"><i>No hay estadísticas registradas todavía</i></td></tr>';
-        }
+        tbodyG.innerHTML = activos.length ? activos.sort((a,b) => b.goles-a.goles).map(j => `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`).join('') : '<tr><td colspan="5">Sin estadísticas</td></tr>';
     }
 
     actualizarInterfaces();
