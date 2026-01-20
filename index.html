@@ -75,6 +75,16 @@
         .calendario-item:hover { background: #f9f9f9; }
         .btn-cargar { background: #3498db; width: auto; padding: 5px 10px; font-size: 0.7rem; }
 
+        /* Estilo para lista de jugadores */
+        .lista-plantilla {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;
+        }
+        .card-plantilla {
+            background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 5px; min-width: 150px;
+        }
+        .card-plantilla h4 { margin: 0 0 5px 0; color: var(--primary); font-size: 0.9rem; border-bottom: 1px solid #ddd; }
+        .card-plantilla ul { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; }
+
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .texto-dorado { font-size: 2.2rem; } }
     </style>
 </head>
@@ -112,6 +122,8 @@
                 <button onclick="registrarJugador()">Inscribir Jugador</button>
             </div>
         </div>
+        <h3 style="margin-top:20px; font-size: 1rem; color: #555;">📋 Ver Plantillas por Equipo</h3>
+        <div id="contenedorPlantillas" class="lista-plantilla"></div>
     </section>
 
     <section>
@@ -186,7 +198,7 @@
     </section>
 
     <section>
-        <h2>🔥 Goleadores</h2>
+        <h2>🔥 Goleadores y Sancionados (Solo activos)</h2>
         <div style="overflow-x: auto;">
             <table id="tablaGoleadores">
                 <thead>
@@ -319,7 +331,6 @@
     }
 
     function mostrarPremiacion(campeonNombre) {
-        // Buscar goleador
         let todosJugadores = [];
         datos.equipos.forEach(e => e.jugadores.forEach(j => todosJugadores.push({...j, eq: e.nombre})));
         todosJugadores.sort((a,b) => b.goles - a.goles);
@@ -436,6 +447,16 @@
             s.value = val;
         });
 
+        // ACTUALIZAR PLANTILLAS (NUEVA FUNCIÓN)
+        const contPlantillas = document.getElementById('contenedorPlantillas');
+        contPlantillas.innerHTML = '';
+        datos.equipos.forEach(e => {
+            const card = document.createElement('div');
+            card.className = 'card-plantilla';
+            card.innerHTML = `<h4>${e.nombre}</h4><ul>${e.jugadores.length > 0 ? e.jugadores.map(j => `<li>• ${j.nombre}</li>`).join('') : '<li><i>Sin jugadores</i></li>'}</ul>`;
+            contPlantillas.appendChild(card);
+        });
+
         const contCal = document.getElementById('contenedorCalendario');
         contCal.innerHTML = '';
         if (datos.calendario?.length > 0) {
@@ -495,13 +516,22 @@
                 </div>`;
         });
 
+        // ACTUALIZAR GOLEADORES CON FILTRO (SOLO LOS QUE TIENEN ACCIÓN)
         const tbodyG = document.querySelector('#tablaGoleadores tbody');
         tbodyG.innerHTML = '';
         let todos = [];
         datos.equipos.forEach(e => e.jugadores.forEach(j => todos.push({...j, eq: e.nombre})));
-        todos.sort((a,b) => b.goles - a.goles).forEach(j => {
+        
+        // Filtramos para mostrar solo los que tienen al menos un gol o una tarjeta
+        const activos = todos.filter(j => j.goles > 0 || j.amarillas > 0 || j.rojas > 0);
+        
+        activos.sort((a,b) => b.goles - a.goles).forEach(j => {
             tbodyG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`;
         });
+        
+        if (activos.length === 0) {
+            tbodyG.innerHTML = '<tr><td colspan="5"><i>No hay estadísticas registradas todavía</i></td></tr>';
+        }
     }
 
     actualizarInterfaces();
