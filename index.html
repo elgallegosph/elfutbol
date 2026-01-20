@@ -22,7 +22,7 @@
         .btn-danger { background: #c0392b; margin-top: 20px; }
         .btn-ws { background: var(--ws); font-size: 0.8rem; padding: 8px; width: auto; min-width: 44px; }
         
-        /* Efecto Alerta Notificación */
+        /* Efecto Alerta Notificación Restaurado */
         .btn-notificar { background: var(--ws); color: white; animation: pulse-green 2s infinite; font-size: 0.75rem; padding: 5px 10px; width: auto; font-weight: bold; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
         
@@ -165,15 +165,21 @@
         guardar();
     }
 
-    // --- FUNCIONES DE TIEMPO Y WHATSAPP ---
+    // --- FUNCIONES DE TIEMPO, APLAZADO Y WHATSAPP RESTAURADAS ---
     function progFecha(id, valor, esPlayoff) {
         let p = esPlayoff ? datos.llaves[id] : datos.calendario.find(x => x.id == id);
-        p.fecha = valor; p.aplazado = false; p.pendiente = true; guardar();
+        p.fecha = valor; 
+        p.aplazado = false; 
+        p.pendiente = true; 
+        guardar();
     }
 
     function aplazar(id, esPlayoff) {
         let p = esPlayoff ? datos.llaves[id] : datos.calendario.find(x => x.id == id);
-        p.fecha = ""; p.aplazado = true; p.pendiente = true; guardar();
+        p.fecha = ""; 
+        p.aplazado = true; 
+        p.pendiente = true; 
+        guardar();
     }
 
     function enviarWS(id, esPlayoff) {
@@ -188,7 +194,8 @@
         if(eqL?.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
         if(eqV?.whatsapp) setTimeout(() => { window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank'); }, 800);
         
-        p.pendiente = false; guardar();
+        p.pendiente = false; 
+        guardar();
     }
 
     function cargarResultadoFinal() {
@@ -241,7 +248,6 @@
     }
 
     function actualizarInterfaces() {
-        // Actualizar Selects
         ['selectEquipoJugador','resLocal','resVis'].forEach(id => {
             const s = document.getElementById(id); if(!s) return;
             const val = s.value; s.innerHTML = '';
@@ -249,7 +255,6 @@
             s.value = val;
         });
 
-        // Calendario Liga (FECHA Y WHATSAPP)
         const cC = document.getElementById('contenedorCalendario'); cC.innerHTML = '';
         if(datos.calendario.length > 0) {
             document.getElementById('seccionCalendario').style.display = 'block';
@@ -266,7 +271,6 @@
             });
         }
 
-        // Árbol de Playoffs (FECHA Y WHATSAPP)
         const cP = document.getElementById('contenedorPlayoffs'); cP.innerHTML = '';
         if(datos.llaves.length > 0) {
             document.getElementById('seccionPlayoffs').style.display = 'block';
@@ -299,7 +303,6 @@
             cP.innerHTML = columna + "</div>";
         }
 
-        // Tablas
         const cT = document.getElementById('contenedorTablas'); cT.innerHTML = '';
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))];
         grupos.forEach(g => {
@@ -312,7 +315,6 @@
             cT.innerHTML += h + '</table>';
         });
 
-        // Plantillas
         const cPL = document.getElementById('contenedorPlantillas'); cPL.innerHTML = '';
         datos.equipos.forEach(e => {
             cPL.innerHTML += `<div style="border:1px solid #ddd; padding:10px; border-radius:5px;">
