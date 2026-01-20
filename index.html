@@ -12,9 +12,8 @@
         section { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
         h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; font-size: 1.4rem; }
         
-        /* Ajuste de Grid para Móviles */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 16px; /* Evita zoom en iOS */ }
+        input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 16px; }
         
         .input-marcador { width: 65px !important; font-size: 1.2rem !important; font-weight: bold; text-align: center; border: 2px solid var(--primary) !important; display: inline-block; }
         button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
@@ -24,9 +23,8 @@
         .btn-danger { background: #c0392b; margin-top: 20px; }
         .btn-ws { background: var(--ws); font-size: 0.8rem; padding: 8px; width: auto; min-width: 44px; }
         
-        /* Tablas Responsivas */
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; /* Asegura que no se aplaste en móviles */ }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #f8f9fa; font-size: 0.9rem; }
         
@@ -36,7 +34,6 @@
         
         .penaltis-row { background: #fff4e5; padding: 10px; border-radius: 6px; margin-top: 10px; display: none; align-items: center; justify-content: center; gap: 10px; border: 1px dashed #e67e22; }
 
-        /* Overlay Final Responsivo */
         .overlay-final {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center;
@@ -187,7 +184,10 @@
         if(datos.equipos.length < 2) return alert("Registra al menos 2 equipos.");
         const mezel = [...datos.equipos].sort(() => Math.random() - 0.5);
         datos.calendario = [];
-        mezel.forEach((e, i) => e.grupo = "Grupo " + String.fromCharCode(65 + (i % nG)));
+        mezel.forEach((e, i) => {
+            e.grupo = "Grupo " + String.fromCharCode(65 + (i % nG));
+            e.pj=0; e.pg=0; e.pe=0; e.pp=0; e.pts=0; e.gf=0; e.gc=0;
+        });
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))];
         grupos.forEach(g => {
             const eqs = datos.equipos.filter(e => e.grupo === g);
@@ -277,9 +277,9 @@
         const cT = document.getElementById('contenedorTablas'); cT.innerHTML = '';
         [...new Set(datos.equipos.map(e => e.grupo))].sort().forEach(g => {
             if(g === "Sin Asignar") return;
-            let h = `<h3>${g}</h3><div class="table-container"><table><thead><tr><th>Equipo</th><th>PJ</th><th>Pts</th><th>DG</th><th>GF</th></tr></thead><tbody>`;
+            let h = `<h3>${g}</h3><div class="table-container"><table><thead><tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
             datos.equipos.filter(e => e.grupo === g).sort((a,b) => b.pts - a.pts || (b.gf-b.gc)-(a.gf-a.gc)).forEach(e => {
-                h += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td><strong>${e.pts}</strong></td><td>${e.gf-e.gc}</td><td>${e.gf}</td></tr>`;
+                h += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td><td>${e.gf}</td><td>${e.gc}</td><td>${e.gf-e.gc}</td><td><strong>${e.pts}</strong></td></tr>`;
             });
             cT.innerHTML += h + '</tbody></table></div>';
         });
