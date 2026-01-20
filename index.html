@@ -362,9 +362,25 @@
     function enviarWhatsApp(l, v, id) {
         const p = datos.calendario.find(x => x.id == id);
         if(!p.fecha) return alert("Asigna fecha primero.");
-        const msg = encodeURIComponent(`🚨 RECORDATORIO:\n⚽ *${l}* vs *${v}*\n📅 Fecha: ${new Date(p.fecha).toLocaleString()}\n🏆 ¡No faltes!`);
-        const tL = datos.equipos.find(e => e.nombre === l).whatsapp;
-        if(tL) window.open(`https://api.whatsapp.com/send?phone=${tL}&text=${msg}`, '_blank');
+        
+        const msg = encodeURIComponent(`🚨 RECORDATORIO DE PARTIDO:\n⚽ *${l}* vs *${v}*\n📅 Fecha: ${new Date(p.fecha).toLocaleString()}\n🏆 ¡No faltes delegad@!`);
+        
+        const eqL = datos.equipos.find(e => e.nombre === l);
+        const eqV = datos.equipos.find(e => e.nombre === v);
+
+        // Intenta enviar a Local
+        if(eqL && eqL.whatsapp) {
+            window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
+        }
+        
+        // Intenta enviar a Visitante (con un pequeño retraso para evitar bloqueo de popups)
+        if(eqV && eqV.whatsapp) {
+            setTimeout(() => {
+                window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank');
+            }, 1000);
+        }
+
+        if(!eqL.whatsapp && !eqV.whatsapp) alert("Ninguno de los dos equipos tiene número de WhatsApp registrado.");
     }
 
     function reiniciarTorneo() { if(confirm("¿Borrar todos los datos definitivamente?")) { localStorage.clear(); location.reload(); } }
