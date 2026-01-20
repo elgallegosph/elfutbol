@@ -107,6 +107,7 @@
 </header>
 
 <div class="container">
+    
     <section>
         <h2>1. Equipos y Plantillas</h2>
         <div class="grid">
@@ -120,48 +121,42 @@
                 <button onclick="registrarJugador()">Inscribir Jugador</button>
             </div>
         </div>
-        <h3 style="margin-top:20px; font-size: 1rem; color: #555;">📋 Ver Plantillas por Equipo</h3>
+        <h3 style="margin-top:20px; font-size: 1rem; color: #555;">📋 Lista de Equipos y Plantillas</h3>
         <div id="contenedorPlantillas" class="lista-plantilla"></div>
     </section>
 
     <section>
-        <h2>2. Sorteo y Fase Final</h2>
-        <div class="grid">
-            <div>
-                <label>Número de grupos:</label>
-                <select id="cantidadGrupos">
-                    <option value="1">1 Grupo (Liga única)</option>
-                    <option value="2">2 Grupos</option>
-                    <option value="4">4 Grupos</option>
-                </select>
-                <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Sorteo y Generar Calendario</button>
-            </div>
-            <div>
-                <label>Iniciar Eliminatorias con:</label>
-                <select id="tipoPlayoff">
-                    <option value="16">Octavos (Top 16)</option>
-                    <option value="8">Cuartos (Top 8)</option>
-                    <option value="4">Semifinales (Top 4)</option>
-                    <option value="2">Final (Top 2)</option>
-                </select>
-                <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Profesionales</button>
-            </div>
+        <h2>2. Sorteo y Generar Calendario</h2>
+        <div>
+            <label>Número de grupos:</label>
+            <select id="cantidadGrupos">
+                <option value="1">1 Grupo (Liga única)</option>
+                <option value="2">2 Grupos</option>
+                <option value="4">4 Grupos</option>
+            </select>
+            <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Realizar Sorteo y Crear Calendario</button>
+        </div>
+        
+        <div id="seccionCalendario" style="display:none; margin-top: 20px;">
+            <h3>📅 Calendario de Partidos (Fase de Grupos)</h3>
+            <div id="contenedorCalendario" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
         </div>
     </section>
 
-    <section id="seccionCalendario" style="display:none;">
-        <h2>📅 Calendario de Partidos (Fase de Grupos)</h2>
-        <div id="contenedorCalendario" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
-    </section>
-
-    <section id="seccionPlayoffs" style="display:none;">
-        <h2>📝 Llaves y Resultados Directos</h2>
-        <div id="contenedorPlayoffs"></div>
-        <button id="btnSiguienteFase" style="display:none; background: #2c3e50; margin-top: 20px;" onclick="avanzarSiguienteFase()">⏭️ Generar Siguiente Fase con Ganadores</button>
+    <section>
+        <h2>3. Marcadores Finales (Fase de Grupos)</h2>
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px;">
+            <select id="resLocal" style="width: auto; min-width: 150px;"></select>
+            <input type="number" id="gLocal" class="input-marcador" placeholder="0">
+            <span style="font-weight: bold;">VS</span>
+            <input type="number" id="gVis" class="input-marcador" placeholder="0">
+            <select id="resVis" style="width: auto; min-width: 150px;"></select>
+            <button onclick="cargarResultadoFinal()" style="width: auto; padding: 12px 25px;">Finalizar Partido</button>
+        </div>
     </section>
 
     <section>
-        <h2>3. Registrar Goles y Tarjetas</h2>
+        <h2>4. Registro de Goles y Tarjetas</h2>
         <div class="grid">
             <div>
                 <select id="selectEquipoEvento" onchange="actualizarSelectJugadoresEvento()"></select>
@@ -179,24 +174,32 @@
     </section>
 
     <section>
-        <h2>4. Marcador Final (Fase de Grupos)</h2>
-        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px;">
-            <select id="resLocal" style="width: auto; min-width: 150px;"></select>
-            <input type="number" id="gLocal" class="input-marcador" placeholder="0">
-            <span style="font-weight: bold;">VS</span>
-            <input type="number" id="gVis" class="input-marcador" placeholder="0">
-            <select id="resVis" style="width: auto; min-width: 150px;"></select>
-            <button onclick="cargarResultadoFinal()" style="width: auto; padding: 12px 25px;">Finalizar Partido</button>
-        </div>
-    </section>
-
-    <section>
-        <h2>📊 Clasificación por Grupos</h2>
+        <h2>5. Clasificación por Grupos</h2>
         <div id="contenedorTablas"></div>
     </section>
 
     <section>
-        <h2>🔥 Goleadores y Sancionados (Solo activos)</h2>
+        <h2>6. Sorteo de Playoffs y Eliminatorias</h2>
+        <div>
+            <label>Iniciar Eliminatorias con:</label>
+            <select id="tipoPlayoff">
+                <option value="16">Octavos (Top 16)</option>
+                <option value="8">Cuartos (Top 8)</option>
+                <option value="4">Semifinales (Top 4)</option>
+                <option value="2">Final (Top 2)</option>
+            </select>
+            <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Profesionales</button>
+        </div>
+
+        <div id="seccionPlayoffs" style="display:none; margin-top: 30px;">
+            <h3>📝 Llaves y Resultados Directos</h3>
+            <div id="contenedorPlayoffs"></div>
+            <button id="btnSiguienteFase" style="display:none; background: #2c3e50; margin-top: 20px;" onclick="avanzarSiguienteFase()">⏭️ Generar Siguiente Fase con Ganadores</button>
+        </div>
+    </section>
+
+    <section>
+        <h2>7. Goleadores y Sancionados (Solo activos)</h2>
         <div style="overflow-x: auto;">
             <table id="tablaGoleadores">
                 <thead>
@@ -207,8 +210,9 @@
         </div>
     </section>
 
-    <div class="admin-zone">
-        <h3>⚠️ Administración</h3>
+    <div class="admin-zone" style="margin-top: 50px; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+        <h3 style="color: #c0392b;">⚠️ Zona de Administración</h3>
+        <p>Use este botón solo para borrar todos los datos y empezar de cero.</p>
         <button class="btn-danger" onclick="reiniciarTorneo()">REINICIAR TODO EL TORNEO</button>
     </div>
 </div>
@@ -273,7 +277,6 @@
         window.scrollTo({ top: document.getElementById('resLocal').offsetTop - 100, behavior: 'smooth' });
     }
 
-    // LÓGICA PROFESIONAL DE PLAYOFFS CON CRUCE ALEATORIO ENTRE GRUPOS
     function generarPlayoffs() {
         const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
         if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos registrados.`);
@@ -283,7 +286,6 @@
         let primeros = [];
         let segundos = [];
 
-        // Obtener 1º y 2º de cada grupo
         gruposUnicos.forEach(g => {
             const clasificados = datos.equipos.filter(e => e.grupo === g)
                 .sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf);
@@ -291,13 +293,9 @@
             if(clasificados[1]) segundos.push(clasificados[1]);
         });
 
-        // Completar cupos si es necesario (para Liga Única o mejores terceros)
         let poolGeneral = [...datos.equipos]
             .sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf);
         
-        let clasificadosFinales = [];
-
-        // Lógica de cruce aleatorio: Intentar 1º vs 2º de grupos distintos
         if (gruposUnicos.length > 1 && primeros.length >= cantidad/2) {
             primeros = primeros.sort(() => Math.random() - 0.5);
             segundos = segundos.sort(() => Math.random() - 0.5);
@@ -305,7 +303,6 @@
             datos.llaves = [];
             for (let i = 0; i < cantidad / 2; i++) {
                 let local = primeros[i];
-                // Intentar buscar un 2º que no sea del mismo grupo
                 let indexVis = segundos.findIndex(s => s.grupo !== local.grupo);
                 if (indexVis === -1) indexVis = 0;
                 
@@ -318,7 +315,6 @@
                 });
             }
         } else {
-            // Si es liga única o pocos grupos, usar tabla general (1º vs último clasificado)
             let top = poolGeneral.slice(0, cantidad);
             let locales = top.slice(0, cantidad / 2);
             let visitantes = top.slice(cantidad / 2).reverse();
