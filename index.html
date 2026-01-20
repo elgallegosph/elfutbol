@@ -26,19 +26,18 @@
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
         .btn-aplazar { background: var(--warning); font-size: 0.8rem; padding: 8px; width: auto; }
         
-        /* --- ESTILOS MEJORADOS PARA PLANTILLAS --- */
         .lista-plantilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 20px; }
         .card-plantilla { background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .card-plantilla:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
-        .equipo-header:hover { background: #edf2f7; }
-        .equipo-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
+        .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
+        .equipo-header span.nombre-clic { cursor: pointer; flex-grow: 1; }
+        .equipo-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; cursor: pointer; }
         .jugadores-lista { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: white; }
         .card-plantilla.active .jugadores-lista { max-height: 500px; padding-bottom: 5px; }
         .jugador-item { padding: 8px 12px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .jugador-item:last-child { border-bottom: none; }
+        .jugador-nombre-edit { cursor: pointer; transition: color 0.2s; }
+        .jugador-nombre-edit:hover { color: var(--accent); text-decoration: underline; }
         .jugador-stats { display: flex; gap: 6px; font-weight: bold; }
-        /* ---------------------------------------- */
 
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
@@ -94,7 +93,7 @@
 
 <div class="container">
     <section>
-        <h2>1. Equipos y Plantillas</h2>
+        <h2>1. Equipos y Plantillas (Haz clic para editar)</h2>
         <div class="grid">
             <div>
                 <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
@@ -197,6 +196,50 @@
             document.getElementById('nombreEquipo').value = ''; document.getElementById('whatsappEquipo').value = ''; guardar();
         }
     }
+
+    // --- NUEVAS FUNCIONES DE EDICIÓN ---
+    function editarEquipo(nombreOriginal) {
+        const equipo = datos.equipos.find(e => e.nombre === nombreOriginal);
+        if(!equipo) return;
+        
+        const nuevoNombre = prompt("Nuevo nombre del equipo:", equipo.nombre);
+        const nuevoTel = prompt("Nuevo WhatsApp (solo números):", equipo.whatsapp);
+        
+        if(nuevoNombre && nuevoNombre.trim() !== "") {
+            const nombreExiste = datos.equipos.find(e => e.nombre === nuevoNombre.trim() && e.nombre !== nombreOriginal);
+            if(nombreExiste) return alert("Ese nombre de equipo ya existe.");
+            
+            // Actualizar en calendario
+            datos.calendario.forEach(p => {
+                if(p.local === nombreOriginal) p.local = nuevoNombre.trim();
+                if(p.visitante === nombreOriginal) p.visitante = nuevoNombre.trim();
+            });
+            // Actualizar en llaves
+            datos.llaves.forEach(l => {
+                if(l.local === nombreOriginal) l.local = nuevoNombre.trim();
+                if(l.visitante === nombreOriginal) l.visitante = nuevoNombre.trim();
+                if(l.ganador === nombreOriginal) l.ganador = nuevoNombre.trim();
+            });
+            
+            equipo.nombre = nuevoNombre.trim();
+        }
+        
+        if(nuevoTel !== null) equipo.whatsapp = nuevoTel.trim();
+        guardar();
+    }
+
+    function editarJugador(nombreEquipo, nombreJugadorOriginal) {
+        const equipo = datos.equipos.find(e => e.nombre === nombreEquipo);
+        const jugador = equipo?.jugadores.find(j => j.nombre === nombreJugadorOriginal);
+        if(!jugador) return;
+        
+        const nuevoNombre = prompt("Editar nombre del jugador:", jugador.nombre);
+        if(nuevoNombre && nuevoNombre.trim() !== "") {
+            jugador.nombre = nuevoNombre.trim();
+            guardar();
+        }
+    }
+    // ----------------------------------
 
     function registrarJugador() {
         const eqNom = document.getElementById('selectEquipoJugador').value;
@@ -396,14 +439,13 @@
         let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
         tbG.innerHTML = jA.filter(j => j.goles > 0).sort((a,b) => b.goles - a.goles).map(j => `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`).join('');
 
-        // --- RENDERIZADO DE PLANTILLAS TIPO ACORDEÓN ---
         const cPL = document.getElementById('contenedorPlantillas'); 
         cPL.innerHTML = '';
-        datos.equipos.forEach((e, index) => {
+        datos.equipos.forEach((e) => {
             const listaJugadores = e.jugadores.length > 0 
                 ? e.jugadores.map(j => `
                     <div class="jugador-item">
-                        <span>👤 ${j.nombre}</span>
+                        <span class="jugador-nombre-edit" onclick="editarJugador('${e.nombre}', '${j.nombre}')">👤 ${j.nombre}</span>
                         <div class="jugador-stats">
                             <span title="Goles">⚽ ${j.goles}</span>
                             <span style="color:#f1c40f" title="Amarillas">🟨 ${j.amarillas}</span>
@@ -414,9 +456,9 @@
 
             cPL.innerHTML += `
                 <div class="card-plantilla">
-                    <div class="equipo-header" onclick="this.parentElement.classList.toggle('active')">
-                        ${e.nombre}
-                        <span class="equipo-badge">${e.jugadores.length} Jgs</span>
+                    <div class="equipo-header">
+                        <span class="nombre-clic" onclick="editarEquipo('${e.nombre}')">${e.nombre} ✏️</span>
+                        <span class="equipo-badge" onclick="this.parentElement.parentElement.classList.toggle('active')">${e.jugadores.length} Jgs ▼</span>
                     </div>
                     <div class="jugadores-lista">
                         ${listaJugadores}
