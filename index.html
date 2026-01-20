@@ -158,7 +158,7 @@
         </div>
     </section>
     
-    <button class="btn-danger" onclick="reiniciarTorneo()">BORRAR TODO EL TORNEO</button>
+    <button class="btn-danger" onclick="reiniciarTorneo()">BORRAR TODO EL TORNEO (ADMIN)</button>
 </div>
 
 <script>
@@ -244,11 +244,15 @@
     function registrarResultadoLlave(i) {
         const gl = parseInt(document.getElementById(`llL_${i}`).value)||0, gv = parseInt(document.getElementById(`llV_${i}`).value)||0;
         const l = datos.llaves[i]; l.gL = gl; l.gV = gv;
+        
         if(gl === gv) {
             const pl = parseInt(document.getElementById(`pL_${i}`).value)||0, pv = parseInt(document.getElementById(`pV_${i}`).value)||0;
-            if(pl === pv) return alert("En eliminatorias debe haber un ganador (revisa penaltis).");
+            if(pl === pv) return alert("En eliminatorias debe haber un ganador (desempata en penaltis).");
             l.pL = pl; l.pV = pv; l.ganador = pl > pv ? l.local : l.visitante;
-        } else { l.ganador = gl > gv ? l.local : l.visitante; }
+        } else { 
+            l.ganador = gl > gv ? l.local : l.visitante; 
+            l.pL = 0; l.pV = 0; // Resetea penaltis si no hay empate
+        }
         
         if(l.fase === "GRAN FINAL" && l.ganador) {
             let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
@@ -300,7 +304,8 @@
         const cP = document.getElementById('contenedorPlayoffs'); cP.innerHTML = '';
         if(datos.llaves.length > 0) document.getElementById('seccionPlayoffs').style.display = 'block';
         datos.llaves.forEach((l, i) => {
-            const displayPen = (l.gL === l.gV && (l.gL !== 0 || l.ganador)) ? 'flex' : 'none';
+            // Se muestra el panel de penaltis si hay empate o si ya hay registros de penaltis previos
+            const displayPen = (l.gL === l.gV && (l.gL !== 0 || l.ganador || l.pL !== 0 || l.pV !== 0)) ? 'flex' : 'none';
             cP.innerHTML += `<div class="fase-card">
                 <div class="llave-row">
                     <strong style="color:var(--playoff)">${l.fase}</strong>
@@ -362,28 +367,31 @@
     function enviarWhatsApp(l, v, id) {
         const p = datos.calendario.find(x => x.id == id);
         if(!p.fecha) return alert("Asigna fecha primero.");
-        
         const msg = encodeURIComponent(`🚨 RECORDATORIO DE PARTIDO:\n⚽ *${l}* vs *${v}*\n📅 Fecha: ${new Date(p.fecha).toLocaleString()}\n🏆 ¡No faltes delegad@!`);
-        
         const eqL = datos.equipos.find(e => e.nombre === l);
         const eqV = datos.equipos.find(e => e.nombre === v);
 
-        // Intenta enviar a Local
-        if(eqL && eqL.whatsapp) {
-            window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
-        }
-        
-        // Intenta enviar a Visitante (con un pequeño retraso para evitar bloqueo de popups)
+        if(eqL && eqL.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
         if(eqV && eqV.whatsapp) {
             setTimeout(() => {
                 window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank');
             }, 1000);
         }
-
-        if(!eqL.whatsapp && !eqV.whatsapp) alert("Ninguno de los dos equipos tiene número de WhatsApp registrado.");
+        if(!eqL.whatsapp && !eqV.whatsapp) alert("Ninguno de los dos equipos tiene número registrado.");
     }
 
-    function reiniciarTorneo() { if(confirm("¿Borrar todos los datos definitivamente?")) { localStorage.clear(); location.reload(); } }
+    function reiniciarTorneo() {
+        const pin = prompt("Por seguridad, ingresa el PIN de administrador para BORRAR TODO el torneo:");
+        // El PIN por defecto es 1234. Puedes cambiarlo aquí abajo.
+        if(pin === "1234") {
+            if(confirm("¿Estás SEGURO de borrar todos los datos definitivamente? Esta acción no se puede deshacer.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        } else {
+            alert("PIN Incorrecto. Solo el administrador puede reiniciar el torneo.");
+        }
+    }
     
     actualizarInterfaces();
 </script>
