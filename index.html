@@ -26,6 +26,20 @@
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
         .btn-aplazar { background: var(--warning); font-size: 0.8rem; padding: 8px; width: auto; }
         
+        /* --- ESTILOS MEJORADOS PARA PLANTILLAS --- */
+        .lista-plantilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card-plantilla { background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .card-plantilla:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
+        .equipo-header:hover { background: #edf2f7; }
+        .equipo-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; }
+        .jugadores-lista { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: white; }
+        .card-plantilla.active .jugadores-lista { max-height: 500px; padding-bottom: 5px; }
+        .jugador-item { padding: 8px 12px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+        .jugador-item:last-child { border-bottom: none; }
+        .jugador-stats { display: flex; gap: 6px; font-weight: bold; }
+        /* ---------------------------------------- */
+
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
@@ -50,8 +64,6 @@
 
         .calendario-item { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 10px; border-bottom: 1px solid #eee; gap: 10px; }
         .calendario-info { display: flex; flex-direction: column; gap: 5px; }
-        .lista-plantilla { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .card-plantilla { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 5px; flex: 1 1 140px; font-size: 0.85rem; }
 
         .status-aplazar { border-left: 5px solid var(--warning) !important; background: #fffaf0; }
 
@@ -173,7 +185,7 @@
 
 <script>
     let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], llaves: [], calendario: [] };
-    let ultimoModificado = null; // Para saber qué partido acaba de ser editado
+    let ultimoModificado = null; 
 
     function guardar() { localStorage.setItem('torneo_data', JSON.stringify(datos)); actualizarInterfaces(); }
 
@@ -240,8 +252,6 @@
         guardar();
     }
 
-    // --- NUEVAS FUNCIONES AUTOMÁTICAS CON BOTÓN ---
-
     function aplazarPartidoLiga(id) {
         const p = datos.calendario.find(x => x.id == id);
         p.fecha = ""; p.aplazado = true; p.pendienteNotificar = true;
@@ -269,14 +279,9 @@
         let status = p.aplazado ? "🚨 APLAZADO" : "📅 PROGRAMADO";
         let fechaStr = p.fecha ? new Date(p.fecha).toLocaleString() : "POR DEFINIR";
         const msg = encodeURIComponent(`${status}: ${l} vs ${v}\n🕒 Fecha: ${fechaStr}\n🏆 ¡Delegados, tomar nota!`);
-        
         const eqL = datos.equipos.find(e => e.nombre === l);
         const eqV = datos.equipos.find(e => e.nombre === v);
-
-        // Abrir local
         if(eqL && eqL.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
-        
-        // Abrir visitante con delay para evitar bloqueo
         if(eqV && eqV.whatsapp) {
             setTimeout(() => {
                 window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank');
@@ -288,8 +293,6 @@
             guardar();
         }
     }
-
-    // --- FIN FUNCIONES AUTO ---
 
     function monitorearEmpate(i) {
         const gl = parseInt(document.getElementById(`llL_${i}`).value), gv = parseInt(document.getElementById(`llV_${i}`).value);
@@ -393,8 +396,33 @@
         let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
         tbG.innerHTML = jA.filter(j => j.goles > 0).sort((a,b) => b.goles - a.goles).map(j => `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`).join('');
 
-        const cPL = document.getElementById('contenedorPlantillas'); cPL.innerHTML = '';
-        datos.equipos.forEach(e => { cPL.innerHTML += `<div class="card-plantilla"><strong>${e.nombre}</strong><br>${e.jugadores.length} jugadores</div>`; });
+        // --- RENDERIZADO DE PLANTILLAS TIPO ACORDEÓN ---
+        const cPL = document.getElementById('contenedorPlantillas'); 
+        cPL.innerHTML = '';
+        datos.equipos.forEach((e, index) => {
+            const listaJugadores = e.jugadores.length > 0 
+                ? e.jugadores.map(j => `
+                    <div class="jugador-item">
+                        <span>👤 ${j.nombre}</span>
+                        <div class="jugador-stats">
+                            <span title="Goles">⚽ ${j.goles}</span>
+                            <span style="color:#f1c40f" title="Amarillas">🟨 ${j.amarillas}</span>
+                            <span style="color:#e74c3c" title="Rojas">🟥 ${j.rojas}</span>
+                        </div>
+                    </div>`).join('')
+                : '<div class="jugador-item" style="color:gray; font-style:italic;">Sin jugadores inscritos</div>';
+
+            cPL.innerHTML += `
+                <div class="card-plantilla">
+                    <div class="equipo-header" onclick="this.parentElement.classList.toggle('active')">
+                        ${e.nombre}
+                        <span class="equipo-badge">${e.jugadores.length} Jgs</span>
+                    </div>
+                    <div class="jugadores-lista">
+                        ${listaJugadores}
+                    </div>
+                </div>`;
+        });
     }
 
     function registrarEvento() {
