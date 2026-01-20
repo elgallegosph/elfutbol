@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Torneo de Fútbol Pro - Gestión Completa</title>
     <style>
-        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; --ws: #25d366; }
+        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; --ws: #25d366; --warning: #e67e22; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
         header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .container { max-width: 1000px; margin: 10px auto; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -22,13 +22,14 @@
         .btn-playoff { background: var(--playoff); margin-top: 10px; }
         .btn-danger { background: #c0392b; margin-top: 20px; }
         .btn-ws { background: var(--ws); font-size: 0.8rem; padding: 8px; width: auto; min-width: 44px; }
+        .btn-aplazar { background: var(--warning); font-size: 0.8rem; padding: 8px; width: auto; }
         
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #f8f9fa; font-size: 0.9rem; }
         
-        .fase-card { background: #fdfefe; border: 1px solid #8e44ad; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 10px solid #8e44ad; }
+        .fase-card { background: #fdfefe; border: 1px solid #8e44ad; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 10px solid #8e44ad; position: relative; }
         .llave-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
         .marcador-contenedor { display: flex; align-items: center; justify-content: center; gap: 5px; flex-grow: 1; }
         
@@ -49,6 +50,8 @@
         .calendario-info { display: flex; flex-direction: column; gap: 5px; }
         .lista-plantilla { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
         .card-plantilla { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 5px; flex: 1 1 140px; font-size: 0.85rem; }
+
+        .status-aplazar { border-left: 5px solid var(--warning) !important; background: #fffaf0; }
 
         @media (max-width: 600px) {
             .texto-dorado { font-size: 2rem; }
@@ -204,9 +207,9 @@
             const eqs = datos.equipos.filter(e => e.grupo === g);
             for (let i=0; i<eqs.length; i++) {
                 for (let j=i+1; j<eqs.length; j++) {
-                    datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[i].nombre, visitante: eqs[j].nombre, jugado: false, fecha: "" });
+                    datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[i].nombre, visitante: eqs[j].nombre, jugado: false, fecha: "", aplazado: false });
                     if(tipo === 2) {
-                        datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[j].nombre, visitante: eqs[i].nombre, jugado: false, fecha: "" });
+                        datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[j].nombre, visitante: eqs[i].nombre, jugado: false, fecha: "", aplazado: false });
                     }
                 }
             }
@@ -222,33 +225,34 @@
         let eL = datos.equipos.find(e => e.nombre === nL), eV = datos.equipos.find(e => e.nombre === nV);
         eL.pj++; eV.pj++; eL.gf += gL; eL.gc += gV; eV.gf += gV; eV.gc += gL;
         if(gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; } else if(gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
-        p.jugado = true; guardar();
+        p.jugado = true; p.aplazado = false; guardar();
     }
 
-    // REGLA FUTBOL: Los mejores vs los peores de la clasificación
     function generarPlayoffs() {
         const pendientes = datos.calendario.filter(p => !p.jugado).length;
         if(pendientes > 0) return alert(`Termina la liga. Faltan ${pendientes} partidos.`);
-        
         const cant = parseInt(document.getElementById('tipoPlayoff').value);
-        if(datos.equipos.length < cant) return alert("No hay suficientes equipos registrados.");
-        
-        // Ordenar por puntos y diferencia de gol
-        let clasificados = [...datos.equipos]
-            .sort((a,b) => b.pts - a.pts || (b.gf-b.gc) - (a.gf-a.gc))
-            .slice(0, cant);
-        
+        if(datos.equipos.length < cant) return alert("No hay suficientes equipos.");
+        let clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf-b.gc) - (a.gf-a.gc)).slice(0, cant);
         datos.llaves = [];
         const faseNombre = cant==16?"OCTAVOS":cant==8?"CUARTOS":cant==4?"SEMIS":"GRAN FINAL";
-        
-        // Emparejamiento cruzado: 1 vs 16, 2 vs 15, 3 vs 14...
         for (let i = 0; i < clasificados.length / 2; i++) {
             datos.llaves.push({ 
-                local: clasificados[i].nombre, 
-                visitante: clasificados[clasificados.length - 1 - i].nombre, 
-                gL:0, gV:0, pL:0, pV:0, ganador:null, fase: faseNombre 
+                local: clasificados[i].nombre, visitante: clasificados[clasificados.length - 1 - i].nombre, 
+                gL:0, gV:0, pL:0, pV:0, ganador:null, fase: faseNombre, fecha: "", aplazado: false 
             });
         }
+        guardar();
+    }
+
+    function aplazarPartidoLiga(id) {
+        const p = datos.calendario.find(x => x.id == id);
+        p.fecha = ""; p.aplazado = true;
+        guardar();
+    }
+
+    function aplazarPartidoPlayoff(i) {
+        datos.llaves[i].fecha = ""; datos.llaves[i].aplazado = true;
         guardar();
     }
 
@@ -260,17 +264,12 @@
 
     function registrarResultadoLlave(i) {
         const gl = parseInt(document.getElementById(`llL_${i}`).value)||0, gv = parseInt(document.getElementById(`llV_${i}`).value)||0;
-        const l = datos.llaves[i]; l.gL = gl; l.gV = gv;
-        
+        const l = datos.llaves[i]; l.gL = gl; l.gV = gv; l.aplazado = false;
         if(gl === gv) {
             const pl = parseInt(document.getElementById(`pL_${i}`).value)||0, pv = parseInt(document.getElementById(`pV_${i}`).value)||0;
-            if(pl === pv) return alert("En eliminatorias debe haber un ganador (desempata en penaltis).");
+            if(pl === pv) return alert("Debe haber un ganador en penaltis.");
             l.pL = pl; l.pV = pv; l.ganador = pl > pv ? l.local : l.visitante;
-        } else { 
-            l.ganador = gl > gv ? l.local : l.visitante; 
-            l.pL = 0; l.pV = 0;
-        }
-        
+        } else { l.ganador = gl > gv ? l.local : l.visitante; l.pL = 0; l.pV = 0; }
         if(l.fase === "GRAN FINAL" && l.ganador) {
             let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
             jA.sort((a,b) => b.goles - a.goles);
@@ -286,13 +285,10 @@
     function avanzarSiguienteFase() {
         const ganadores = datos.llaves.filter(x => x.ganador).map(x => x.ganador);
         if(ganadores.length < datos.llaves.length) return alert("Faltan resultados.");
-        
         datos.llaves = [];
         const f = ganadores.length == 8 ? "CUARTOS" : ganadores.length == 4 ? "SEMIS" : "GRAN FINAL";
-        
-        // Emparejar ganadores: Ganador Llave 1 vs Ganador Llave 2, etc.
         for (let i=0; i < ganadores.length; i+=2) {
-            datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f });
+            datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f, fecha:"", aplazado:false });
         }
         guardar();
     }
@@ -309,14 +305,17 @@
         if(datos.calendario.length > 0) {
             document.getElementById('seccionCalendario').style.display = 'block';
             datos.calendario.forEach(p => {
-                cC.innerHTML += `<div class="calendario-item" style="opacity:${p.jugado?0.5:1}">
+                cC.innerHTML += `<div class="calendario-item ${p.aplazado?'status-aplazar':''}" style="opacity:${p.jugado?0.5:1}">
                     <div class="calendario-info">
-                        <strong>${p.local} vs ${p.visitante}</strong>
-                        <input type="datetime-local" style="padding:5px; width:auto;" value="${p.fecha}" onchange="datos.calendario.find(x=>x.id==${p.id}).fecha=this.value;localStorage.setItem('torneo_data', JSON.stringify(datos))">
+                        <strong>${p.local} vs ${p.visitante} ${p.aplazado?'(APLAZADO)':''}</strong>
+                        <input type="datetime-local" style="padding:5px; width:auto;" value="${p.fecha}" onchange="const x=datos.calendario.find(i=>i.id==${p.id}); x.fecha=this.value; x.aplazado=false; guardar();">
                     </div>
                     <div style="display:flex; gap:5px;">
-                        ${p.jugado ? '✅' : `<button class="btn-ws" style="background:var(--primary)" onclick="document.getElementById('resLocal').value='${p.local}';document.getElementById('resVis').value='${p.visitante}';window.scrollTo(0, 500);">📝</button>`}
-                        <button class="btn-ws" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id})">📲</button>
+                        ${p.jugado ? '✅' : `
+                            <button class="btn-ws" style="background:var(--primary)" onclick="document.getElementById('resLocal').value='${p.local}';document.getElementById('resVis').value='${p.visitante}';window.scrollTo(0, 500);">📝</button>
+                            <button class="btn-aplazar" onclick="aplazarPartidoLiga(${p.id})">⏳</button>
+                        `}
+                        <button class="btn-ws" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">📲</button>
                     </div>
                 </div>`;
             });
@@ -336,9 +335,16 @@
         if(datos.llaves.length > 0) document.getElementById('seccionPlayoffs').style.display = 'block';
         datos.llaves.forEach((l, i) => {
             const displayPen = (l.gL === l.gV && (l.gL !== 0 || l.ganador || l.pL !== 0 || l.pV !== 0)) ? 'flex' : 'none';
-            cP.innerHTML += `<div class="fase-card">
+            cP.innerHTML += `<div class="fase-card ${l.aplazado?'status-aplazar':''}">
+                <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:var(--playoff)">${l.fase} ${l.aplazado?'(APLAZADO)':''}</strong>
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input type="datetime-local" style="padding:5px; font-size:12px; width:auto;" value="${l.fecha}" onchange="datos.llaves[${i}].fecha=this.value; datos.llaves[${i}].aplazado=false; guardar();">
+                        <button class="btn-aplazar" style="padding:5px 10px;" onclick="aplazarPartidoPlayoff(${i})">⏳ Aplazar</button>
+                        <button class="btn-ws" onclick="enviarWhatsApp('${l.local}','${l.visitante}',${i}, true)">📲</button>
+                    </div>
+                </div>
                 <div class="llave-row">
-                    <strong style="color:var(--playoff)">${l.fase}</strong>
                     <div class="marcador-contenedor">
                         <span>${l.local}</span>
                         <input type="number" id="llL_${i}" class="input-marcador" value="${l.gL}" oninput="monitorearEmpate(${i})">
@@ -385,28 +391,22 @@
         });
     }
 
-    function enviarWhatsApp(l, v, id) {
-        const p = datos.calendario.find(x => x.id == id);
-        if(!p.fecha) return alert("Asigna fecha primero.");
-        const msg = encodeURIComponent(`🚨 RECORDATORIO DE PARTIDO:\n⚽ *${l}* vs *${v}*\n📅 Fecha: ${new Date(p.fecha).toLocaleString()}\n🏆 ¡No faltes delegad@!`);
+    function enviarWhatsApp(l, v, id, esPlayoff) {
+        let p = esPlayoff ? datos.llaves[id] : datos.calendario.find(x => x.id == id);
+        let status = p.aplazado ? "⚠️ PARTIDO APLAZADO" : "⚽ RECORDATORIO DE PARTIDO";
+        let fechaStr = p.fecha ? new Date(p.fecha).toLocaleString() : "Pendiente de programar";
+        const msg = encodeURIComponent(`${status}:\n🏆 *${l}* vs *${v}*\n📅 Fecha: ${fechaStr}\n¡Por favor confirmar asistencia!`);
         const eqL = datos.equipos.find(e => e.nombre === l);
         const eqV = datos.equipos.find(e => e.nombre === v);
-
         if(eqL && eqL.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
-        if(eqV && eqV.whatsapp) {
-            setTimeout(() => {
-                window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank');
-            }, 1000);
-        }
+        if(eqV && eqV.whatsapp) setTimeout(() => window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank'), 1000);
     }
 
     function reiniciarTorneo() {
         const pin = prompt("PIN de ADMIN para borrar:");
         if(pin === "1234") {
             if(confirm("¿Borrar todo?")) { localStorage.clear(); location.reload(); }
-        } else {
-            alert("Acceso denegado.");
-        }
+        } else { alert("Acceso denegado."); }
     }
     
     actualizarInterfaces();
