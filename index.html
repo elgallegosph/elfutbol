@@ -194,23 +194,19 @@
         const nG = parseInt(document.getElementById('cantidadGrupos').value);
         const tipo = parseInt(document.getElementById('tipoCalendario').value);
         if(datos.equipos.length < 2) return alert("Registra al menos 2 equipos.");
-        
         const mezel = [...datos.equipos].sort(() => Math.random() - 0.5);
         datos.calendario = [];
         mezel.forEach((e, i) => {
             e.grupo = "Grupo " + String.fromCharCode(65 + (i % nG));
             e.pj=0; e.pg=0; e.pe=0; e.pp=0; e.pts=0; e.gf=0; e.gc=0;
         });
-
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))];
         grupos.forEach(g => {
             const eqs = datos.equipos.filter(e => e.grupo === g);
             for (let i=0; i<eqs.length; i++) {
                 for (let j=i+1; j<eqs.length; j++) {
                     datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[i].nombre, visitante: eqs[j].nombre, jugado: false, fecha: "", aplazado: false });
-                    if(tipo === 2) {
-                        datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[j].nombre, visitante: eqs[i].nombre, jugado: false, fecha: "", aplazado: false });
-                    }
+                    if(tipo === 2) { datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[j].nombre, visitante: eqs[i].nombre, jugado: false, fecha: "", aplazado: false }); }
                 }
             }
         });
@@ -221,7 +217,7 @@
         const nL = document.getElementById('resLocal').value, nV = document.getElementById('resVis').value;
         const gL = parseInt(document.getElementById('gLocal').value)||0, gV = parseInt(document.getElementById('gVis').value)||0;
         const p = datos.calendario.find(x => !x.jugado && x.local === nL && x.visitante === nV);
-        if(!p) return alert("No hay partido pendiente entre estos equipos.");
+        if(!p) return alert("No hay partido pendiente.");
         let eL = datos.equipos.find(e => e.nombre === nL), eV = datos.equipos.find(e => e.nombre === nV);
         eL.pj++; eV.pj++; eL.gf += gL; eL.gc += gV; eV.gf += gV; eV.gc += gL;
         if(gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; } else if(gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
@@ -230,35 +226,66 @@
 
     function generarPlayoffs() {
         const pendientes = datos.calendario.filter(p => !p.jugado).length;
-        if(pendientes > 0) return alert(`Termina la liga. Faltan ${pendientes} partidos.`);
+        if(pendientes > 0) return alert(`Termina la liga primero.`);
         const cant = parseInt(document.getElementById('tipoPlayoff').value);
-        if(datos.equipos.length < cant) return alert("No hay suficientes equipos.");
         let clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf-b.gc) - (a.gf-a.gc)).slice(0, cant);
         datos.llaves = [];
-        const faseNombre = cant==16?"OCTAVOS":cant==8?"CUARTOS":cant==4?"SEMIS":"GRAN FINAL";
+        const fN = cant==16?"OCTAVOS":cant==8?"CUARTOS":cant==4?"SEMIS":"GRAN FINAL";
         for (let i = 0; i < clasificados.length / 2; i++) {
-            datos.llaves.push({ 
-                local: clasificados[i].nombre, visitante: clasificados[clasificados.length - 1 - i].nombre, 
-                gL:0, gV:0, pL:0, pV:0, ganador:null, fase: faseNombre, fecha: "", aplazado: false 
-            });
+            datos.llaves.push({ local: clasificados[i].nombre, visitante: clasificados[clasificados.length - 1 - i].nombre, gL:0, gV:0, pL:0, pV:0, ganador:null, fase: fN, fecha: "", aplazado: false });
         }
         guardar();
     }
+
+    // --- NUEVAS FUNCIONES AUTOMÁTICAS ---
 
     function aplazarPartidoLiga(id) {
         const p = datos.calendario.find(x => x.id == id);
         p.fecha = ""; p.aplazado = true;
         guardar();
+        enviarWhatsApp(p.local, p.visitante, id, false);
     }
 
     function aplazarPartidoPlayoff(i) {
         datos.llaves[i].fecha = ""; datos.llaves[i].aplazado = true;
         guardar();
+        enviarWhatsApp(datos.llaves[i].local, datos.llaves[i].visitante, i, true);
     }
 
+    function programarFechaLiga(id, valor) {
+        const p = datos.calendario.find(x => x.id == id);
+        p.fecha = valor; p.aplazado = false;
+        guardar();
+        enviarWhatsApp(p.local, p.visitante, id, false);
+    }
+
+    function programarFechaPlayoff(i, valor) {
+        datos.llaves[i].fecha = valor; datos.llaves[i].aplazado = false;
+        guardar();
+        enviarWhatsApp(datos.llaves[i].local, datos.llaves[i].visitante, i, true);
+    }
+
+    function enviarWhatsApp(l, v, id, esPlayoff) {
+        let p = esPlayoff ? datos.llaves[id] : datos.calendario.find(x => x.id == id);
+        let status = p.aplazado ? "🚨 APLAZADO" : "📅 PROGRAMADO";
+        let fechaStr = p.fecha ? new Date(p.fecha).toLocaleString() : "POR DEFINIR";
+        const msg = encodeURIComponent(`${status}: ${l} vs ${v}\n🕒 Fecha: ${fechaStr}\n🏆 ¡Delegados, tomar nota!`);
+        
+        const eqL = datos.equipos.find(e => e.nombre === l);
+        const eqV = datos.equipos.find(e => e.nombre === v);
+
+        if(eqL && eqL.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
+        if(eqV && eqV.whatsapp) {
+            setTimeout(() => {
+                window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank');
+            }, 1200);
+        }
+    }
+
+    // --- FIN FUNCIONES AUTO ---
+
     function monitorearEmpate(i) {
-        const gl = parseInt(document.getElementById(`llL_${i}`).value);
-        const gv = parseInt(document.getElementById(`llV_${i}`).value);
+        const gl = parseInt(document.getElementById(`llL_${i}`).value), gv = parseInt(document.getElementById(`llV_${i}`).value);
         document.getElementById(`penPanel_${i}`).style.display = (!isNaN(gl) && !isNaN(gv) && gl === gv) ? "flex" : "none";
     }
 
@@ -267,16 +294,15 @@
         const l = datos.llaves[i]; l.gL = gl; l.gV = gv; l.aplazado = false;
         if(gl === gv) {
             const pl = parseInt(document.getElementById(`pL_${i}`).value)||0, pv = parseInt(document.getElementById(`pV_${i}`).value)||0;
-            if(pl === pv) return alert("Debe haber un ganador en penaltis.");
+            if(pl === pv) return alert("Empate en penaltis no permitido.");
             l.pL = pl; l.pV = pv; l.ganador = pl > pv ? l.local : l.visitante;
         } else { l.ganador = gl > gv ? l.local : l.visitante; l.pL = 0; l.pV = 0; }
         if(l.fase === "GRAN FINAL" && l.ganador) {
             let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
             jA.sort((a,b) => b.goles - a.goles);
-            const goleador = jA[0] || { nombre: "---", goles: 0, eq: "" };
             document.getElementById('nombreCampeon').innerText = l.ganador;
-            document.getElementById('nombreGoleador').innerText = `${goleador.nombre} (${goleador.eq})`;
-            document.getElementById('golesGoleador').innerText = `${goleador.goles} GOLES`;
+            document.getElementById('nombreGoleador').innerText = jA[0]?.nombre || "---";
+            document.getElementById('golesGoleador').innerText = `${jA[0]?.goles || 0} GOLES`;
             document.getElementById('overlayFinal').style.display='flex';
         }
         guardar();
@@ -287,9 +313,7 @@
         if(ganadores.length < datos.llaves.length) return alert("Faltan resultados.");
         datos.llaves = [];
         const f = ganadores.length == 8 ? "CUARTOS" : ganadores.length == 4 ? "SEMIS" : "GRAN FINAL";
-        for (let i=0; i < ganadores.length; i+=2) {
-            datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f, fecha:"", aplazado:false });
-        }
+        for (let i=0; i < ganadores.length; i+=2) { datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f, fecha:"", aplazado:false }); }
         guardar();
     }
 
@@ -308,7 +332,7 @@
                 cC.innerHTML += `<div class="calendario-item ${p.aplazado?'status-aplazar':''}" style="opacity:${p.jugado?0.5:1}">
                     <div class="calendario-info">
                         <strong>${p.local} vs ${p.visitante} ${p.aplazado?'(APLAZADO)':''}</strong>
-                        <input type="datetime-local" style="padding:5px; width:auto;" value="${p.fecha}" onchange="const x=datos.calendario.find(i=>i.id==${p.id}); x.fecha=this.value; x.aplazado=false; guardar();">
+                        <input type="datetime-local" style="padding:5px; width:auto;" value="${p.fecha}" onchange="programarFechaLiga(${p.id}, this.value)">
                     </div>
                     <div style="display:flex; gap:5px;">
                         ${p.jugado ? '✅' : `
@@ -339,24 +363,16 @@
                 <div style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
                     <strong style="color:var(--playoff)">${l.fase} ${l.aplazado?'(APLAZADO)':''}</strong>
                     <div style="display:flex; gap:5px; align-items:center;">
-                        <input type="datetime-local" style="padding:5px; font-size:12px; width:auto;" value="${l.fecha}" onchange="datos.llaves[${i}].fecha=this.value; datos.llaves[${i}].aplazado=false; guardar();">
+                        <input type="datetime-local" style="padding:5px; font-size:12px; width:auto;" value="${l.fecha}" onchange="programarFechaPlayoff(${i}, this.value)">
                         <button class="btn-aplazar" style="padding:5px 10px;" onclick="aplazarPartidoPlayoff(${i})">⏳ Aplazar</button>
                         <button class="btn-ws" onclick="enviarWhatsApp('${l.local}','${l.visitante}',${i}, true)">📲</button>
                     </div>
                 </div>
                 <div class="llave-row">
-                    <div class="marcador-contenedor">
-                        <span>${l.local}</span>
-                        <input type="number" id="llL_${i}" class="input-marcador" value="${l.gL}" oninput="monitorearEmpate(${i})">
-                        <span>-</span>
-                        <input type="number" id="llV_${i}" class="input-marcador" value="${l.gV}" oninput="monitorearEmpate(${i})">
-                        <span>${l.visitante}</span>
-                    </div>
+                    <div class="marcador-contenedor"><span>${l.local}</span><input type="number" id="llL_${i}" class="input-marcador" value="${l.gL}" oninput="monitorearEmpate(${i})"><span>-</span><input type="number" id="llV_${i}" class="input-marcador" value="${l.gV}" oninput="monitorearEmpate(${i})"><span>${l.visitante}</span></div>
                     <button onclick="registrarResultadoLlave(${i})" style="width:auto; padding:10px 20px; background:var(--success);">OK</button>
                 </div>
-                <div id="penPanel_${i}" class="penaltis-row" style="display: ${displayPen}">
-                    🏆 Penaltis: <input type="number" id="pL_${i}" class="input-marcador" value="${l.pL}"> - <input type="number" id="pV_${i}" class="input-marcador" value="${l.pV}">
-                </div>
+                <div id="penPanel_${i}" class="penaltis-row" style="display: ${displayPen}">🏆 Penaltis: <input type="number" id="pL_${i}" class="input-marcador" value="${l.pL}"> - <input type="number" id="pV_${i}" class="input-marcador" value="${l.pV}"></div>
                 ${l.ganador ? `<div style="color:var(--success); font-weight:bold; margin-top:10px; text-align:center;">🥇 AVANZA: ${l.ganador}</div>` : ''}
             </div>`;
         });
@@ -364,49 +380,26 @@
 
         const tbG = document.querySelector('#tablaGoleadores tbody');
         let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
-        const activos = jA.filter(j => j.goles > 0 || j.amarillas > 0 || j.rojas > 0);
-        tbG.innerHTML = activos.sort((a,b) => b.goles - a.goles).map(j => `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`).join('');
-        if(activos.length === 0) tbG.innerHTML = '<tr><td colspan="5">No hay estadísticas registradas</td></tr>';
+        tbG.innerHTML = jA.filter(j => j.goles > 0).sort((a,b) => b.goles - a.goles).map(j => `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`).join('');
 
         const cPL = document.getElementById('contenedorPlantillas'); cPL.innerHTML = '';
         datos.equipos.forEach(e => { cPL.innerHTML += `<div class="card-plantilla"><strong>${e.nombre}</strong><br>${e.jugadores.length} jugadores</div>`; });
     }
 
     function registrarEvento() {
-        const eqNom = document.getElementById('selectEquipoEvento').value;
-        const jugNom = document.getElementById('selectJugadorEvento').value;
+        const eqNom = document.getElementById('selectEquipoEvento').value, jugNom = document.getElementById('selectJugadorEvento').value;
         const j = datos.equipos.find(e => e.nombre === eqNom)?.jugadores.find(x => x.nombre === jugNom);
-        if(j) { 
-            const t = document.getElementById('tipoEvento').value; 
-            if(t=='gol') j.goles++; else if(t=='amarilla') j.amarillas++; else j.rojas++; 
-            guardar(); 
-        }
+        if(j) { const t = document.getElementById('tipoEvento').value; if(t=='gol') j.goles++; else if(t=='amarilla') j.amarillas++; else j.rojas++; guardar(); }
     }
 
     function actualizarSelectJugadoresEvento() {
         const s = document.getElementById('selectJugadorEvento'); s.innerHTML = '';
         const eqNom = document.getElementById('selectEquipoEvento').value;
-        datos.equipos.find(e => e.nombre === eqNom)?.jugadores.forEach(j => { 
-            let o = document.createElement('option'); o.value = j.nombre; o.textContent = j.nombre; s.appendChild(o); 
-        });
-    }
-
-    function enviarWhatsApp(l, v, id, esPlayoff) {
-        let p = esPlayoff ? datos.llaves[id] : datos.calendario.find(x => x.id == id);
-        let status = p.aplazado ? "⚠️ PARTIDO APLAZADO" : "⚽ RECORDATORIO DE PARTIDO";
-        let fechaStr = p.fecha ? new Date(p.fecha).toLocaleString() : "Pendiente de programar";
-        const msg = encodeURIComponent(`${status}:\n🏆 *${l}* vs *${v}*\n📅 Fecha: ${fechaStr}\n¡Por favor confirmar asistencia!`);
-        const eqL = datos.equipos.find(e => e.nombre === l);
-        const eqV = datos.equipos.find(e => e.nombre === v);
-        if(eqL && eqL.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
-        if(eqV && eqV.whatsapp) setTimeout(() => window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank'), 1000);
+        datos.equipos.find(e => e.nombre === eqNom)?.jugadores.forEach(j => { let o = document.createElement('option'); o.value = j.nombre; o.textContent = j.nombre; s.appendChild(o); });
     }
 
     function reiniciarTorneo() {
-        const pin = prompt("PIN de ADMIN para borrar:");
-        if(pin === "1234") {
-            if(confirm("¿Borrar todo?")) { localStorage.clear(); location.reload(); }
-        } else { alert("Acceso denegado."); }
+        if(prompt("PIN ADMIN:") === "1234") { if(confirm("¿Borrar todo?")) { localStorage.clear(); location.reload(); } }
     }
     
     actualizarInterfaces();
