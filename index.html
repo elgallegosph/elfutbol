@@ -22,93 +22,62 @@
         .btn-playoff { background: var(--playoff); margin-top: 10px; }
         .btn-danger { background: #c0392b; margin-top: 20px; }
         .btn-ws { background: var(--ws); font-size: 0.8rem; padding: 8px; width: auto; min-width: 44px; }
-        .btn-notificar { background: var(--ws); color: white; animation: pulse-green 2s infinite; font-size: 0.85rem; }
+        .btn-notificar { background: var(--ws); color: white; animation: pulse-green 2s infinite; font-size: 0.75rem; padding: 5px 10px; width: auto; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
         .btn-aplazar { background: var(--warning); font-size: 0.8rem; padding: 8px; width: auto; }
         
         .lista-plantilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 20px; }
         .card-plantilla { background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card-plantilla:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .card-plantilla.active .jugadores-lista { max-height: 500px; padding-bottom: 5px; }
         .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
-        .nombre-click { cursor: pointer; flex: 1; display: flex; align-items: center; gap: 5px; }
+        .nombre-click { cursor: pointer; flex: 1; }
         .equipo-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; cursor: pointer; }
         .jugadores-lista { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: white; }
-        .card-plantilla.active .jugadores-lista { max-height: 500px; padding-bottom: 5px; }
         .jugador-item { padding: 8px 12px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .jugador-nombre { cursor: pointer; transition: 0.2s; flex: 1; }
-        .jugador-nombre:hover { color: var(--accent); }
         .jugador-stats { display: flex; gap: 6px; font-weight: bold; align-items: center; }
-        .btn-delete { background: none; color: #ccc; width: auto; padding: 0 5px; margin: 0; border: none; font-size: 12px; }
-        .btn-delete:hover { color: var(--accent); }
+        .btn-delete { background: none; color: #ccc; width: auto; padding: 0 5px; margin: 0; border: none; font-size: 12px; cursor: pointer; }
 
-        .table-container { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
+        .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background: #f8f9fa; font-size: 0.9rem; }
         
-        /* ESTILOS ÁRBOL DE PLAYOFFS */
+        /* ESTILOS ÁRBOL DE PLAYOFFS RESTAURADO */
         #contenedorPlayoffs { 
             display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 20px; 
+            gap: 30px; 
             overflow-x: auto; 
-            padding: 20px 0; 
-            background: #fdfdfd; 
-            min-height: 400px; 
+            padding: 20px; 
+            background: #f9f9f9; 
+            border-radius: 10px;
         }
-        .columna-fase { display: flex; flex-direction: column; justify-content: space-around; gap: 30px; min-width: 250px; }
+        .columna-fase { display: flex; flex-direction: column; justify-content: space-around; gap: 20px; min-width: 320px; }
         .fase-card { 
             background: white; 
             border: 1px solid #8e44ad; 
-            padding: 10px; 
+            padding: 15px; 
             border-radius: 8px; 
-            border-left: 6px solid #8e44ad; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            font-size: 0.85rem;
+            border-left: 10px solid #8e44ad; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .marcador-contenedor { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 10px 0; }
-        .marcador-contenedor span { font-weight: bold; flex: 1; }
-        .input-marcador-tree { width: 45px !important; padding: 5px !important; font-size: 1rem !important; text-align: center; }
-
-        .penaltis-row { background: #fff4e5; padding: 5px; border-radius: 4px; margin-top: 5px; display: none; align-items: center; justify-content: center; gap: 5px; border: 1px dashed #e67e22; font-size: 0.75rem; }
+        .marcador-contenedor { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0; }
+        .penaltis-row { background: #fff4e5; padding: 8px; border-radius: 6px; margin-top: 10px; display: none; align-items: center; justify-content: center; gap: 10px; border: 1px dashed #e67e22; }
+        .status-aplazar { border-left-color: var(--warning) !important; background: #fffaf0; }
 
         .overlay-final {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center;
-            align-items: center; flex-direction: column; color: white; text-align: center; padding: 20px;
+            align-items: center; flex-direction: column; color: white; text-align: center;
         }
-        .texto-dorado {
-            font-size: 2.5rem; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px #f1c40f;
-            animation: latido 1.5s infinite alternate; margin: 10px 0; word-break: break-word;
-        }
+        .texto-dorado { font-size: 2.5rem; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px #f1c40f; animation: latido 1.5s infinite alternate; }
         @keyframes latido { from { transform: scale(1); } to { transform: scale(1.05); } }
-
-        .calendario-item { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 10px; border-bottom: 1px solid #eee; gap: 10px; }
-        .calendario-info { display: flex; flex-direction: column; gap: 5px; }
-
-        .status-aplazar { border-left: 5px solid var(--warning) !important; background: #fffaf0; }
-
-        @media (max-width: 600px) {
-            .texto-dorado { font-size: 2rem; }
-            .columna-fase { min-width: 280px; }
-        }
     </style>
 </head>
 <body>
 
 <div id="overlayFinal" class="overlay-final">
     <div style="font-size: 1.5rem;">🏆 FINALIZADO 🏆</div>
-    <div style="margin-top: 20px;">
-        <div style="color: #ccc;">CAMPEÓN ACTUAL</div>
-        <div id="nombreCampeon" class="texto-dorado">---</div>
-    </div>
-    <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
-        <div style="color: #ccc;">⚽ BOTA DE ORO</div>
-        <div id="nombreGoleador" style="font-size: 1.5rem; color: #fff;">---</div>
-        <div id="golesGoleador" style="color: #f1c40f; font-weight: bold;">0 GOLES</div>
-    </div>
-    <button onclick="document.getElementById('overlayFinal').style.display='none'" style="margin-top:30px; width:auto; padding:12px 40px; background:#e74c3c;">Cerrar Panel</button>
+    <div id="nombreCampeon" class="texto-dorado">---</div>
+    <button onclick="document.getElementById('overlayFinal').style.display='none'" style="margin-top:30px; width:auto; padding:12px 40px; background:#e74c3c;">Cerrar</button>
 </div>
 
 <header><h1>🏆 Gestión de Campeonato Pro</h1></header>
@@ -142,13 +111,12 @@
     </section>
 
     <section>
-        <h2>3. Cargar Resultado</h2>
+        <h2>3. Cargar Resultado (Liga)</h2>
         <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
             <div style="display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center;">
                 <select id="resLocal" style="flex:1;"></select>
                 <input type="number" id="gLocal" class="input-marcador" value="0">
             </div>
-            <div style="font-weight: bold;">VS</div>
             <div style="display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center;">
                 <input type="number" id="gVis" class="input-marcador" value="0">
                 <select id="resVis" style="flex:1;"></select>
@@ -177,33 +145,31 @@
     </section>
 
     <section>
-        <h2>6. Eliminatorias (Árbol de Fútbol)</h2>
+        <h2>6. Eliminatorias (Forma Árbol)</h2>
         <select id="tipoPlayoff">
-            <option value="16">Octavos (16 Equipos)</option>
-            <option value="8">Cuartos (8 Equipos)</option>
-            <option value="4">Semis (4 Equipos)</option>
-            <option value="2">Final (2 Equipos)</option>
+            <option value="16">Octavos</option>
+            <option value="8">Cuartos</option>
+            <option value="4">Semis</option>
+            <option value="2">Final</option>
         </select>
         <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Iniciar Playoffs</button>
         <div id="seccionPlayoffs" style="display:none; margin-top: 20px;">
             <div id="contenedorPlayoffs"></div>
-            <div style="text-align: center; margin-top: 20px;">
-                <button id="btnSiguienteFase" style="display:none; background: #2c3e50; width: auto; padding: 12px 30px;" onclick="avanzarSiguienteFase()">Generar Siguiente Ronda</button>
-            </div>
+            <button id="btnSiguienteFase" style="display:none; background: #2c3e50; margin-top:20px;" onclick="avanzarSiguienteFase()">Generar Siguiente Ronda</button>
         </div>
     </section>
 
     <section>
-        <h2>7. Goleadores y Sancionados</h2>
+        <h2>7. Goleadores</h2>
         <div class="table-container">
             <table id="tablaGoleadores">
-                <thead><tr><th>Jugador</th><th>Equipo</th><th>⚽</th><th>🟨</th><th>🟥</th></tr></thead>
+                <thead><tr><th>Jugador</th><th>Equipo</th><th>⚽</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
     </section>
     
-    <button class="btn-danger" onclick="reiniciarTorneo()">BORRAR TODO EL TORNEO (ADMIN)</button>
+    <button class="btn-danger" onclick="reiniciarTorneo()">BORRAR TODO (ADMIN PIN: 1234)</button>
 </div>
 
 <script>
@@ -216,7 +182,7 @@
         const tel = document.getElementById('whatsappEquipo').value.trim();
         if (nom && !datos.equipos.find(e => e.nombre === nom)) {
             datos.equipos.push({ nombre: nom, whatsapp: tel, pj:0, pg:0, pe:0, pp:0, pts:0, gf:0, gc:0, jugadores:[], grupo:"Sin Asignar" });
-            document.getElementById('nombreEquipo').value = ''; document.getElementById('whatsappEquipo').value = ''; guardar();
+            guardar();
         }
     }
 
@@ -224,68 +190,23 @@
         const eqNom = document.getElementById('selectEquipoJugador').value;
         const e = datos.equipos.find(x => x.nombre === eqNom);
         const n = document.getElementById('nombreJugador').value.trim();
-        if(e && n) { e.jugadores.push({ nombre: n, goles:0, amarillas:0, rojas:0 }); document.getElementById('nombreJugador').value=''; guardar(); }
-    }
-
-    function modificarEquipo(nombreOriginal) {
-        const eq = datos.equipos.find(e => e.nombre === nombreOriginal);
-        if(!eq) return;
-        const nuevoNombre = prompt("Nuevo nombre del equipo:", eq.nombre);
-        const nuevoWA = prompt("Nuevo WhatsApp del delegado:", eq.whatsapp);
-        if(nuevoNombre && nuevoNombre.trim() !== "") {
-            const tempNombre = nuevoNombre.trim();
-            datos.calendario.forEach(p => {
-                if(p.local === nombreOriginal) p.local = tempNombre;
-                if(p.visitante === nombreOriginal) p.visitante = tempNombre;
-            });
-            datos.llaves.forEach(l => {
-                if(l.local === nombreOriginal) l.local = tempNombre;
-                if(l.visitante === nombreOriginal) l.visitante = tempNombre;
-                if(l.ganador === nombreOriginal) l.ganador = tempNombre;
-            });
-            eq.nombre = tempNombre;
-        }
-        if(nuevoWA !== null) eq.whatsapp = nuevoWA.trim();
-        guardar();
-    }
-
-    function eliminarEquipo(nombre) {
-        if(confirm(`¿Eliminar equipo "${nombre}"?`)) { datos.equipos = datos.equipos.filter(e => e.nombre !== nombre); guardar(); }
-    }
-
-    function modificarJugador(eqNom, jugNom) {
-        const eq = datos.equipos.find(e => e.nombre === eqNom);
-        const jug = eq?.jugadores.find(j => j.nombre === jugNom);
-        if(!jug) return;
-        const nuevoNombre = prompt("Editar nombre:", jug.nombre);
-        if(nuevoNombre && nuevoNombre.trim() !== "") { jug.nombre = nuevoNombre.trim(); guardar(); }
-    }
-
-    function eliminarJugador(eqNom, jugNom) {
-        if(confirm(`¿Eliminar a ${jugNom}?`)) {
-            const eq = datos.equipos.find(e => e.nombre === eqNom);
-            eq.jugadores = eq.jugadores.filter(j => j.nombre !== jugNom);
-            guardar();
-        }
+        if(e && n) { e.jugadores.push({ nombre: n, goles:0, amarillas:0, rojas:0 }); guardar(); }
     }
 
     function realizarSorteo() {
         const nG = parseInt(document.getElementById('cantidadGrupos').value);
         const tipo = parseInt(document.getElementById('tipoCalendario').value);
-        if(datos.equipos.length < 2) return alert("Registra al menos 2 equipos.");
+        if(datos.equipos.length < 2) return alert("Mínimo 2 equipos");
         const mezel = [...datos.equipos].sort(() => Math.random() - 0.5);
         datos.calendario = [];
-        mezel.forEach((e, i) => {
-            e.grupo = "Grupo " + String.fromCharCode(65 + (i % nG));
-            e.pj=0; e.pg=0; e.pe=0; e.pp=0; e.pts=0; e.gf=0; e.gc=0;
-        });
+        mezel.forEach((e, i) => { e.grupo = "Grupo " + String.fromCharCode(65 + (i % nG)); });
         const grupos = [...new Set(datos.equipos.map(e => e.grupo))];
         grupos.forEach(g => {
             const eqs = datos.equipos.filter(e => e.grupo === g);
             for (let i=0; i<eqs.length; i++) {
                 for (let j=i+1; j<eqs.length; j++) {
                     datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[i].nombre, visitante: eqs[j].nombre, jugado: false, fecha: "", aplazado: false, pendienteNotificar: false });
-                    if(tipo === 2) { datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[j].nombre, visitante: eqs[i].nombre, jugado: false, fecha: "", aplazado: false, pendienteNotificar: false }); }
+                    if(tipo === 2) datos.calendario.push({ id: Math.random(), grupo: g, local: eqs[j].nombre, visitante: eqs[i].nombre, jugado: false, fecha: "", aplazado: false, pendienteNotificar: false });
                 }
             }
         });
@@ -296,29 +217,37 @@
         const nL = document.getElementById('resLocal').value, nV = document.getElementById('resVis').value;
         const gL = parseInt(document.getElementById('gLocal').value)||0, gV = parseInt(document.getElementById('gVis').value)||0;
         const p = datos.calendario.find(x => !x.jugado && x.local === nL && x.visitante === nV);
-        if(!p) return alert("No hay partido pendiente.");
+        if(!p) return alert("Partido no encontrado");
         let eL = datos.equipos.find(e => e.nombre === nL), eV = datos.equipos.find(e => e.nombre === nV);
         eL.pj++; eV.pj++; eL.gf += gL; eL.gc += gV; eV.gf += gV; eV.gc += gL;
         if(gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; } else if(gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
-        p.jugado = true; p.aplazado = false; p.pendienteNotificar = false; guardar();
+        p.jugado = true; guardar();
     }
 
     function generarPlayoffs() {
-        const pendientes = datos.calendario.filter(p => !p.jugado).length;
-        if(pendientes > 0) return alert(`Termina la liga primero.`);
         const cant = parseInt(document.getElementById('tipoPlayoff').value);
-        let clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf-b.gc) - (a.gf-a.gc)).slice(0, cant);
+        let clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts).slice(0, cant);
         datos.llaves = [];
-        const fN = cant==16?"OCTAVOS":cant==8?"CUARTOS":cant==4?"SEMIS":"GRAN FINAL";
+        const fN = cant==16?"OCTAVOS":cant==8?"CUARTOS":cant==4?"SEMIS":"FINAL";
         for (let i = 0; i < clasificados.length / 2; i++) {
             datos.llaves.push({ local: clasificados[i].nombre, visitante: clasificados[clasificados.length - 1 - i].nombre, gL:0, gV:0, pL:0, pV:0, ganador:null, fase: fN, fecha: "", aplazado: false, pendienteNotificar: false });
         }
         guardar();
     }
 
-    function monitorearEmpate(i) {
-        const gl = parseInt(document.getElementById(`llL_${i}`).value), gv = parseInt(document.getElementById(`llV_${i}`).value);
-        document.getElementById(`penPanel_${i}`).style.display = (!isNaN(gl) && !isNaN(gv) && gl === gv) ? "flex" : "none";
+    function programarFechaPlayoff(i, valor) { datos.llaves[i].fecha = valor; datos.llaves[i].aplazado = false; datos.llaves[i].pendienteNotificar = true; guardar(); }
+    function aplazarPartidoPlayoff(i) { datos.llaves[i].fecha = ""; datos.llaves[i].aplazado = true; datos.llaves[i].pendienteNotificar = true; guardar(); }
+
+    function enviarWhatsApp(l, v, id, esPlayoff) {
+        let p = esPlayoff ? datos.llaves[id] : datos.calendario.find(x => x.id == id);
+        let status = p.aplazado ? "🚨 APLAZADO" : "📅 PROGRAMADO";
+        let fechaStr = p.fecha ? new Date(p.fecha).toLocaleString() : "POR DEFINIR";
+        const msg = encodeURIComponent(`${status}: ${l} vs ${v}\n🕒 Fecha: ${fechaStr}\n🏆 ¡Tomen nota!`);
+        const eqL = datos.equipos.find(e => e.nombre === l);
+        const eqV = datos.equipos.find(e => e.nombre === v);
+        if(eqL?.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
+        if(eqV?.whatsapp) setTimeout(() => { window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank'); }, 800);
+        p.pendienteNotificar = false; guardar();
     }
 
     function registrarResultadoLlave(i) {
@@ -326,15 +255,11 @@
         const l = datos.llaves[i]; l.gL = gl; l.gV = gv;
         if(gl === gv) {
             const pl = parseInt(document.getElementById(`pL_${i}`).value)||0, pv = parseInt(document.getElementById(`pV_${i}`).value)||0;
-            if(pl === pv) return alert("Define penaltis.");
+            if(pl === pv) return alert("Define penaltis");
             l.pL = pl; l.pV = pv; l.ganador = pl > pv ? l.local : l.visitante;
-        } else { l.ganador = gl > gv ? l.local : l.visitante; l.pL = 0; l.pV = 0; }
-        if(l.fase === "GRAN FINAL" && l.ganador) {
-            let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
-            jA.sort((a,b) => b.goles - a.goles);
-            document.getElementById('nombreCampeon').innerText = l.ganador;
-            document.getElementById('nombreGoleador').innerText = jA[0]?.nombre || "---";
-            document.getElementById('golesGoleador').innerText = `${jA[0]?.goles || 0} GOLES`;
+        } else { l.ganador = gl > gv ? l.local : l.visitante; }
+        if(l.fase === "FINAL" && l.ganador) {
+            document.getElementById('nombreCampeon').innerText = "CAMPEÓN: " + l.ganador;
             document.getElementById('overlayFinal').style.display='flex';
         }
         guardar();
@@ -342,107 +267,103 @@
 
     function avanzarSiguienteFase() {
         const ganadores = datos.llaves.filter(x => x.ganador).map(x => x.ganador);
-        if(ganadores.length < datos.llaves.length) return alert("Termina los partidos.");
-        const fActual = datos.llaves[0].fase;
-        const fSiguiente = fActual === "OCTAVOS" ? "CUARTOS" : fActual === "CUARTOS" ? "SEMIS" : "GRAN FINAL";
+        if(ganadores.length < datos.llaves.length) return alert("Faltan resultados");
+        const f = ganadores.length == 8 ? "CUARTOS" : ganadores.length == 4 ? "SEMIS" : "FINAL";
         datos.llaves = [];
-        for (let i=0; i < ganadores.length; i+=2) { datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase: fSiguiente, fecha:"", aplazado:false, pendienteNotificar:false }); }
+        for (let i=0; i < ganadores.length; i+=2) { datos.llaves.push({ local: ganadores[i], visitante: ganadores[i+1], gL:0, gV:0, pL:0, pV:0, ganador:null, fase:f, fecha:"", aplazado:false, pendienteNotificar:false }); }
         guardar();
     }
 
-    function enviarWhatsApp(l, v, id, esPlayoff) {
-        let p = esPlayoff ? datos.llaves[id] : datos.calendario.find(x => x.id == id);
-        let status = p.aplazado ? "🚨 APLAZADO" : "📅 PROGRAMADO";
-        let fechaStr = p.fecha ? new Date(p.fecha).toLocaleString() : "POR DEFINIR";
-        const msg = encodeURIComponent(`${status}: ${l} vs ${v}\n🕒 Fecha: ${fechaStr}`);
-        const eqL = datos.equipos.find(e => e.nombre === l);
-        const eqV = datos.equipos.find(e => e.nombre === v);
-        if(eqL && eqL.whatsapp) window.open(`https://api.whatsapp.com/send?phone=${eqL.whatsapp}&text=${msg}`, '_blank');
-        if(eqV && eqV.whatsapp) setTimeout(() => { window.open(`https://api.whatsapp.com/send?phone=${eqV.whatsapp}&text=${msg}`, '_blank'); }, 800);
+    function monitorearEmpate(i) {
+        const gl = parseInt(document.getElementById(`llL_${i}`).value), gv = parseInt(document.getElementById(`llV_${i}`).value);
+        document.getElementById(`penPanel_${i}`).style.display = (gl === gv) ? "flex" : "none";
     }
 
     function actualizarInterfaces() {
-        ['selectEquipoJugador','selectEquipoEvento','resLocal','resVis'].forEach(id => {
+        // Selects
+        ['selectEquipoJugador','selectEquipoEvento','resLocal','resVis','selectEquipoEvento'].forEach(id => {
             const s = document.getElementById(id); if(!s) return;
-            s.innerHTML = ''; datos.equipos.forEach(e => { let o = document.createElement('option'); o.value = e.nombre; o.textContent = e.nombre; s.appendChild(o); });
+            const val = s.value; s.innerHTML = '';
+            datos.equipos.forEach(e => { s.innerHTML += `<option value="${e.nombre}">${e.nombre}</option>`; });
+            s.value = val;
         });
 
+        // Calendario Liga
         const cC = document.getElementById('contenedorCalendario'); cC.innerHTML = '';
         if(datos.calendario.length > 0) {
             document.getElementById('seccionCalendario').style.display = 'block';
             datos.calendario.forEach(p => {
-                cC.innerHTML += `<div class="calendario-item ${p.aplazado?'status-aplazar':''}" style="opacity:${p.jugado?0.5:1}">
-                    <div class="calendario-info"><strong>${p.local} vs ${p.visitante}</strong></div>
-                    <div style="display:flex; gap:5px;">
-                        <button class="btn-ws" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">📲</button>
-                    </div>
-                </div>`;
+                cC.innerHTML += `<div class="calendario-item"><span>${p.local} vs ${p.visitante}</span><button class="btn-ws" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">📲</button></div>`;
             });
         }
 
-        const cT = document.getElementById('contenedorTablas'); cT.innerHTML = '';
-        [...new Set(datos.equipos.map(e => e.grupo))].sort().forEach(g => {
-            if(g === "Sin Asignar") return;
-            let h = `<h3>${g}</h3><div class="table-container"><table><thead><tr><th>Equipo</th><th>PJ</th><th>Pts</th></tr></thead><tbody>`;
-            datos.equipos.filter(e => e.grupo === g).sort((a,b) => b.pts - a.pts).forEach(e => { h += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.pts}</td></tr>`; });
-            cT.innerHTML += h + '</tbody></table></div>';
-        });
-
-        // ÁRBOL DE PLAYOFFS
+        // Árbol de Playoff RESTAURADO con Notificaciones y Fechas
         const cP = document.getElementById('contenedorPlayoffs'); cP.innerHTML = '';
         if(datos.llaves.length > 0) {
             document.getElementById('seccionPlayoffs').style.display = 'block';
             let columna = `<div class="columna-fase">`;
             datos.llaves.forEach((l, i) => {
-                const displayPen = (l.gL === l.gV && l.ganador) ? 'flex' : 'none';
-                columna += `<div class="fase-card">
-                    <div style="font-weight:bold; color:var(--playoff); font-size:10px;">${l.fase}</div>
-                    <div class="marcador-contenedor">
-                        <span>${l.local}</span>
-                        <input type="number" id="llL_${i}" class="input-marcador-tree" value="${l.gL}" oninput="monitorearEmpate(${i})">
+                const displayPen = (l.gL === l.gV && (l.ganador || l.pL !== 0)) ? 'flex' : 'none';
+                columna += `
+                <div class="fase-card ${l.aplazado?'status-aplazar':''}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <strong style="color:var(--playoff); font-size:12px;">${l.fase}</strong>
+                        <button class="btn-ws" onclick="enviarWhatsApp('${l.local}','${l.visitante}',${i}, true)">📲</button>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <input type="datetime-local" style="padding:5px; font-size:11px;" value="${l.fecha}" onchange="programarFechaPlayoff(${i}, this.value)">
+                        <div style="display:flex; gap:5px; margin-top:5px;">
+                            <button class="btn-aplazar" style="flex:1; padding:5px;" onclick="aplazarPartidoPlayoff(${i})">⏳ Aplazar</button>
+                            ${l.pendienteNotificar ? `<button class="btn-notificar" style="flex:2;" onclick="enviarWhatsApp('${l.local}','${l.visitante}',${i}, true)">🚀 NOTIFICAR</button>` : ''}
+                        </div>
                     </div>
                     <div class="marcador-contenedor">
-                        <span>${l.visitante}</span>
-                        <input type="number" id="llV_${i}" class="input-marcador-tree" value="${l.gV}" oninput="monitorearEmpate(${i})">
+                        <span style="flex:1; text-align:right;">${l.local}</span>
+                        <input type="number" id="llL_${i}" class="input-marcador" style="width:45px !important;" value="${l.gL}" oninput="monitorearEmpate(${i})">
+                        <span>-</span>
+                        <input type="number" id="llV_${i}" class="input-marcador" style="width:45px !important;" value="${l.gV}" oninput="monitorearEmpate(${i})">
+                        <span style="flex:1;">${l.visitante}</span>
                     </div>
-                    <div id="penPanel_${i}" class="penaltis-row" style="display:${displayPen}">P: <input type="number" id="pL_${i}" class="input-marcador-tree" value="${l.pL}"> - <input type="number" id="pV_${i}" class="input-marcador-tree" value="${l.pV}"></div>
-                    <button onclick="registrarResultadoLlave(${i})" style="padding:5px; margin-top:5px; font-size:10px; background:var(--success)">Guardar</button>
-                    ${l.ganador ? `<div style="color:var(--success); font-weight:bold; font-size:10px; margin-top:5px;">Ganador: ${l.ganador}</div>` : ''}
+                    <div id="penPanel_${i}" class="penaltis-row" style="display: ${displayPen}">
+                        <input type="number" id="pL_${i}" class="input-marcador" style="width:40px !important;" value="${l.pL}">
+                        <span>(P)</span>
+                        <input type="number" id="pV_${i}" class="input-marcador" style="width:40px !important;" value="${l.pV}">
+                    </div>
+                    <button onclick="registrarResultadoLlave(${i})" style="width:100%; margin-top:10px; background:var(--success); padding:8px;">OK</button>
+                    ${l.ganador ? `<div style="text-align:center; color:var(--success); font-weight:bold; margin-top:5px;">Avanza: ${l.ganador}</div>` : ''}
                 </div>`;
             });
             cP.innerHTML = columna + `</div>`;
         }
-        document.getElementById('btnSiguienteFase').style.display = (datos.llaves.length > 1) ? 'inline-block' : 'none';
+        document.getElementById('btnSiguienteFase').style.display = (datos.llaves.length > 1) ? 'block' : 'none';
 
-        const tbG = document.querySelector('#tablaGoleadores tbody');
-        let jA = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jA.push({...j, eq: e.nombre})));
-        tbG.innerHTML = jA.filter(j => j.goles > 0).sort((a,b) => b.goles - a.goles).map(j => `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td><td>${j.amarillas}</td><td>${j.rojas}</td></tr>`).join('');
+        // Tablas
+        const cT = document.getElementById('contenedorTablas'); cT.innerHTML = '';
+        [...new Set(datos.equipos.map(e => e.grupo))].forEach(g => {
+            if(g === "Sin Asignar") return;
+            let h = `<h3>${g}</h3><table style="width:100%"><tr><th>Eq</th><th>Pts</th></tr>`;
+            datos.equipos.filter(e => e.grupo === g).sort((a,b) => b.pts - a.pts).forEach(e => { h += `<tr><td>${e.nombre}</td><td>${e.pts}</td></tr>`; });
+            cT.innerHTML += h + '</table>';
+        });
 
+        // Plantillas
         const cPL = document.getElementById('contenedorPlantillas'); cPL.innerHTML = '';
-        datos.equipos.forEach((e) => {
-            cPL.innerHTML += `<div class="card-plantilla">
-                <div class="equipo-header">
-                    <div class="nombre-click" onclick="modificarEquipo('${e.nombre}')">${e.nombre} ✏️</div>
-                    <button class="btn-delete" onclick="eliminarEquipo('${e.nombre}')" style="color:red">🗑️</button>
-                </div>
-            </div>`;
+        datos.equipos.forEach(e => {
+            cPL.innerHTML += `<div class="card-plantilla"><div class="equipo-header"><span>${e.nombre}</span><button class="btn-delete" onclick="this.parentElement.parentElement.classList.toggle('active')">▼</button></div><div class="jugadores-lista">${e.jugadores.map(j=>`<div class="jugador-item"><span>${j.nombre}</span><span>⚽ ${j.goles}</span></div>`).join('')}</div></div>`;
         });
     }
 
     function registrarEvento() {
         const eqNom = document.getElementById('selectEquipoEvento').value, jugNom = document.getElementById('selectJugadorEvento').value;
         const j = datos.equipos.find(e => e.nombre === eqNom)?.jugadores.find(x => x.nombre === jugNom);
-        if(j) { const t = document.getElementById('tipoEvento').value; if(t=='gol') j.goles++; else if(t=='amarilla') j.amarillas++; else j.rojas++; guardar(); }
+        if(j) { const t = document.getElementById('tipoEvento').value; if(t=='gol') j.goles++; guardar(); }
     }
-
     function actualizarSelectJugadoresEvento() {
         const s = document.getElementById('selectJugadorEvento'); s.innerHTML = '';
         const eqNom = document.getElementById('selectEquipoEvento').value;
-        datos.equipos.find(e => e.nombre === eqNom)?.jugadores.forEach(j => { let o = document.createElement('option'); o.value = j.nombre; o.textContent = j.nombre; s.appendChild(o); });
+        datos.equipos.find(e => e.nombre === eqNom)?.jugadores.forEach(j => { s.innerHTML += `<option value="${j.nombre}">${j.nombre}</option>`; });
     }
-
-    function reiniciarTorneo() { if(prompt("PIN ADMIN:") === "1234") { localStorage.clear(); location.reload(); } }
-    
+    function reiniciarTorneo() { if(prompt("PIN:")==="1234") { localStorage.clear(); location.reload(); } }
     actualizarInterfaces();
 </script>
 </body>
