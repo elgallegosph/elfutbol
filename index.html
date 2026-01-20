@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Torneo de Fútbol Pro - Gestión de Eliminatorias</title>
     <style>
-        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; }
+        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; --ws: #25d366; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
         header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .container { max-width: 1000px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
@@ -29,6 +29,7 @@
         .btn-sorteo { background: var(--success); }
         .btn-playoff { background: var(--playoff); font-size: 1.1rem; margin-top: 10px; }
         .btn-danger { background: #c0392b; margin-top: 20px; }
+        .btn-ws { background: var(--ws); font-size: 0.75rem; padding: 5px 10px; width: auto; margin-left: 5px; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
@@ -69,7 +70,7 @@
 
         .calendario-item {
             display: grid;
-            grid-template-columns: 1fr 180px 100px;
+            grid-template-columns: 1fr 180px 100px 100px;
             align-items: center;
             padding: 10px;
             border-bottom: 1px solid #eee;
@@ -123,6 +124,7 @@
         <div class="grid">
             <div>
                 <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
+                <input type="text" id="whatsappEquipo" placeholder="WhatsApp (Ej: 573001234567)">
                 <button onclick="registrarEquipo()">Crear Equipo</button>
             </div>
             <div>
@@ -149,7 +151,7 @@
         
         <div id="seccionCalendario" style="display:none; margin-top: 20px;">
             <h3>📅 Calendario de Partidos (Fase de Grupos)</h3>
-            <p style="font-size: 0.8rem; color: #666;">* Las fechas se guardan automáticamente al cambiarlas.</p>
+            <p style="font-size: 0.8rem; color: #666;">* Las fechas se guardan automáticamente. Use el botón de WhatsApp para notificar.</p>
             <div id="contenedorCalendario" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
         </div>
     </section>
@@ -238,12 +240,16 @@
 
     function registrarEquipo() {
         const nombre = document.getElementById('nombreEquipo').value.trim();
+        const whatsapp = document.getElementById('whatsappEquipo').value.trim();
         if (nombre && !datos.equipos.find(e => e.nombre === nombre)) {
             datos.equipos.push({ 
-                nombre, pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, 
+                nombre, 
+                whatsapp: whatsapp || "",
+                pj: 0, pg: 0, pe: 0, pp: 0, pts: 0, 
                 gf: 0, gc: 0, jugadores: [], grupo: "Sin Asignar" 
             });
             document.getElementById('nombreEquipo').value = '';
+            document.getElementById('whatsappEquipo').value = '';
             guardar();
         }
     }
@@ -297,6 +303,24 @@
             part.fecha = nuevaFecha;
             localStorage.setItem('torneo_data', JSON.stringify(datos));
         }
+    }
+
+    function enviarWhatsApp(localNom, visitanteNom, fecha) {
+        if(!fecha) return alert("Primero asigna una fecha y hora al partido.");
+        
+        const eqLocal = datos.equipos.find(e => e.nombre === localNom);
+        const eqVis = datos.equipos.find(e => e.nombre === visitanteNom);
+        
+        const f = new Date(fecha);
+        const fechaFormateada = f.toLocaleDateString() + " a las " + f.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        const mensaje = encodeURIComponent(`📢 *RECORDATORIO DE PARTIDO*\n\n⚽ *${localNom}* vs *${visitanteNom}*\n📅 Fecha: ${fechaFormateada}\n\n¡Los esperamos puntuales! 🏆`);
+        
+        // Se intenta enviar al local, si no tiene número pedirá el dato
+        const tel = eqLocal.whatsapp || eqVis.whatsapp;
+        if(!tel) return alert("Ninguno de los dos equipos tiene número de WhatsApp registrado.");
+        
+        window.open(`https://api.whatsapp.com/send?phone=${tel}&text=${mensaje}`, '_blank');
     }
 
     function cargarEnMarcador(local, visitante) {
@@ -467,7 +491,9 @@
         datos.equipos.forEach(e => {
             const card = document.createElement('div');
             card.className = 'card-plantilla';
-            card.innerHTML = `<h4>${e.nombre}</h4><ul>${e.jugadores.length > 0 ? e.jugadores.map(j => `<li>• ${j.nombre}</li>`).join('') : '<li><i>Sin jugadores</i></li>'}</ul>`;
+            card.innerHTML = `<h4>${e.nombre}</h4>
+                <div style="font-size:0.7rem; color:#666; margin-bottom:5px;">📞 ${e.whatsapp || 'Sin Tel.'}</div>
+                <ul>${e.jugadores.length > 0 ? e.jugadores.map(j => `<li>• ${j.nombre}</li>`).join('') : '<li><i>Sin jugadores</i></li>'}</ul>`;
             contPlantillas.appendChild(card);
         });
 
@@ -481,7 +507,10 @@
                     <span><strong>${p.grupo}:</strong> ${p.local} vs ${p.visitante}</span>
                     <input type="datetime-local" class="input-fecha" value="${p.fecha || ''}" 
                            onchange="actualizarFechaPartido(${p.id}, this.value)" ${p.jugado ? 'disabled' : ''}>
+                    
                     ${p.jugado ? '<span>✅</span>' : `<button class="btn-cargar" onclick="cargarEnMarcador('${p.local}', '${p.visitante}')">Cargar</button>`}
+                    
+                    <button class="btn-ws" onclick="enviarWhatsApp('${p.local}', '${p.visitante}', '${p.fecha}')">📲 Notificar</button>
                 </div>`;
             });
         }
