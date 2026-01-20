@@ -151,7 +151,7 @@
         
         <div id="seccionCalendario" style="display:none; margin-top: 20px;">
             <h3>📅 Calendario de Partidos (Fase de Grupos)</h3>
-            <p style="font-size: 0.8rem; color: #666;">* Las fechas se guardan automáticamente. Use el botón de WhatsApp para notificar.</p>
+            <p style="font-size: 0.8rem; color: #666;">* Las fechas se guardan automáticamente al cambiarlas.</p>
             <div id="contenedorCalendario" style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
         </div>
     </section>
@@ -301,11 +301,16 @@
         const part = datos.calendario.find(p => p.id == id);
         if(part) {
             part.fecha = nuevaFecha;
+            // Guardamos directamente en localStorage para no refrescar la interfaz y perder el foco del input
             localStorage.setItem('torneo_data', JSON.stringify(datos));
         }
     }
 
-    function enviarWhatsApp(localNom, visitanteNom, fecha) {
+    function enviarWhatsApp(localNom, visitanteNom, idPartido) {
+        // Buscamos el partido por ID para obtener la fecha más reciente guardada
+        const part = datos.calendario.find(p => p.id == idPartido);
+        const fecha = part ? part.fecha : "";
+
         if(!fecha) return alert("Primero asigna una fecha y hora al partido.");
         
         const eqLocal = datos.equipos.find(e => e.nombre === localNom);
@@ -316,7 +321,6 @@
         
         const mensaje = encodeURIComponent(`📢 *RECORDATORIO DE PARTIDO*\n\n⚽ *${localNom}* vs *${visitanteNom}*\n📅 Fecha: ${fechaFormateada}\n\n¡Los esperamos puntuales! 🏆`);
         
-        // Se intenta enviar al local, si no tiene número pedirá el dato
         const tel = eqLocal.whatsapp || eqVis.whatsapp;
         if(!tel) return alert("Ninguno de los dos equipos tiene número de WhatsApp registrado.");
         
@@ -502,16 +506,19 @@
         if (datos.calendario?.length > 0) {
             document.getElementById('seccionCalendario').style.display = 'block';
             datos.calendario.forEach(p => {
-                contCal.innerHTML += `
-                <div class="calendario-item" style="opacity: ${p.jugado ? '0.5' : '1'}">
+                const item = document.createElement('div');
+                item.className = 'calendario-item';
+                item.style.opacity = p.jugado ? '0.5' : '1';
+                item.innerHTML = `
                     <span><strong>${p.grupo}:</strong> ${p.local} vs ${p.visitante}</span>
                     <input type="datetime-local" class="input-fecha" value="${p.fecha || ''}" 
                            onchange="actualizarFechaPartido(${p.id}, this.value)" ${p.jugado ? 'disabled' : ''}>
                     
                     ${p.jugado ? '<span>✅</span>' : `<button class="btn-cargar" onclick="cargarEnMarcador('${p.local}', '${p.visitante}')">Cargar</button>`}
                     
-                    <button class="btn-ws" onclick="enviarWhatsApp('${p.local}', '${p.visitante}', '${p.fecha}')">📲 Notificar</button>
-                </div>`;
+                    <button class="btn-ws" onclick="enviarWhatsApp('${p.local}', '${p.visitante}', ${p.id})">📲 Notificar</button>
+                `;
+                contCal.appendChild(item);
             });
         }
 
