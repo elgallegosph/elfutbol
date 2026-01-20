@@ -52,21 +52,22 @@
             margin-top: 10px; border: 1px solid var(--success);
         }
 
-        #overlayCampeon {
+        /* Overlay para Campeón y Goleador */
+        .overlay-final {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center;
+            background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center;
             align-items: center; flex-direction: column; color: white; text-align: center;
         }
-        .texto-campeon {
-            font-size: 5rem; font-weight: 900; text-transform: uppercase;
+        .texto-dorado {
+            font-size: 4rem; font-weight: 900; text-transform: uppercase;
             color: #f1c40f; text-shadow: 0 0 20px #f1c40f;
             animation: latido 1.5s infinite alternate, entrada 1s ease-out;
+            margin: 10px 0;
         }
-        @keyframes latido { from { transform: scale(1); } to { transform: scale(1.1); } }
+        @keyframes latido { from { transform: scale(1); } to { transform: scale(1.05); } }
         @keyframes entrada { from { opacity: 0; transform: translateY(-100px); } to { opacity: 1; transform: translateY(0); } }
-        .btn-cerrar-campeon { background: #e74c3c; width: auto; padding: 10px 30px; margin-top: 20px; font-size: 1.2rem; }
+        .btn-cerrar-final { background: #e74c3c; width: auto; padding: 10px 30px; margin-top: 20px; font-size: 1.2rem; }
 
-        /* Estilos para el Calendario */
         .calendario-item {
             display: flex; justify-content: space-between; align-items: center;
             padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85rem;
@@ -74,15 +75,23 @@
         .calendario-item:hover { background: #f9f9f9; }
         .btn-cargar { background: #3498db; width: auto; padding: 5px 10px; font-size: 0.7rem; }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .texto-campeon { font-size: 2.5rem; } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .texto-dorado { font-size: 2.2rem; } }
     </style>
 </head>
 <body>
 
-<div id="overlayCampeon">
-    <div style="font-size: 2rem;">🏆 ¡TENEMOS UN CAMPEÓN! 🏆</div>
-    <div id="nombreCampeon" class="texto-campeon">EQUIPO</div>
-    <button class="btn-cerrar-campeon" onclick="document.getElementById('overlayCampeon').style.display='none'">Cerrar</button>
+<div id="overlayFinal" class="overlay-final">
+    <div style="font-size: 1.8rem;">🏆 ¡EL TORNEO HA FINALIZADO! 🏆</div>
+    <div style="margin-top: 30px; border-bottom: 1px solid #444; padding-bottom: 20px; width: 80%;">
+        <div style="color: #ccc; font-size: 1.2rem;">CAMPEÓN</div>
+        <div id="nombreCampeon" class="texto-dorado">EQUIPO</div>
+    </div>
+    <div style="margin-top: 20px;">
+        <div style="color: #ccc; font-size: 1.2rem;">⚽ MÁXIMO GOLEADOR</div>
+        <div id="nombreGoleador" class="texto-dorado" style="font-size: 2.5rem; color: #fff; text-shadow: 0 0 10px #fff;">JUGADOR</div>
+        <div id="golesGoleador" style="font-size: 1.5rem; color: #f1c40f;">0 GOLES</div>
+    </div>
+    <button class="btn-cerrar-final" onclick="document.getElementById('overlayFinal').style.display='none'">Cerrar Panel de Premios</button>
 </div>
 
 <header>
@@ -220,7 +229,7 @@
         const equiposMezclados = [...datos.equipos].sort(() => Math.random() - 0.5);
         
         datos.grupos = {};
-        datos.calendario = []; // Reiniciar calendario
+        datos.calendario = [];
 
         for (let i = 0; i < nGrupos; i++) {
             datos.grupos["Grupo " + String.fromCharCode(65 + i)] = [];
@@ -232,22 +241,17 @@
             eq.grupo = nombreGrupo;
         });
 
-        // GENERACIÓN AUTOMÁTICA DE CALENDARIO
         const gruposNombres = Object.keys(datos.grupos);
         gruposNombres.forEach(g => {
             const eqsEnGrupo = datos.equipos.filter(e => e.grupo === g);
             for (let i = 0; i < eqsEnGrupo.length; i++) {
                 for (let j = i + 1; j < eqsEnGrupo.length; j++) {
                     datos.calendario.push({
-                        grupo: g,
-                        local: eqsEnGrupo[i].nombre,
-                        visitante: eqsEnGrupo[j].nombre,
-                        jugado: false
+                        grupo: g, local: eqsEnGrupo[i].nombre, visitante: eqsEnGrupo[j].nombre, jugado: false
                     });
                 }
             }
         });
-
         guardar();
     }
 
@@ -309,10 +313,23 @@
         }
 
         if (llave.fase === "GRAN FINAL" && llave.ganador) {
-            document.getElementById('nombreCampeon').innerText = llave.ganador;
-            document.getElementById('overlayCampeon').style.display = 'flex';
+            mostrarPremiacion(llave.ganador);
         }
         guardar();
+    }
+
+    function mostrarPremiacion(campeonNombre) {
+        // Buscar goleador
+        let todosJugadores = [];
+        datos.equipos.forEach(e => e.jugadores.forEach(j => todosJugadores.push({...j, eq: e.nombre})));
+        todosJugadores.sort((a,b) => b.goles - a.goles);
+        
+        const goleador = todosJugadores[0] || { nombre: "N/A", goles: 0, eq: "" };
+
+        document.getElementById('nombreCampeon').innerText = campeonNombre;
+        document.getElementById('nombreGoleador').innerText = goleador.nombre + " (" + goleador.eq + ")";
+        document.getElementById('golesGoleador').innerText = goleador.goles + " GOLES";
+        document.getElementById('overlayFinal').style.display = 'flex';
     }
 
     function avanzarSiguienteFase() {
@@ -369,34 +386,25 @@
         let eL = datos.equipos.find(e => e.nombre === nL);
         let eV = datos.equipos.find(e => e.nombre === nV);
 
-        if (eL.grupo !== eV.grupo) {
-            alert(`Error: Los equipos son de grupos diferentes.`);
-            return;
-        }
+        if (eL.grupo !== eV.grupo) return alert(`Error: Los equipos son de grupos diferentes.`);
         
         eL.pj++; eV.pj++;
         eL.gf += gL; eL.gc += gV;
         eV.gf += gV; eV.gc += gL;
 
-        if (gL > gV) { 
-            eL.pg++; eL.pts += 3; eV.pp++; 
-        } else if (gV > gL) { 
-            eV.pg++; eV.pts += 3; eL.pp++; 
-        } else { 
-            eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; 
-        }
+        if (gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; } 
+        else if (gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } 
+        else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
 
-        // Marcar partido como jugado en calendario si existe
         const part = datos.calendario.find(p => (p.local === nL && p.visitante === nV) || (p.local === nV && p.visitante === nL));
         if (part) part.jugado = true;
-
         guardar();
     }
 
     function reiniciarTorneo() {
         if (prompt("Clave admin:") === "admin123") {
             datos = { equipos: [], grupos: {}, llaves: [], calendario: [] };
-            guardar();
+            localStorage.setItem('torneo_data', JSON.stringify(datos));
             location.reload();
         }
     }
@@ -428,10 +436,9 @@
             s.value = val;
         });
 
-        // ACTUALIZAR CALENDARIO VISUAL
         const contCal = document.getElementById('contenedorCalendario');
         contCal.innerHTML = '';
-        if (datos.calendario && datos.calendario.length > 0) {
+        if (datos.calendario?.length > 0) {
             document.getElementById('seccionCalendario').style.display = 'block';
             datos.calendario.forEach(p => {
                 contCal.innerHTML += `
@@ -476,7 +483,6 @@
                         </div>
                         <button onclick="registrarResultadoLlave(${i})" style="width:auto; padding:10px 20px; background:var(--success)">Confirmar</button>
                     </div>
-                    
                     <div id="panelPenales_${i}" class="penaltis-row" style="display: ${esEmpateReglamentario ? 'flex' : 'none'};">
                         <strong>⚽ PENALTIS:</strong> 
                         <div style="display:flex; align-items:center; gap:10px;">
@@ -485,7 +491,6 @@
                             <input type="number" id="penV_${i}" class="input-marcador" style="width:65px !important" value="${llave.pVis}"> ${llave.visitante}
                         </div>
                     </div>
-
                     ${llave.ganador ? `<div class="ganador-label">🥇 AVANZA: ${llave.ganador} ${llave.pLocal !== llave.pVis ? '(vía Penaltis)' : ''}</div>` : ''}
                 </div>`;
         });
