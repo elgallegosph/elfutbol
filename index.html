@@ -301,13 +301,11 @@
         const part = datos.calendario.find(p => p.id == id);
         if(part) {
             part.fecha = nuevaFecha;
-            // Guardamos directamente en localStorage para no refrescar la interfaz y perder el foco del input
             localStorage.setItem('torneo_data', JSON.stringify(datos));
         }
     }
 
     function enviarWhatsApp(localNom, visitanteNom, idPartido) {
-        // Buscamos el partido por ID para obtener la fecha más reciente guardada
         const part = datos.calendario.find(p => p.id == idPartido);
         const fecha = part ? part.fecha : "";
 
@@ -321,10 +319,23 @@
         
         const mensaje = encodeURIComponent(`📢 *RECORDATORIO DE PARTIDO*\n\n⚽ *${localNom}* vs *${visitanteNom}*\n📅 Fecha: ${fechaFormateada}\n\n¡Los esperamos puntuales! 🏆`);
         
-        const tel = eqLocal.whatsapp || eqVis.whatsapp;
-        if(!tel) return alert("Ninguno de los dos equipos tiene número de WhatsApp registrado.");
-        
-        window.open(`https://api.whatsapp.com/send?phone=${tel}&text=${mensaje}`, '_blank');
+        // Obtenemos ambos números
+        const telLocal = eqLocal.whatsapp;
+        const telVis = eqVis.whatsapp;
+
+        if(!telLocal && !telVis) return alert("Ninguno de los dos equipos tiene número de WhatsApp registrado.");
+
+        // Intentar enviar al local
+        if(telLocal) {
+            window.open(`https://api.whatsapp.com/send?phone=${telLocal}&text=${mensaje}`, '_blank');
+        }
+
+        // Intentar enviar al visitante con un pequeño retraso para evitar bloqueo de popups
+        if(telVis) {
+            setTimeout(() => {
+                window.open(`https://api.whatsapp.com/send?phone=${telVis}&text=${mensaje}`, '_blank');
+            }, 600);
+        }
     }
 
     function cargarEnMarcador(local, visitante) {
@@ -512,7 +523,7 @@
                 item.innerHTML = `
                     <span><strong>${p.grupo}:</strong> ${p.local} vs ${p.visitante}</span>
                     <input type="datetime-local" class="input-fecha" value="${p.fecha || ''}" 
-                           onchange="actualizarFechaPartido(${p.id}, this.value)" ${p.jugado ? 'disabled' : ''}>
+                            onchange="actualizarFechaPartido(${p.id}, this.value)" ${p.jugado ? 'disabled' : ''}>
                     
                     ${p.jugado ? '<span>✅</span>' : `<button class="btn-cargar" onclick="cargarEnMarcador('${p.local}', '${p.visitante}')">Cargar</button>`}
                     
