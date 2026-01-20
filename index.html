@@ -52,7 +52,6 @@
             margin-top: 10px; border: 1px solid var(--success);
         }
 
-        /* Overlay para Campeón y Goleador */
         .overlay-final {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center;
@@ -75,7 +74,6 @@
         .calendario-item:hover { background: #f9f9f9; }
         .btn-cargar { background: #3498db; width: auto; padding: 5px 10px; font-size: 0.7rem; }
 
-        /* Estilo para lista de jugadores */
         .lista-plantilla {
             display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;
         }
@@ -146,7 +144,7 @@
                     <option value="4">Semifinales (Top 4)</option>
                     <option value="2">Final (Top 2)</option>
                 </select>
-                <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Aleatorias</button>
+                <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Generar Llaves Profesionales</button>
             </div>
         </div>
     </section>
@@ -275,20 +273,33 @@
         window.scrollTo({ top: document.getElementById('resLocal').offsetTop - 100, behavior: 'smooth' });
     }
 
+    // LÓGICA PROFESIONAL DE PLAYOFFS (BOMBO 1 VS BOMBO 2)
     function generarPlayoffs() {
         const cantidad = parseInt(document.getElementById('tipoPlayoff').value);
         if (datos.equipos.length < cantidad) return alert(`Necesitas ${cantidad} equipos registrados.`);
-        const clasificados = [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc)).slice(0, cantidad).sort(() => Math.random() - 0.5);
-        
+
+        // Ordenar por mérito deportivo real: Puntos > Diferencia Goles > Goles Favor
+        const clasificados = [...datos.equipos]
+            .sort((a, b) => b.pts - a.pts || (b.gf - b.gc) - (a.gf - a.gc) || b.gf - a.gf)
+            .slice(0, cantidad);
+
         datos.llaves = [];
         const faseNombre = cantidad === 16 ? "OCTAVOS" : cantidad === 8 ? "CUARTOS" : cantidad === 4 ? "SEMIFINAL" : "GRAN FINAL";
-        
-        for (let i = 0; i < cantidad; i += 2) {
+
+        // Emparejamiento: 1º vs Último clasificado, 2º vs Penúltimo...
+        let locales = clasificados.slice(0, cantidad / 2);
+        let visitantes = clasificados.slice(cantidad / 2).reverse();
+
+        for (let i = 0; i < locales.length; i++) {
             datos.llaves.push({
-                local: clasificados[i].nombre, visitante: clasificados[i+1].nombre,
+                local: locales[i].nombre, 
+                visitante: visitantes[i].nombre,
                 gLocal: 0, gVis: 0, pLocal: 0, pVis: 0, ganador: null, fase: faseNombre
             });
         }
+        
+        // Sorteo de orden de las llaves
+        datos.llaves.sort(() => Math.random() - 0.5);
         guardar();
     }
 
@@ -447,7 +458,6 @@
             s.value = val;
         });
 
-        // ACTUALIZAR PLANTILLAS (NUEVA FUNCIÓN)
         const contPlantillas = document.getElementById('contenedorPlantillas');
         contPlantillas.innerHTML = '';
         datos.equipos.forEach(e => {
@@ -516,13 +526,11 @@
                 </div>`;
         });
 
-        // ACTUALIZAR GOLEADORES CON FILTRO (SOLO LOS QUE TIENEN ACCIÓN)
         const tbodyG = document.querySelector('#tablaGoleadores tbody');
         tbodyG.innerHTML = '';
         let todos = [];
         datos.equipos.forEach(e => e.jugadores.forEach(j => todos.push({...j, eq: e.nombre})));
         
-        // Filtramos para mostrar solo los que tienen al menos un gol o una tarjeta
         const activos = todos.filter(j => j.goles > 0 || j.amarillas > 0 || j.rojas > 0);
         
         activos.sort((a,b) => b.goles - a.goles).forEach(j => {
