@@ -95,6 +95,16 @@
         <div style="margin: 15px 0;">
     <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar por equipo, grupo o fase..." 
            onkeyup="filtrarPartidos()" 
+           style="border: 2px solid var(--primary); background: #fff; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box;">
+    
+    <div id="vistaResultados" style="display:none; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px;">
+        <h3 style="margin:0 0 10px 0; font-size: 1rem; color: var(--primary);">📊 Resultados Encontrados</h3>
+        <div id="listaFiltrada" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+</div>
+        <div style="margin: 15px 0;">
+    <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar por equipo, grupo o fase..." 
+           onkeyup="filtrarPartidos()" 
            style="border: 2px solid var(--primary); background: #fff; padding-left: 15px; margin-bottom: 10px;">
     
     <div id="vistaResultados" style="display:none; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
@@ -396,21 +406,23 @@
         if(datos.calendario.length > 0) {
             document.getElementById('seccionCalendario').style.display = 'block';
             datos.calendario.forEach(p => {
-                cC.innerHTML += `<div class="calendario-item ${p.aplazado?'status-aplazar':''}" style="opacity:${p.jugado?0.5:1}">
-                    <div class="calendario-info">
-                        <strong>${p.local} vs ${p.visitante} ${p.aplazado?'(APLAZADO)':''}</strong>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <input type="datetime-local" style="padding:5px; width:auto;" value="${p.fecha}" onchange="programarFechaLiga(${p.id}, this.value)">
-                            ${p.pendienteNotificar ? `<button class="btn-notificar" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">🚀 ENVIAR NOTIFICACIONES</button>` : ''}
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        ${p.jugado ? '✅' : `<button class="btn-ws" style="background:var(--primary)" onclick="document.getElementById('resLocal').value='${p.local}';document.getElementById('resVis').value='${p.visitante}';window.scrollTo(0, 500);">📝</button><button class="btn-aplazar" onclick="aplazarPartidoLiga(${p.id})">⏳</button>`}
-                        <button class="btn-ws" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">📲</button>
-                    </div>
-                </div>`;
-            });
-        }
+    // Esta línea calcula el marcador si el partido ya se jugó
+    const marcadorFinal = p.jugado ? `<span style="color:var(--success); font-weight:bold; margin-left:8px;">(${p.gL} - ${p.gV})</span>` : "";
+
+    cC.innerHTML += `<div class="calendario-item ${p.aplazado?'status-aplazar':''}" style="opacity:${p.jugado?0.8:1}">
+        <div class="calendario-info">
+            <strong>${p.local} vs ${p.visitante} ${marcadorFinal} ${p.aplazado?'(APLAZADO)':''}</strong>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <input type="datetime-local" style="padding:5px; width:auto;" value="${p.fecha}" onchange="programarFechaLiga(${p.id}, this.value)">
+                ${p.pendienteNotificar ? `<button class="btn-notificar" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">🚀 NOTIFICAR</button>` : ''}
+            </div>
+        </div>
+        <div style="display:flex; gap:5px;">
+            ${p.jugado ? '✅' : `<button class="btn-ws" style="background:var(--primary)" onclick="document.getElementById('resLocal').value='${p.local}';document.getElementById('resVis').value='${p.visitante}';window.scrollTo(0, 500);">📝</button><button class="btn-aplazar" onclick="aplazarPartidoLiga(${p.id})">⏳</button>`}
+            <button class="btn-ws" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">📲</button>
+        </div>
+    </div>`;
+});
 
         const cT = document.getElementById('contenedorTablas'); cT.innerHTML = '';
         [...new Set(datos.equipos.map(e => e.grupo))].sort().forEach(g => {
@@ -565,6 +577,40 @@
     if (lista.innerHTML === "") {
         lista.innerHTML = "<div style='padding:10px; color:gray;'>No se encontraron coincidencias.</div>";
     }
+}
+        function filtrarPartidos() {
+    const texto = document.getElementById('buscadorPartidos').value.toLowerCase();
+    const contenedor = document.getElementById('vistaResultados');
+    const lista = document.getElementById('listaFiltrada');
+    
+    if (texto === "") {
+        contenedor.style.display = 'none';
+        return;
+    }
+
+    contenedor.style.display = 'block';
+    lista.innerHTML = "";
+
+    // Filtrar Liga
+    datos.calendario.forEach(p => {
+        if (p.local.toLowerCase().includes(texto) || p.visitante.toLowerCase().includes(texto) || p.grupo.toLowerCase().includes(texto)) {
+            const marcador = p.jugado ? `<b style="color:var(--success)">${p.gL} - ${p.gV}</b>` : `<span style="color:orange">vs (Pendiente)</span>`;
+            lista.innerHTML += `<div style="padding:8px; border-bottom:1px solid #eee; font-size:0.9rem;">
+                <small style="color:gray;">${p.grupo}</small> | ${p.local} ${marcador} ${p.visitante}
+            </div>`;
+        }
+    });
+
+    // Filtrar Playoffs
+    datos.llaves.forEach(l => {
+        if (l.local.toLowerCase().includes(texto) || l.visitante.toLowerCase().includes(texto) || l.fase.toLowerCase().includes(texto)) {
+            let res = l.ganador ? `<b style="color:var(--playoff)">${l.gL} - ${l.gV}</b>` : `<span style="color:purple">vs (Eliminatoria)</span>`;
+            if (l.pL > 0 || l.pV > 0) res += ` <small>(${l.pL}-${l.pV} Pen)</small>`;
+            lista.innerHTML += `<div style="padding:8px; border-bottom:1px solid #eee; font-size:0.9rem; background:#fff0ff;">
+                <small style="color:var(--playoff); font-weight:bold;">${l.fase}</small> | ${l.local} ${res} ${l.visitante}
+            </div>`;
+        }
+    });
 }
 </script>
 </body>
