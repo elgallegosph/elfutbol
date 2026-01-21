@@ -1,9 +1,9 @@
-// 1. SIEMPRE LOS IMPORTS PRIMERO
+// 1. IMPORTACIONES (Siempre deben ir al principio)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// 2. CONFIGURACIÓN (Tus credenciales)
+// 2. CONFIGURACIÓN (Tus datos de Firebase)
 const firebaseConfig = {
   apiKey: "AIzaSyDea95aNqXhCuIOHPyrFwJKPX1sRAQBbEg",
   authDomain: "elfutbolapp.firebaseapp.com",
@@ -18,10 +18,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// 4. FUNCIONES GLOBALES (Para que los botones de HTML funcionen)
+// 4. FUNCIONES GLOBALES (AQUÍ ESTÁ LA SOLUCIÓN AL ERROR)
+// Usamos window.nombreDeLaFuncion para que el botón del HTML pueda encontrarla
 window.register = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
+    if (!email || !pass) return alert("Completa todos los campos");
+    
     try {
         await createUserWithEmailAndPassword(auth, email, pass);
         alert("¡Cuenta creada exitosamente!");
@@ -35,7 +38,7 @@ window.login = async () => {
     const pass = document.getElementById('password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-        alert("¡Sesión iniciada!");
+        alert("¡Bienvenido!");
     } catch (e) { 
         alert("Error al entrar: " + e.message); 
     }
@@ -44,7 +47,7 @@ window.login = async () => {
 window.logout = () => {
     signOut(auth).then(() => {
         alert("Sesión cerrada");
-        location.reload(); // Recarga para volver al login
+        location.reload(); 
     });
 };
 
@@ -63,13 +66,13 @@ window.crearTorneo = async () => {
             userId: user.uid
         });
         alert("¡Torneo '" + nombre + "' creado!");
-        cargarTorneos(); // Recarga la lista de botones
+        cargarTorneos(); 
     } catch (e) {
         console.error("Error: ", e);
     }
 };
 
-// 5. CARGAR TORNEOS
+// 5. LÓGICA DE CARGA
 async function cargarTorneos() {
     const user = auth.currentUser;
     if (!user) return;
@@ -84,20 +87,18 @@ async function cargarTorneos() {
         const t = doc.data();
         const btn = document.createElement('button');
         btn.innerText = t.nombre;
-        btn.style = "margin: 5px; padding: 10px; cursor: pointer; border-radius: 5px; background: white;";
+        btn.style = "margin: 5px; padding: 10px; cursor: pointer; border: 1px solid #000; background: #fff;";
         
         btn.onclick = () => {
-            // CAMBIO DE FONDO DINÁMICO
             document.body.style.backgroundImage = `url('${t.fondoUrl}')`;
             document.body.style.backgroundSize = "cover";
             document.body.style.backgroundAttachment = "fixed";
-            alert("Viendo: " + t.nombre);
         };
         contenedor.appendChild(btn);
     });
 }
 
-// 6. DETECTOR DE ESTADO (Muestra u oculta secciones)
+// 6. DETECTOR DE SESIÓN
 onAuthStateChanged(auth, (user) => {
     const seccionPrivada = document.getElementById('seccion-privada');
     const seccionAuth = document.getElementById('auth-container');
