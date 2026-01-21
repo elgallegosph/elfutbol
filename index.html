@@ -3,300 +3,303 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro - Gestión Completa</title>
+    <title>Torneo Pro - Gestión Integral</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; --ws: #25d366; --warning: #e67e22; }
+        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --success: #27ae60; --dark: #2c3e50; --warning: #f1c40f; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
-        header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; }
         .container { max-width: 1000px; margin: 10px auto; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         section { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; font-size: 1.4rem; }
+        h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
         input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 16px; }
-        .input-marcador { width: 65px !important; font-size: 1.2rem !important; font-weight: bold; text-align: center; border: 2px solid var(--primary) !important; display: inline-block; }
-        button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.98); }
-        .btn-sorteo { background: var(--success); }
-        .btn-playoff { background: var(--playoff); margin-top: 10px; }
-        .btn-danger { background: #c0392b; margin-top: 20px; }
-        .btn-ws { background: var(--ws); font-size: 0.8rem; padding: 8px; width: auto; min-width: 44px; }
-        .btn-notificar { background: var(--ws); color: white; animation: pulse-green 2s infinite; font-size: 0.85rem; }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
-        .btn-aplazar { background: var(--warning); font-size: 0.8rem; padding: 8px; width: auto; }
-        .lista-plantilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 20px; }
-        .card-plantilla { background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card-plantilla:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
-        .nombre-click { flex: 1; display: flex; align-items: center; gap: 5px; }
-        .equipo-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; cursor: pointer; }
-        .jugadores-lista { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: white; }
-        .card-plantilla.active .jugadores-lista { max-height: 500px; padding-bottom: 5px; }
-        .jugador-item { padding: 8px 12px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .jugador-nombre { flex: 1; }
-        .table-container { width: 100%; overflow-x: auto; margin-top: 15px; background: white; padding: 5px; border-radius: 5px; }
+        button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; }
+        .btn-descargar { background: var(--dark); margin: 10px 0; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        
+        /* Captura e Info */
+        #zonaCaptura { padding: 15px; background: white; }
+        .header-captura { display: none; border-bottom: 3px solid var(--primary); margin-bottom: 15px; padding-bottom: 10px; }
+        
+        /* Tablas */
+        .table-container { width: 100%; overflow-x: auto; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background: #f8f9fa; font-size: 0.9rem; }
-        .status-aplazar { border-left: 5px solid var(--warning) !important; background: #fffaf0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 0.9rem; }
+        th { background: #f8f9fa; }
+        
+        /* Plantillas */
+        .card-plantilla { border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
+        .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .jugadores-lista { display: none; padding: 5px; background: #fff; }
+        .card-plantilla.active .jugadores-lista { display: block; }
+        .jugador-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 0.85rem; }
 
-        /* MODO ADMIN ACTIVO */
-        body.admin-activo .nombre-click, body.admin-activo .jugador-nombre { cursor: pointer; color: var(--primary); text-decoration: underline dotted; }
+        /* Marcador */
+        .input-marcador { width: 60px !important; text-align: center; font-weight: bold; border: 2px solid var(--primary) !important; }
 
-        /* RESTRICCIONES SOLO LECTURA */
-        body.solo-lectura button:not(#panelAcceso button):not(.btn-descargar), 
-        body.solo-lectura input:not(#buscadorPartidos), 
-        body.solo-lectura select,
-        body.solo-lectura .btn-ws,
-        body.solo-lectura .btn-aplazar,
-        body.solo-lectura .btn-delete,
-        body.solo-lectura .btn-notificar {
-            display: none !important;
-        }
-
-        @media (max-width: 600px) { .input-marcador { width: 55px !important; } }
+        /* Permisos */
+        body.admin-activo .edit-link { cursor: pointer; color: var(--primary); text-decoration: underline; }
+        body.solo-lectura .admin-only { display: none !important; }
     </style>
 </head>
 <body class="solo-lectura">
 
-<div id="panelAcceso" style="background: #2c3e50; color: white; padding: 10px; text-align: center; font-size: 0.9rem;">
-    <div id="modoEspectador">
-        👁️ Modo Espectador (Lectura) 
-        <button onclick="activarAdmin()" style="width: auto; padding: 5px 15px; margin-left: 10px; background: var(--accent);">Admin Login</button>
-    </div>
-    <div id="modoAdmin" style="display:none;">
-        🔓 ADMINISTRADOR ACTIVO
-        <button onclick="cerrarSesion()" style="width: auto; padding: 5px 15px; margin-left: 10px; background: #7f8c8d;">Cerrar</button>
-    </div>
+<div id="panelAcceso" style="background: var(--dark); color: white; padding: 10px; text-align: center;">
+    <div id="modoEspectador">👁️ Modo Espectador <button onclick="login()" style="width:auto; padding:5px 15px; background:var(--accent); margin-left:10px;">Login Admin</button></div>
+    <div id="modoAdmin" style="display:none;">🔓 Administrador <button onclick="logout()" style="width:auto; padding:5px 15px; background:#7f8c8d; margin-left:10px;">Cerrar</button></div>
 </div>
 
-<header><h1>🏆 Gestión de Campeonato Pro</h1></header>
+<header>
+    <input type="text" id="nombreTorneoInput" placeholder="Nombre del Torneo" style="background:transparent; color:white; border:1px dashed white; text-align:center; font-size:1.5rem; width:80%;">
+</header>
 
 <div class="container">
-    <section>
-        <h2>1. Equipos y Plantillas</h2>
+    <section class="admin-only">
+        <h2>1. Registro de Equipos</h2>
         <div class="grid">
-            <div>
-                <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
-                <input type="text" id="whatsappEquipo" placeholder="WhatsApp">
-                <button onclick="registrarEquipo()">Registrar Equipo</button>
-            </div>
-            <div>
-                <select id="selectEquipoJugador"></select>
-                <input type="text" id="nombreJugador" placeholder="Nombre Jugador">
-                <button onclick="registrarJugador()">Añadir Jugador</button>
-            </div>
+            <input type="text" id="nomEq" placeholder="Nombre del Equipo">
+            <button onclick="addEquipo()">Registrar Equipo</button>
         </div>
-        <div id="contenedorPlantillas" class="lista-plantilla"></div>
+    </section>
+
+    <section class="admin-only">
+        <h2>2. Configurar Calendario</h2>
+        <div class="grid">
+            <select id="cantGrupos">
+                <option value="1">Liga Única</option>
+                <option value="2">2 Grupos (A y B)</option>
+                <option value="4">4 Grupos (A, B, C, D)</option>
+            </select>
+            <select id="tipoIdaVuelta">
+                <option value="1">Solo Ida</option>
+                <option value="2">Ida y Vuelta</option>
+            </select>
+            <button onclick="generarCalendario()" style="background: var(--success);">🎲 Generar Grupos y Partidos</button>
+        </div>
+    </section>
+
+    <section class="admin-only">
+        <h2>3. Cargar Resultado</h2>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <div style="display:flex; gap:10px; width:100%;">
+                <select id="selLoc" style="flex:2;"></select>
+                <input type="number" id="resL" class="input-marcador" value="0">
+            </div>
+            <div style="display:flex; gap:10px; width:100%;">
+                <input type="number" id="resV" class="input-marcador" value="0">
+                <select id="selVis" style="flex:2;"></select>
+            </div>
+            <button onclick="guardarResultado()" style="width:100%;">Registrar Partido</button>
+        </div>
+    </section>
+
+    <section class="admin-only">
+        <h2>4. Goles y Tarjetas</h2>
+        <div class="grid">
+            <select id="selEqEv" onchange="updateSelJug()"></select>
+            <select id="selJugEv"></select>
+            <select id="tipoEv">
+                <option value="gol">⚽ Gol</option>
+                <option value="ama">🟨 Amarilla</option>
+                <option value="roja">🟥 Roja</option>
+            </select>
+            <button onclick="addEvento()">Grabar Evento</button>
+        </div>
     </section>
 
     <section>
-        <h2>2. Calendario y Buscador</h2>
-        <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar equipo (ej: Real Madrid)..." onkeyup="filtrarPartidos()">
-        <div id="vistaResultados" style="display:none; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin: 10px 0;">
-            <div id="listaFiltrada"></div>
-        </div>
-        <div id="seccionCalendario" style="display:none; margin-top: 20px;"><div id="contenedorCalendario"></div></div>
-        <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Generar Calendario</button>
-    </section>
-
-    <section id="seccionDescarga">
-        <h2>3. Clasificación</h2>
-        <button class="btn-descargar" onclick="descargarTabla()" style="background: #34495e; margin-bottom: 10px; width: auto; padding: 10px 20px;">📸 Descargar Tabla (Imagen)</button>
-        <div id="contenedorTablas"></div>
-    </section>
-
-    <section>
-        <h2>4. Cargar Resultado</h2>
-        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
-            <div style="display: flex; gap: 10px; width: 100%; justify-content: center;">
-                <select id="resLocal" style="flex:1;"></select>
-                <input type="number" id="gLocal" class="input-marcador" value="0">
+        <h2>5. Posiciones y Estadísticas</h2>
+        <button class="btn-descargar" onclick="descargarImagen()">📸 Descargar Tabla (Imagen)</button>
+        
+        <div id="zonaCaptura">
+            <div class="header-captura" id="capHeader">
+                <h1 id="capTitulo"></h1>
+                <p id="capFecha"></p>
             </div>
-            <div style="display: flex; gap: 10px; width: 100%; justify-content: center;">
-                <input type="number" id="gVis" class="input-marcador" value="0">
-                <select id="resVis" style="flex:1;"></select>
-            </div>
-            <button onclick="cargarResultadoFinal()">Cargar Resultado</button>
+            <div id="tablasPosiciones"></div>
         </div>
     </section>
 
     <section>
-        <h2>5. Goleadores</h2>
-        <div class="table-container">
-            <table id="tablaGoleadores">
-               <thead><tr><th>Jugador</th><th>Equipo</th><th>⚽</th></tr></thead>
-               <tbody></tbody>
-            </table>
-        </div>
+        <h2>6. Calendario de Partidos</h2>
+        <input type="text" id="busq" placeholder="🔍 Buscar equipo..." onkeyup="render()">
+        <div id="listaPartidos" style="margin-top:15px; max-height:400px; overflow-y:auto;"></div>
     </section>
-    
-    <button class="btn-danger" onclick="reiniciarTorneo()">BORRAR TODO (ADMIN)</button>
+
+    <section>
+        <h2>7. Plantillas y Goleadores</h2>
+        <div class="admin-only" style="margin-bottom:15px; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+            <select id="selEqPlantilla"></select>
+            <input type="text" id="nomJugPlantilla" placeholder="Nombre Jugador">
+            <button onclick="addJugador()">Añadir a Plantilla</button>
+        </div>
+        <div id="plantillasContenedor"></div>
+    </section>
+
+    <button class="admin-only" onclick="resetTorneo()" style="background:var(--accent); margin-top:50px;">🗑️ REINICIAR TODO EL TORNEO</button>
 </div>
 
 <script>
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzR9hgwvG2-B8gFHIlhpSuKCY_2jybTvwOIyQlqxZMftWm9FZTUaTA6mpDtrmrGOpDylA/exec'; 
-    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], llaves: [], calendario: [] };
+    let db = JSON.parse(localStorage.getItem('torneo_pro_v4')) || { 
+        nombre: "MI TORNEO", 
+        equipos: [], 
+        partidos: [] 
+    };
 
-    // --- SEGURIDAD ---
-    function aplicarPermisos() {
-        const esAdmin = localStorage.getItem('admin_session') === 'true';
-        if (esAdmin) {
-            document.body.classList.remove('solo-lectura');
-            document.body.classList.add('admin-activo');
-            document.getElementById('modoAdmin').style.display = 'block';
-            document.getElementById('modoEspectador').style.display = 'none';
+    function login() { if(prompt("PIN:")==="1234") { localStorage.setItem('isAdmin', 'true'); location.reload(); } }
+    function logout() { localStorage.removeItem('isAdmin'); location.reload(); }
+
+    function addEquipo() {
+        const n = document.getElementById('nomEq').value.trim();
+        if(n) { db.equipos.push({ nombre: n, grupo: 'A', pj:0, pg:0, pe:0, pp:0, gf:0, gc:0, pts:0, jugadores:[] }); save(); }
+    }
+
+    function generarCalendario() {
+        if(db.equipos.length < 2) return alert("Mínimo 2 equipos");
+        const nG = parseInt(document.getElementById('cantGrupos').value);
+        const tipo = parseInt(document.getElementById('tipoIdaVuelta').value);
+        
+        // Asignar Grupos
+        db.equipos.sort(() => Math.random() - 0.5);
+        db.equipos.forEach((e, i) => {
+            e.grupo = String.fromCharCode(65 + (i % nG));
+            e.pj=0; e.pg=0; e.pe=0; e.pp=0; e.gf=0; e.gc=0; e.pts=0;
+        });
+
+        // Crear Partidos (Sin mezclar grupos)
+        db.partidos = [];
+        const grupos = [...new Set(db.equipos.map(e => e.grupo))];
+        grupos.forEach(g => {
+            const eqs = db.equipos.filter(e => e.grupo === g);
+            for(let i=0; i<eqs.length; i++) {
+                for(let j=i+1; j<eqs.length; j++) {
+                    db.partidos.push({ id: Math.random(), g, loc: eqs[i].nombre, vis: eqs[j].nombre, jug: false, gl:0, gv:0 });
+                    if(tipo === 2) db.partidos.push({ id: Math.random(), g, loc: eqs[j].nombre, vis: eqs[i].nombre, jug: false, gl:0, gv:0 });
+                }
+            }
+        });
+        save();
+    }
+
+    function guardarResultado() {
+        const l = document.getElementById('selLoc').value, v = document.getElementById('selVis').value;
+        const gl = parseInt(document.getElementById('resL').value), gv = parseInt(document.getElementById('resV').value);
+        const p = db.partidos.find(x => !x.jug && x.loc === l && x.vis === v);
+        if(!p) return alert("Partido no encontrado o ya jugado");
+
+        let el = db.equipos.find(e => e.nombre === l), ev = db.equipos.find(e => e.nombre === v);
+        p.gl = gl; p.gv = gv; p.jug = true;
+        el.pj++; ev.pj++; el.gf += gl; el.gc += gv; ev.gf += gv; ev.gc += gl;
+
+        if(gl > gv) { el.pg++; el.pts += 3; ev.pp++; }
+        else if(gv > gl) { ev.pg++; ev.pts += 3; el.pp++; }
+        else { el.pe++; ev.pe++; el.pts += 1; ev.pts += 1; }
+        save();
+    }
+
+    function addJugador() {
+        const eq = db.equipos.find(e => e.nombre === document.getElementById('selEqPlantilla').value);
+        const n = document.getElementById('nomJugPlantilla').value.trim();
+        if(eq && n) { eq.jugadores.push({ nombre: n, g:0, a:0, r:0 }); save(); }
+    }
+
+    function addEvento() {
+        const eq = db.equipos.find(e => e.nombre === document.getElementById('selEqEv').value);
+        const jug = eq?.jugadores.find(j => j.nombre === document.getElementById('selJugEv').value);
+        if(!jug) return;
+        const t = document.getElementById('tipoEv').value;
+        if(t === 'gol') jug.g++; else if(t === 'ama') jug.a++; else jug.r++;
+        save();
+    }
+
+    function editNombre(tipo, original, eqNom = '') {
+        if(localStorage.getItem('isAdmin') !== 'true') return;
+        const nuevo = prompt("Nuevo nombre:", original);
+        if(!nuevo) return;
+        if(tipo === 'eq') {
+            db.partidos.forEach(p => { if(p.loc === original) p.loc = nuevo; if(p.vis === original) p.vis = nuevo; });
+            db.equipos.find(e => e.nombre === original).nombre = nuevo;
         } else {
-            document.body.classList.add('solo-lectura');
-            document.body.classList.remove('admin-activo');
-            document.getElementById('modoAdmin').style.display = 'none';
-            document.getElementById('modoEspectador').style.display = 'block';
+            db.equipos.find(e => e.nombre === eqNom).jugadores.find(j => j.nombre === original).nombre = nuevo;
         }
+        save();
     }
 
-    function activarAdmin() {
-        if (prompt("PIN ADMIN:") === "1234") {
-            localStorage.setItem('admin_session', 'true');
-            aplicarPermisos();
-        }
+    function save() {
+        db.nombre = document.getElementById('nombreTorneoInput').value;
+        localStorage.setItem('torneo_pro_v4', JSON.stringify(db));
+        render();
     }
 
-    function cerrarSesion() { localStorage.removeItem('admin_session'); location.reload(); }
-
-    // --- EXPORTAR ---
-    function descargarTabla() {
-        const tabla = document.getElementById('contenedorTablas');
-        html2canvas(tabla).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'Tabla_Posiciones.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        });
+    function updateSelJug() {
+        const s = document.getElementById('selJugEv'); s.innerHTML = '';
+        const eq = db.equipos.find(e => e.nombre === document.getElementById('selEqEv').value);
+        eq?.jugadores.forEach(j => s.innerHTML += `<option>${j.nombre}</option>`);
     }
 
-    // --- FUNCIONES CORE ---
-    async function guardar() {
-        localStorage.setItem('torneo_data', JSON.stringify(datos));
-        actualizarInterfaces();
-        if (WEB_APP_URL.includes('AKfy')) {
-            fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(datos) });
-        }
-    }
+    function render() {
+        const admin = localStorage.getItem('isAdmin') === 'true';
+        document.body.className = admin ? 'admin-activo' : 'solo-lectura';
+        document.getElementById('modoAdmin').style.display = admin ? 'block' : 'none';
+        document.getElementById('modoEspectador').style.display = admin ? 'none' : 'block';
+        document.getElementById('nombreTorneoInput').value = db.nombre;
+        document.getElementById('nombreTorneoInput').disabled = !admin;
 
-    function registrarEquipo() {
-        const nom = document.getElementById('nombreEquipo').value.trim();
-        if (nom) { datos.equipos.push({ nombre: nom, whatsapp: '', pj:0, pg:0, pe:0, pp:0, pts:0, gf:0, gc:0, jugadores:[], grupo:"Grupo A" }); guardar(); }
-    }
-
-    function registrarJugador() {
-        const eq = datos.equipos.find(x => x.nombre === document.getElementById('selectEquipoJugador').value);
-        const n = document.getElementById('nombreJugador').value.trim();
-        if(eq && n) { eq.jugadores.push({ nombre: n, goles:0, amarillas:0, rojas:0 }); guardar(); }
-    }
-
-    // --- EDICIÓN RESTRINGIDA ---
-    function modificarEquipo(nombre) {
-        if (localStorage.getItem('admin_session') !== 'true') return;
-        const eq = datos.equipos.find(e => e.nombre === nombre);
-        const nuevo = prompt("Nuevo nombre equipo:", eq.nombre);
-        if (nuevo) { 
-            datos.calendario.forEach(p => { if(p.local===nombre) p.local=nuevo; if(p.visitante===nombre) p.visitante=nuevo; });
-            eq.nombre = nuevo; guardar(); 
-        }
-    }
-
-    function modificarJugador(eqNom, jugNom) {
-        if (localStorage.getItem('admin_session') !== 'true') return;
-        const jug = datos.equipos.find(e => e.nombre === eqNom).jugadores.find(j => j.nombre === jugNom);
-        const nuevo = prompt("Nuevo nombre jugador:", jug.nombre);
-        if (nuevo) { jug.nombre = nuevo; guardar(); }
-    }
-
-    function eliminarEquipo(nombre) {
-        if (localStorage.getItem('admin_session') === 'true' && confirm("¿Eliminar?")) {
-            datos.equipos = datos.equipos.filter(e => e.nombre !== nombre); guardar();
-        }
-    }
-
-    function realizarSorteo() {
-        const mezel = [...datos.equipos].sort(() => Math.random() - 0.5);
-        datos.calendario = [];
-        for(let i=0; i<mezel.length; i++) {
-            for(let j=i+1; j<mezel.length; j++) {
-                datos.calendario.push({ id: Math.random(), local: mezel[i].nombre, visitante: mezel[j].nombre, jugado: false, gL:0, gV:0, fecha: "" });
-            }
-        }
-        guardar();
-    }
-
-    function cargarResultadoFinal() {
-        const nL = document.getElementById('resLocal').value, nV = document.getElementById('resVis').value;
-        const gL = parseInt(document.getElementById('gLocal').value)||0, gV = parseInt(document.getElementById('gVis').value)||0;
-        const p = datos.calendario.find(x => !x.jugado && x.local === nL && x.visitante === nV);
-        if(!p) return;
-        let eL = datos.equipos.find(e => e.nombre === nL), eV = datos.equipos.find(e => e.nombre === nV);
-        eL.pj++; eV.pj++; eL.gf += gL; eL.gc += gV; eV.gf += gV; eV.gc += gL;
-        p.gL = gL; p.gV = gV; p.jugado = true;
-        if(gL > gV) { eL.pg++; eL.pts += 3; eV.pp++; } else if(gV > gL) { eV.pg++; eV.pts += 3; eL.pp++; } else { eL.pe++; eV.pe++; eL.pts += 1; eV.pts += 1; }
-        guardar();
-    }
-
-    function filtrarPartidos() {
-        const texto = document.getElementById('buscadorPartidos').value.toLowerCase();
-        const lista = document.getElementById('listaFiltrada');
-        document.getElementById('vistaResultados').style.display = texto.length > 1 ? 'block' : 'none';
-        lista.innerHTML = "";
-        datos.calendario.forEach(p => {
-            if (p.local.toLowerCase().includes(texto) || p.visitante.toLowerCase().includes(texto)) {
-                lista.innerHTML += `<div style="padding:5px; border-bottom:1px solid #ddd;">${p.local} ${p.jugado ? `<b>${p.gL}-${p.gV}</b>` : 'vs'} ${p.visitante}</div>`;
-            }
-        });
-    }
-
-    function actualizarInterfaces() {
-        aplicarPermisos();
         // Selects
-        ['selectEquipoJugador','resLocal','resVis'].forEach(id => {
-            const s = document.getElementById(id); s.innerHTML = '';
-            datos.equipos.forEach(e => s.innerHTML += `<option value="${e.nombre}">${e.nombre}</option>`);
+        ['selEqPlantilla','selLoc','selVis','selEqEv'].forEach(id => {
+            const s = document.getElementById(id); const val = s.value;
+            s.innerHTML = ''; db.equipos.forEach(e => s.innerHTML += `<option>${e.nombre}</option>`);
+            s.value = val;
+        });
+
+        // Tablas por Grupo
+        const contT = document.getElementById('tablasPosiciones'); contT.innerHTML = '';
+        const grupos = [...new Set(db.equipos.map(e => e.grupo))].sort();
+        grupos.forEach(g => {
+            let h = `<h3>Grupo ${g}</h3><div class="table-container"><table><thead><tr><th>Equipo</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>DG</th><th>Pts</th></tr></thead><tbody>`;
+            db.equipos.filter(e => e.grupo === g).sort((a,b) => b.pts - a.pts || (b.gf-b.gc)-(a.gf-a.gc)).forEach(e => {
+                h += `<tr><td class="edit-link" onclick="editNombre('eq','${e.nombre}')">${e.nombre}</td><td>${e.pj}</td><td>${e.pg}</td><td>${e.pe}</td><td>${e.pp}</td><td>${e.gf-e.gc}</td><td><b>${e.pts}</b></td></tr>`;
+            });
+            contT.innerHTML += h + '</tbody></table></div>';
         });
 
         // Calendario
-        const cC = document.getElementById('contenedorCalendario'); cC.innerHTML = '';
-        if(datos.calendario.length > 0) {
-            document.getElementById('seccionCalendario').style.display = 'block';
-            datos.calendario.forEach(p => {
-                cC.innerHTML += `<div class="calendario-item" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee; opacity:${p.jugado?0.6:1}">
-                    <span>${p.local} <b>${p.jugado ? '('+p.gL+'-'+p.gV+')' : 'vs'}</b> ${p.visitante}</span>
-                    <div>${p.jugado ? '✅' : `<button style="width:auto; padding:5px;" onclick="document.getElementById('resLocal').value='${p.local}';document.getElementById('resVis').value='${p.visitante}';">📝</button>`}</div>
+        const bus = document.getElementById('busq').value.toLowerCase();
+        const contC = document.getElementById('listaPartidos'); contC.innerHTML = '';
+        db.partidos.forEach(p => {
+            if(p.loc.toLowerCase().includes(bus) || p.vis.toLowerCase().includes(bus)) {
+                contC.innerHTML += `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; background:${p.jug?'#f9f9f9':'#fff'}">
+                    <span><small>${p.g}</small> | ${p.loc} <b>${p.jug?p.gl+' - '+p.gv:'vs'}</b> ${p.vis}</span>
+                    ${!p.jug && admin ? `<button style="width:auto; padding:2px 8px;" onclick="document.getElementById('selLoc').value='${p.loc}';document.getElementById('selVis').value='${p.vis}';window.scrollTo(0,0)">📝</button>`:''}
                 </div>`;
-            });
-        }
-
-        // Tablas
-        const cT = document.getElementById('contenedorTablas'); cT.innerHTML = '<h3>Tabla de Posiciones</h3>';
-        let h = `<div class="table-container"><table><thead><tr><th>Equipo</th><th>PJ</th><th>GF</th><th>GC</th><th>Pts</th></tr></thead><tbody>`;
-        [...datos.equipos].sort((a,b) => b.pts - a.pts || (b.gf-b.gc)-(a.gf-a.gc)).forEach(e => {
-            h += `<tr><td>${e.nombre}</td><td>${e.pj}</td><td>${e.gf}</td><td>${e.gc}</td><td><b>${e.pts}</b></td></tr>`;
+            }
         });
-        cT.innerHTML += h + '</tbody></table></div>';
-
-        // Goleadores
-        const tbG = document.querySelector('#tablaGoleadores tbody'); tbG.innerHTML = '';
-        let jrs = []; datos.equipos.forEach(e => e.jugadores.forEach(j => jrs.push({...j, eq:e.nombre})));
-        jrs.sort((a,b)=>b.goles-a.goles).forEach(j => { if(j.goles > 0) tbG.innerHTML += `<tr><td>${j.nombre}</td><td>${j.eq}</td><td>${j.goles}</td></tr>`; });
 
         // Plantillas
-        const cPL = document.getElementById('contenedorPlantillas'); cPL.innerHTML = '';
-        datos.equipos.forEach(e => {
-            const jgs = e.jugadores.map(j => `<div class="jugador-item"><span class="jugador-nombre" onclick="modificarJugador('${e.nombre}','${j.nombre}')">👤 ${j.nombre}</span> ⚽ ${j.goles}</div>`).join('');
-            cPL.innerHTML += `<div class="card-plantilla"><div class="equipo-header"><span class="nombre-click" onclick="modificarEquipo('${e.nombre}')">${e.nombre}</span> <span class="equipo-badge" onclick="this.parentElement.parentElement.classList.toggle('active')">${e.jugadores.length} Ver ▼</span></div><div class="jugadores-lista">${jgs}</div></div>`;
+        const contP = document.getElementById('plantillasContenedor'); contP.innerHTML = '';
+        db.equipos.forEach(e => {
+            const jgs = e.jugadores.map(j => `<div class="jugador-item"><span class="edit-link" onclick="editNombre('jug','${j.nombre}','${e.nombre}')">👤 ${j.nombre}</span> <span>⚽${j.g} 🟨${j.a} 🟥${j.r}</span></div>`).join('');
+            contP.innerHTML += `<div class="card-plantilla"><div class="equipo-header" onclick="this.parentElement.classList.toggle('active')"><span>${e.nombre} (G: ${e.grupo})</span><span>${e.jugadores.length} Ver ▼</span></div><div class="jugadores-lista">${jgs || 'Sin jugadores'}</div></div>`;
         });
     }
 
-    function reiniciarTorneo() { if(prompt("PIN:")==="1234") { datos={equipos:[],llaves:[],calendario:[]}; guardar(); } }
+    function descargarImagen() {
+        const h = document.getElementById('capHeader');
+        document.getElementById('capTitulo').innerText = db.nombre;
+        document.getElementById('capFecha').innerText = "Corte: " + new Date().toLocaleString();
+        h.style.display = 'block';
+        html2canvas(document.getElementById('zonaCaptura')).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Posiciones_${db.nombre}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            h.style.display = 'none';
+        });
+    }
 
-    actualizarInterfaces();
+    function resetTorneo() { if(confirm("¿BORRAR TODO?")) { localStorage.clear(); location.reload(); } }
+
+    render();
 </script>
 </body>
 </html>
