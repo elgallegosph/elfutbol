@@ -92,6 +92,11 @@
 
     <section>
         <h2>2. Sorteo y Calendario</h2>
+        <div style="margin: 15px 0; position: relative;">
+    <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar equipo (Ej: Real Madrid)..." 
+           onkeyup="filtrarPartidos()" 
+           style="border: 2px solid var(--primary); background: #fff; padding-left: 40px;">
+</div>
         <div class="grid">
            <select id="cantidadGrupos"><option value="1">Liga Única</option><option value="2">2 Grupos</option><option value="4">4 Grupos</option></select>
            <select id="tipoCalendario"><option value="1">Solo Ida</option><option value="2">Ida y Vuelta</option></select>
@@ -489,6 +494,23 @@
 }
     
     actualizarInterfaces();
+    function filtrarPartidos() {
+    const texto = document.getElementById('buscadorPartidos').value.toLowerCase();
+    const items = document.querySelectorAll('.calendario-item');
+    const llaves = document.querySelectorAll('.fase-card');
+
+    // Filtrar partidos de liga
+    items.forEach(item => {
+        const contenido = item.textContent.toLowerCase();
+        item.style.display = contenido.includes(texto) ? 'grid' : 'none';
+    });
+
+    // Filtrar llaves de playoffs
+    llaves.forEach(llave => {
+        const contenido = llave.textContent.toLowerCase();
+        llave.style.display = contenido.includes(texto) ? 'block' : 'none';
+    });
+}
 </script>
 </body>
 </html>
