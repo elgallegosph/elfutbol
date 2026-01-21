@@ -62,10 +62,24 @@
         body.solo-lectura .btn-notificar {
             display: none !important;
         }
-
+<div id="seccion-privada" style="padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 20px;">
+    <h2>Panel de Torneos</h2>
+    <div style="margin-bottom: 15px;">
+        <input type="text" id="nombreTorneo" placeholder="Nombre del torneo (ej: Copa Verano)" style="padding: 8px;">
+        <input type="text" id="urlFondo" placeholder="Link de imagen de fondo" style="padding: 8px;">
+        <button onclick="crearTorneo()" style="padding: 8px; cursor: pointer;">Crear Torneo</button>
+    </div>
+    
+    <h3>Mis Torneos:</h3>
+    <div id="listaTorneos" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        </div>
+</div>
         @media (max-width: 600px) { .texto-dorado { font-size: 2rem; } .llave-row { flex-direction: column; text-align: center; } .input-marcador { width: 55px !important; } }
     </style>
 </head>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
 <body>
 
 <div id="panelAcceso" style="background: #2c3e50; color: white; padding: 10px; text-align: center; font-size: 0.9rem;">
