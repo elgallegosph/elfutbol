@@ -93,6 +93,16 @@
     <section>
         <h2>2. Sorteo y Calendario</h2>
         <div style="margin: 15px 0;">
+        <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar equipo, grupo o fase..." 
+               onkeyup="filtrarPartidos()" 
+               style="border: 2px solid var(--primary); background: #fff; padding: 12px; border-radius: 5px; width: 100%; box-sizing: border-box; font-size: 16px;">
+        
+        <div id="vistaResultados" style="display:none; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px;">
+            <h3 style="margin:0 0 10px 0; font-size: 1rem; color: var(--primary);">📊 Resultados y Estadísticas</h3>
+            <div id="listaFiltrada" style="max-height: 300px; overflow-y: auto;"></div>
+        </div>
+    </div>
+        <div style="margin: 15px 0;">
     <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar por equipo, grupo o fase..." 
            onkeyup="filtrarPartidos()" 
            style="border: 2px solid var(--primary); background: #fff; padding: 10px; border-radius: 5px; width: 100%; box-sizing: border-box;">
@@ -406,24 +416,39 @@
         if(datos.calendario.length > 0) {
             document.getElementById('seccionCalendario').style.display = 'block';
             datos.calendario.forEach(p => {
-    // Esta línea calcula el marcador si el partido ya se jugó
-    const marcadorFinal = p.jugado ? `<span style="color:var(--success); font-weight:bold; margin-left:8px;">(${p.gL} - ${p.gV})</span>` : "";
+    datos.calendario.forEach(p => {
+            let localEstilo = "";
+            let visitaEstilo = "";
+            let marcadorFinal = "";
 
-    cC.innerHTML += `<div class="calendario-item ${p.aplazado?'status-aplazar':''}" style="opacity:${p.jugado?0.8:1}">
-        <div class="calendario-info">
-            <strong>${p.local} vs ${p.visitante} ${marcadorFinal} ${p.aplazado?'(APLAZADO)':''}</strong>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <input type="datetime-local" style="padding:5px; width:auto;" value="${p.fecha}" onchange="programarFechaLiga(${p.id}, this.value)">
-                ${p.pendienteNotificar ? `<button class="btn-notificar" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">🚀 NOTIFICAR</button>` : ''}
-            </div>
-        </div>
-        <div style="display:flex; gap:5px;">
-            ${p.jugado ? '✅' : `<button class="btn-ws" style="background:var(--primary)" onclick="document.getElementById('resLocal').value='${p.local}';document.getElementById('resVis').value='${p.visitante}';window.scrollTo(0, 500);">📝</button><button class="btn-aplazar" onclick="aplazarPartidoLiga(${p.id})">⏳</button>`}
-            <button class="btn-ws" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">📲</button>
-        </div>
-    </div>`;
-});
+            // Lógica para resaltar al ganador y poner marcador
+            if (p.jugado) {
+                if (p.gL > p.gV) {
+                    localEstilo = "color:var(--success); font-weight:bold;";
+                } else if (p.gV > p.gL) {
+                    visitaEstilo = "color:var(--success); font-weight:bold;";
+                }
+                marcadorFinal = `<span style="color:var(--primary); font-weight:bold; margin: 0 10px;">(${p.gL} - ${p.gV})</span>`;
+            }
 
+            cC.innerHTML += `<div class="calendario-item ${p.aplazado?'status-aplazar':''}" style="opacity:${p.jugado?0.8:1}">
+                <div class="calendario-info">
+                    <div style="font-size:1rem;">
+                        <span style="${localEstilo}">${p.local}</span> 
+                        ${marcadorFinal || ' <small style="color:#ccc">vs</small> '} 
+                        <span style="${visitaEstilo}">${p.visitante}</span>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
+                        <input type="datetime-local" style="padding:5px; width:auto; font-size:12px; border:1px solid #ddd;" value="${p.fecha}" onchange="programarFechaLiga(${p.id}, this.value)">
+                        ${p.aplazado ? '<span style="color:var(--warning); font-size:11px; font-weight:bold;">⚠️ APLAZADO</span>' : ''}
+                    </div>
+                </div>
+                <div style="display:flex; gap:5px; align-items:center;">
+                    ${p.jugado ? '<span style="color:var(--success); font-weight:bold;">✅</span>' : `<button class="btn-ws" style="background:var(--primary); padding:5px 10px;" onclick="document.getElementById('resLocal').value='${p.local}';document.getElementById('resVis').value='${p.visitante}';window.scrollTo(0, 500);">📝</button>`}
+                    <button class="btn-ws" style="padding:5px 10px;" onclick="enviarWhatsApp('${p.local}','${p.visitante}',${p.id}, false)">📲</button>
+                </div>
+            </div>`;
+        });
         const cT = document.getElementById('contenedorTablas'); cT.innerHTML = '';
         [...new Set(datos.equipos.map(e => e.grupo))].sort().forEach(g => {
             if(g === "Sin Asignar") return;
@@ -515,7 +540,45 @@
         } 
     }
 }
-    
+    function filtrarPartidos() {
+        const texto = document.getElementById('buscadorPartidos').value.toLowerCase();
+        const contenedor = document.getElementById('vistaResultados');
+        const lista = document.getElementById('listaFiltrada');
+        
+        if (texto === "" || texto.length < 2) {
+            contenedor.style.display = 'none';
+            return;
+        }
+
+        contenedor.style.display = 'block';
+        lista.innerHTML = "";
+        let golesTotales = 0;
+        let partidosEncontrados = 0;
+
+        datos.calendario.forEach(p => {
+            if (p.local.toLowerCase().includes(texto) || p.visitante.toLowerCase().includes(texto)) {
+                partidosEncontrados++;
+                let res = "vs";
+                if (p.jugado) {
+                    res = `<b style="color:var(--primary)">${p.gL} - ${p.gV}</b>`;
+                    if (p.local.toLowerCase().includes(texto)) golesTotales += p.gL;
+                    if (p.visitante.toLowerCase().includes(texto)) golesTotales += p.gV;
+                }
+                lista.innerHTML += `<div style="padding:8px; border-bottom:1px solid #eee; font-size:0.9rem;">
+                    <small style="color:gray;">${p.grupo}</small> | ${p.local} ${res} ${p.visitante}
+                </div>`;
+            }
+        });
+
+        if (partidosEncontrados > 0) {
+            const resumenGoles = `<div style="margin-bottom:10px; padding:10px; background:var(--success); color:white; border-radius:5px; text-align:center; font-weight:bold;">
+                ⚽ GOLES TOTALES DE "${texto.toUpperCase()}": ${golesTotales}
+            </div>`;
+            lista.innerHTML = resumenGoles + lista.innerHTML;
+        } else {
+            lista.innerHTML = "<div style='padding:10px; color:gray;'>No se encontraron resultados.</div>";
+        }
+    }
     actualizarInterfaces();
     function filtrarPartidos() {
     const texto = document.getElementById('buscadorPartidos').value.toLowerCase();
