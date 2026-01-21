@@ -92,6 +92,17 @@
 
     <section>
         <h2>2. Sorteo y Calendario</h2>
+        <div style="margin: 15px 0;">
+    <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar por equipo, grupo o fase..." 
+           onkeyup="filtrarPartidos()" 
+           style="border: 2px solid var(--primary); background: #fff; padding-left: 15px; margin-bottom: 10px;">
+    
+    <div id="vistaResultados" style="display:none; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+        <h3 style="margin-top:0; font-size: 1rem; color: var(--primary);">📊 Historial de Encuentros</h3>
+        <div id="listaFiltrada" style="max-height: 400px; overflow-y: auto;">
+            </div>
+    </div>
+</div>
         <div style="margin: 15px 0; position: relative;">
     <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar equipo (Ej: Real Madrid)..." 
            onkeyup="filtrarPartidos()" 
