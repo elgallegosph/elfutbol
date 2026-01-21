@@ -1,4 +1,30 @@
-// En app.js
+// Cambia esto en app.js
+window.register = async () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    try {
+        await createUserWithEmailAndPassword(auth, email, pass);
+        alert("¡Cuenta creada exitosamente!");
+    } catch (e) { 
+        alert("Error al registrar: " + e.message); 
+    }
+};
+
+window.login = async () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+    } catch (e) { 
+        alert("Error al entrar: " + e.message); 
+    }
+};
+
+window.logout = () => signOut(auth);
+
+window.crearTorneo = async () => {
+    // ... tu código de crear torneo ...
+};
 window.crearTorneo = async () => { 
    // ... todo el código que te pasé antes ...
 }
