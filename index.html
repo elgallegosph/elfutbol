@@ -237,33 +237,6 @@
 
     cargarDesdeDrive();
 
-    // MODO ADMIN / ESPECTADOR
-    function activarAdmin() {
-        const pin = prompt("Introduce el PIN de Administrador:");
-        if (pin === "1234") {
-            localStorage.setItem('admin_session', 'true');
-            aplicarPermisos();
-        } else { alert("PIN Incorrecto"); }
-    }
-
-    function cerrarSesion() {
-        localStorage.removeItem('admin_session');
-        location.reload();
-    }
-
-    function aplicarPermisos() {
-        const esAdmin = localStorage.getItem('admin_session') === 'true';
-        if (esAdmin) {
-            document.body.classList.remove('solo-lectura');
-            document.getElementById('modoAdmin').style.display = 'block';
-            document.getElementById('modoEspectador').style.display = 'none';
-        } else {
-            document.body.classList.add('solo-lectura');
-            document.getElementById('modoAdmin').style.display = 'none';
-            document.getElementById('modoEspectador').style.display = 'block';
-        }
-    }
-
     // BUSCADOR DE PARTIDOS
     function filtrarPartidos() {
         const texto = document.getElementById('buscadorPartidos').value.toLowerCase();
@@ -555,28 +528,35 @@
     }
 
     actualizarInterfaces();
-<div id="seccion-publica" style="background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; margin: 20px; color: #000; text-align: center;">
-    <h2>🏆 Torneos Disponibles</h2>
-    <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+<div id="seccion-publica" style="background: rgba(255,255,255,0.95); padding: 25px; border-radius: 15px; margin: 20px; color: #000; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+    <h2 style="margin-top:0;">🏆 Torneos Disponibles</h2>
+    <p>Selecciona un torneo para cambiar el fondo y visualizarlo:</p>
+    <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 15px;">
         </div>
 </div>
 
-<div id="auth-container" style="background: white; padding: 20px; border: 1px solid #ccc; margin: 20px; text-align: center; border-radius: 10px; color: #333;">
-    <h3>Administración</h3>
-    <input type="email" id="email" placeholder="Correo" style="padding: 8px; margin: 5px;">
-    <input type="password" id="password" placeholder="Contraseña" style="padding: 8px; margin: 5px;">
-    <br>
-    <button onclick="login()" style="background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer;">Entrar</button>
-    <button onclick="register()" style="background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer;">Registrarse</button>
+<hr style="border: 0.5px dashed #ccc; margin: 40px 20px;">
+
+<div id="auth-container" style="background: #fff; padding: 20px; border: 1px solid #ddd; margin: 20px auto; text-align: center; border-radius: 10px; max-width: 400px; color: #333;">
+    <h3 style="margin-top:0;">🔐 Registro y Acceso Admin</h3>
+    <input type="email" id="email" placeholder="Correo electrónico" style="width: 80%; padding: 10px; margin: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <input type="password" id="password" placeholder="Contraseña (min. 6 caracteres)" style="width: 80%; padding: 10px; margin: 5px; border: 1px solid #ccc; border-radius: 5px;">
+    <div style="margin-top:10px;">
+        <button onclick="login()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Entrar</button>
+        <button onclick="register()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Registrarse</button>
+    </div>
 </div>
 
-<div id="seccion-privada" style="display:none; background: #e2f3f5; padding: 20px; border-radius: 10px; margin: 20px; color: #000; text-align: center;">
-    <h3>Panel de Control</h3>
-    <input type="text" id="nombreTorneo" placeholder="Nombre del torneo" style="padding: 8px;">
-    <input type="text" id="urlFondo" placeholder="URL de imagen" style="padding: 8px;">
-    <button onclick="crearTorneo()" style="background: #17a2b8; color: white; padding: 10px;">Publicar Torneo</button>
-    <br><br>
-    <button onclick="logout()" style="color: red; cursor: pointer;">Cerrar Sesión</button>
+<div id="seccion-privada" style="display:none; background: #e8f5e9; padding: 25px; border: 2px solid #2e7d32; margin: 20px; border-radius: 15px; text-align: center; color: #000;">
+    <h3 style="color: #2e7d32; margin-top:0;">✨ Panel de Gestión de Torneos</h3>
+    <p>Desde aquí puedes publicar nuevos torneos para tus visitantes:</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; max-width: 400px; margin: 0 auto;">
+        <input type="text" id="nombreTorneo" placeholder="Nombre del torneo" style="padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+        <input type="text" id="urlFondo" placeholder="Link de la imagen de fondo" style="padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+        <button onclick="crearTorneo()" style="background: #1b5e20; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">🚀 Publicar Torneo</button>
+    </div>
+    <br>
+    <button onclick="logout()" style="background: none; border: none; color: #c62828; cursor: pointer; text-decoration: underline;">Cerrar Sesión de Administrador</button>
 </div>
 
 <script type="module" src="app.js"></script>
