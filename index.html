@@ -3,99 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Torneo Pro</title>
+    <title>Torneo Pro - Registro de Admin</title>
     <style>
         :root { --primary: #1a5276; --success: #27ae60; --danger: #c0392b; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* Ocultar elementos de admin por defecto */
         body.modo-visitante .solo-admin { display: none !important; }
         
-        input, select, button { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
+        input, button { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
+        .btn-secundario { background: #7f8c8d; }
         
         .status-bar { padding: 10px; text-align: center; font-weight: bold; margin-bottom: 20px; border-radius: 5px; }
         .modo-lectura { background: #ffebee; color: #c62828; }
         .modo-edicion { background: #e8f5e9; color: #2e7d32; }
-        
-        #panel-firebase { background: #f9f9f9; padding: 20px; border: 2px dashed #ddd; margin-top: 40px; }
     </style>
 </head>
 <body class="modo-visitante" id="mainBody">
 
 <div class="container">
     <header>
-        <h1>🏆 Panel de Torneo</h1>
-        <div id="txtEstado" class="status-bar modo-lectura">👁️ MODO VISITANTE (SOLO LECTURA)</div>
+        <h1>🏆 Gestión de Torneo</h1>
+        <div id="txtEstado" class="status-bar modo-lectura">👁️ MODO VISITANTE</div>
     </header>
 
-    <section>
-        <h2>1. Gestión de Equipos</h2>
+    <section class="solo-admin">
+        <h2>🛠️ Panel de Control</h2>
         <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
-        <button class="solo-admin" onclick="registrarEquipo()">Registrar Equipo</button>
-        <div id="listaEquipos" style="margin-top:15px; font-weight: bold; color: var(--primary);"></div>
+        <button onclick="registrarEquipo()">Añadir Equipo</button>
+        <div id="listaEquipos"></div>
+        <hr>
+        <input type="text" id="nombreTorneo" placeholder="Nombre para publicar torneo">
+        <button onclick="crearTorneo()" style="background:var(--success)">💾 PUBLICAR EN LA NUBE</button>
     </section>
 
-    <div id="panel-firebase">
-        <div id="auth-ui">
-            <h3>🔐 Acceso Administrador</h3>
-            <input type="email" id="email" placeholder="Correo">
-            <input type="password" id="password" placeholder="Contraseña">
-            <button onclick="login()">Iniciar Sesión</button>
-            <button onclick="register()" style="background:none; color:var(--primary); font-size:12px;">Crear cuenta de admin</button>
+    <div id="panel-auth" style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin-top: 40px;">
+        <div id="auth-inputs">
+            <h3>🔐 Acceso / Registro</h3>
+            <p>Usa tu correo para entrar o crear una cuenta de administrador.</p>
+            <input type="email" id="email" placeholder="Correo electrónico">
+            <input type="password" id="password" placeholder="Contraseña (mínimo 6 caracteres)">
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="login()">Iniciar Sesión</button>
+                <button onclick="register()" class="btn-secundario">Crear Cuenta</button>
+            </div>
         </div>
 
-        <div id="admin-ui" style="display:none;">
-            <p>✅ Sesión activa como administrador</p>
-            <input type="text" id="nombreTorneo" placeholder="Nombre para guardar este torneo">
-            <button onclick="crearTorneo()" style="background:var(--success)">💾 Guardar en Firebase</button>
-            <button onclick="logout()" style="background:var(--danger); margin-top:10px;">Cerrar Sesión</button>
+        <div id="admin-ui" style="display:none; text-align: center;">
+            <p>Sesión activa: <b id="userEmail"></b></p>
+            <button onclick="logout()" style="background:var(--danger)">Cerrar Sesión</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Lógica de datos interna
-    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [] };
+    // Lógica de datos básica
+    let datosLocales = { equipos: [] };
 
     window.registrarEquipo = function() {
         const nombre = document.getElementById('nombreEquipo').value;
         if(!nombre) return alert("Escribe un nombre");
-        datos.equipos.push(nombre);
-        localStorage.setItem('torneo_data', JSON.stringify(datos));
-        actualizarVista();
+        datosLocales.equipos.push(nombre);
+        localStorage.setItem('torneo_data', JSON.stringify(datosLocales));
+        document.getElementById('listaEquipos').innerHTML = "<b>Equipos actuales:</b> " + datosLocales.equipos.join(', ');
         document.getElementById('nombreEquipo').value = "";
     };
 
-    function actualizarVista() {
-        const lista = document.getElementById('listaEquipos');
-        lista.innerHTML = datos.equipos.length > 0 ? "Equipos: " + datos.equipos.join(', ') : "No hay equipos registrados.";
-    }
-
-    // Cambia la interfaz según el estado de Firebase
-    window.cambiarModo = function(esAdmin) {
+    window.cambiarModo = function(user) {
         const body = document.getElementById('mainBody');
-        const txt = document.getElementById('txtEstado');
-        const authUI = document.getElementById('auth-ui');
+        const authInputs = document.getElementById('auth-inputs');
         const adminUI = document.getElementById('admin-ui');
+        const txt = document.getElementById('txtEstado');
 
-        if(esAdmin) {
+        if(user) {
             body.classList.remove('modo-visitante');
-            txt.innerText = "⚡ MODO ADMINISTRADOR ACTIVO";
-            txt.className = "status-bar modo-edicion";
-            authUI.style.display = "none";
+            authInputs.style.display = "none";
             adminUI.style.display = "block";
+            document.getElementById('userEmail').innerText = user.email;
+            txt.innerText = "⚡ MODO ADMINISTRADOR";
+            txt.className = "status-bar modo-edicion";
         } else {
             body.classList.add('modo-visitante');
-            txt.innerText = "👁️ MODO VISITANTE (SOLO LECTURA)";
-            txt.className = "status-bar modo-lectura";
-            authUI.style.display = "block";
+            authInputs.style.display = "block";
             adminUI.style.display = "none";
+            txt.innerText = "👁️ MODO VISITANTE";
+            txt.className = "status-bar modo-lectura";
         }
     };
-
-    window.onload = actualizarVista;
 </script>
 
 <script type="module" src="app.js"></script>
