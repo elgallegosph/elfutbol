@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Credenciales corregidas de tu proyecto 'elfutbolapp'
 const firebaseConfig = {
   apiKey: "AIzaSyDea95aNqXhCuIOHPyrFwJKPX1sRAQBbEg",
   authDomain: "elfutbolapp.firebaseapp.com",
@@ -15,13 +16,14 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Exportar funciones al objeto global para que el HTML las vea
 window.register = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     try {
         await createUserWithEmailAndPassword(auth, email, pass);
-        alert("¡Cuenta creada!");
-    } catch (e) { alert("Error: " + e.message); }
+        alert("¡Cuenta creada correctamente!");
+    } catch (e) { alert("Error al registrar: " + e.message); }
 };
 
 window.login = async () => {
@@ -29,7 +31,7 @@ window.login = async () => {
     const pass = document.getElementById('password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) { alert("Error: " + e.message); }
+    } catch (e) { alert("Error al entrar: " + e.message); }
 };
 
 window.logout = () => signOut(auth);
@@ -38,10 +40,10 @@ window.publicarTorneo = async () => {
     const data = JSON.parse(localStorage.getItem('futbol_local'));
     try {
         await setDoc(doc(db, "campeonatos", "torneo_actual"), { data });
-        alert("Sincronizado con éxito");
-    } catch (e) { alert("Error: " + e.message); }
+        alert("Sincronizado con Firebase exitosamente");
+    } catch (e) { alert("Error al guardar: " + e.message); }
 };
 
 onAuthStateChanged(auth, (user) => {
-    window.cambiarModo(user);
+    if (window.cambiarModo) window.cambiarModo(user);
 });
