@@ -60,3 +60,22 @@ window.borrarTorneoNube = async () => {
         console.error("Error al limpiar nube: " + e.message);
     }
 };
+
+import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Escuchar cambios para dispositivos que solo son "Visitantes"
+const docRef = doc(db, "campeonatos", "torneo_actual");
+
+onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+        const datosNube = docSnap.data().data;
+        // Solo actualizamos si no somos el admin editando en este momento
+        if (document.body.classList.contains('modo-visitante')) {
+            localStorage.setItem('futbol_local', JSON.stringify(datosNube));
+            if (window.dbT) {
+                window.dbT = datosNube;
+                window.render();
+            }
+        }
+    }
+});
