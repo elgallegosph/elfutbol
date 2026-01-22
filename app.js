@@ -1,8 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Credenciales corregidas de tu proyecto 'elfutbolapp'
 const firebaseConfig = {
   apiKey: "AIzaSyDea95aNqXhCuIOHPyrFwJKPX1sRAQBbEg",
   authDomain: "elfutbolapp.firebaseapp.com",
@@ -16,14 +15,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Exportar funciones al objeto global para que el HTML las vea
+// ESCUCHA AUTOMÁTICA (Para que el visitante vea cambios sin refrescar)
+onSnapshot(doc(db, "campeonatos", "torneo_actual"), (docSnap) => {
+    if (docSnap.exists()) {
+        window.actualizarDesdeNube(docSnap.data().data);
+    }
+});
+
 window.register = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     try {
         await createUserWithEmailAndPassword(auth, email, pass);
-        alert("¡Cuenta creada correctamente!");
-    } catch (e) { alert("Error al registrar: " + e.message); }
+        alert("¡Admin registrado!");
+    } catch (e) { alert("Error: " + e.message); }
 };
 
 window.login = async () => {
@@ -31,51 +36,21 @@ window.login = async () => {
     const pass = document.getElementById('password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) { alert("Error al entrar: " + e.message); }
+    } catch (e) { alert("Error: " + e.message); }
 };
 
 window.logout = () => signOut(auth);
 
-window.publicarTorneo = async () => {
-    const data = JSON.parse(localStorage.getItem('futbol_local'));
+// Función para subir datos a la nube
+window.publicarTorneo = async (data) => {
     try {
-        await setDoc(doc(db, "campeonatos", "torneo_actual"), { data });
-        alert("Sincronizado con Firebase exitosamente");
-    } catch (e) { alert("Error al guardar: " + e.message); }
-};
-
-onAuthStateChanged(auth, (user) => {
-    if (window.cambiarModo) window.cambiarModo(user);
-});
-
-window.borrarTorneoNube = async () => {
-    try {
-        // Sobrescribe el documento con datos vacíos
         await setDoc(doc(db, "campeonatos", "torneo_actual"), { 
-            data: { equipos: [], grupos: {} },
+            data: data,
             ultimaActualizacion: new Date().toISOString()
         });
-        console.log("Datos borrados en la nube");
-    } catch (e) {
-        console.error("Error al limpiar nube: " + e.message);
-    }
+    } catch (e) { console.error("Error al publicar:", e); }
 };
 
-import { onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// Escuchar cambios para dispositivos que solo son "Visitantes"
-const docRef = doc(db, "campeonatos", "torneo_actual");
-
-onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-        const datosNube = docSnap.data().data;
-        // Solo actualizamos si no somos el admin editando en este momento
-        if (document.body.classList.contains('modo-visitante')) {
-            localStorage.setItem('futbol_local', JSON.stringify(datosNube));
-            if (window.dbT) {
-                window.dbT = datosNube;
-                window.render();
-            }
-        }
-    }
+onAuthStateChanged(auth, (user) => { 
+    window.cambiarModo(user); 
 });
