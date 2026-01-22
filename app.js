@@ -2,9 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// !!! REEMPLAZA ESTO CON TUS CREDENCIALES !!!
+// !!! COPIA TUS DATOS REALES AQUÍ !!!
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
+  apiKey: "TU_API_KEY_AQUI", 
   authDomain: "TU_PROYECTO.firebaseapp.com",
   projectId: "TU_PROYECTO",
   storageBucket: "TU_PROYECTO.appspot.com",
@@ -16,54 +16,41 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// FUNCION DE REGISTRO (Nueva)
-window.register = async () => {
+// REGISTRO
+const register = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
-    
-    if(pass.length < 6) return alert("La contraseña debe tener al menos 6 caracteres");
-
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-        alert("¡Cuenta creada con éxito! Bienvenido administrador.");
-    } catch (error) {
-        if (error.code === 'auth/email-already-in-use') alert("Este correo ya tiene cuenta.");
-        else alert("Error al registrar: " + error.message);
-    }
+        await createUserWithEmailAndPassword(auth, email, pass);
+        alert("¡Cuenta creada!");
+    } catch (e) { alert("Error: " + e.message); }
 };
 
-// FUNCION DE LOGIN
-window.login = async () => {
+// LOGIN
+const login = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-    } catch (e) {
-        alert("Error: " + e.message);
-    }
+    } catch (e) { alert("Error: " + e.message); }
 };
 
-// FUNCION DE CERRAR SESIÓN
-window.logout = () => signOut(auth);
-
-// PUBLICAR TORNEO
-window.crearTorneo = async () => {
-    const nombreT = document.getElementById('nombreTorneo').value;
-    if(!nombreT) return alert("Escribe un nombre para el torneo");
+// PUBLICAR
+const crearTorneo = async () => {
+    const nombre = document.getElementById('nombreTorneo').value;
     const datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [] };
-
     try {
-        await setDoc(doc(db, "torneos", nombreT), {
-            config: datos,
-            propietario: auth.currentUser.email
-        });
-        alert("Torneo publicado correctamente.");
-    } catch (e) {
-        alert("Error al publicar: " + e.message);
-    }
+        await setDoc(doc(db, "torneos", nombre), { config: datos });
+        alert("Publicado en la nube");
+    } catch (e) { alert("Error: " + e.message); }
 };
 
-// VIGILANTE DE ESTADO
+// VINCULAR AL HTML (Esto soluciona el error 'is not defined')
+window.register = register;
+window.login = login;
+window.logout = () => signOut(auth);
+window.crearTorneo = crearTorneo;
+
 onAuthStateChanged(auth, (user) => {
     window.cambiarModo(user);
 });
