@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Fútbol - Gestión de Torneo</title>
+    <title>El Fútbol - Gestión en Tiempo Real</title>
     <style>
         :root { --primary: #1a5276; --success: #27ae60; --danger: #c0392b; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
@@ -21,7 +21,7 @@
 
 <div class="container">
     <header>
-        <h1>🏆 Gestión de Torneo Pro</h1>
+        <h1>🏆 Gestión de Torneo Pro (Sincronizado)</h1>
         <div id="txtEstado" class="status-bar">MODO VISITANTE</div>
     </header>
 
@@ -66,21 +66,28 @@
         </div>
         <div id="admin-ui" style="display:none; text-align: center;">
             <p>Conectado como: <b id="userEmail"></b></p>
-            <button onclick="publicarTorneo()" style="background: var(--success);">💾 Guardar Cambios en la Nube</button>
             <button onclick="logout()" style="background: var(--danger); margin-top: 10px;">Cerrar Sesión</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Estructura de datos global
-    window.dbT = JSON.parse(localStorage.getItem('futbol_local')) || { equipos: [], grupos: {} };
+    // La variable dbT ahora se actualizará DESDE la nube
+    window.dbT = { equipos: [], grupos: {} };
+
+    // Función que recibe los datos de app.js (desde Firebase) y actualiza la pantalla
+    window.actualizarDesdeNube = function(datosNube) {
+        if (datosNube) {
+            window.dbT = datosNube;
+            render();
+        }
+    };
 
     window.registrarEquipo = function() {
         const n = document.getElementById('nombreEquipo').value;
         if(!n) return alert("Escribe un nombre para el equipo");
         dbT.equipos.push({ nombre: n, jugadores: [] });
-        guardarYRender();
+        sincronizarConNube();
         document.getElementById('nombreEquipo').value = "";
     };
 
@@ -93,7 +100,7 @@
         const eq = dbT.equipos.find(e => e.nombre === eqN);
         if(eq) {
             eq.jugadores.push({ nombre: jugN, telefono: tel });
-            guardarYRender();
+            sincronizarConNube();
             document.getElementById('nombreJug').value = "";
             document.getElementById('telJug').value = "";
         }
@@ -107,31 +114,31 @@
             const g = i % 2 === 0 ? "Grupo A" : "Grupo B";
             dbT.grupos[g].push(e.nombre);
         });
-        guardarYRender();
+        sincronizarConNube();
     };
 
     window.reiniciarTorneo = function() {
-        if (confirm("¿Borrar todos los datos del torneo?")) {
+        if (confirm("¿Borrar todos los datos del torneo en la NUBE?")) {
             dbT = { equipos: [], grupos: {} };
-            guardarYRender();
+            sincronizarConNube();
         }
     };
 
-    function guardarYRender() {
-        localStorage.setItem('futbol_local', JSON.stringify(dbT));
-        render();
-        // Sincronización automática con Firebase si es Admin
-        if (window.publicarTorneo && !document.body.classList.contains('modo-visitante')) {
-            window.publicarTorneo(); 
+    function sincronizarConNube() {
+        // En lugar de localStorage, llamamos a la función de app.js que sube a Firebase
+        if (window.publicarTorneo) {
+            window.publicarTorneo(dbT); 
         }
+        render();
     }
 
     window.render = function() {
-        // Actualizar Select de equipos
         const sel = document.getElementById('selEq');
-        sel.innerHTML = dbT.equipos.map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
+        const eqActual = sel.value; // Guardar selección actual
         
-        // Renderizar Grupos
+        sel.innerHTML = dbT.equipos.map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
+        if (eqActual) sel.value = eqActual;
+
         document.getElementById('displayGrupos').innerHTML = Object.keys(dbT.grupos).map(k => `
             <div class="grupo-caja"><h3>${k}</h3>${dbT.grupos[k].map(n => `<p>⚽ ${n}</p>`).join('')}</div>
         `).join('');
@@ -143,7 +150,7 @@
         const eqN = document.getElementById('selEq').value;
         const eq = dbT.equipos.find(e => e.nombre === eqN);
         const div = document.getElementById('listaJugadores');
-        if(eq && eq.jugadores.length > 0) {
+        if(eq && eq.jugadores && eq.jugadores.length > 0) {
             div.innerHTML = `<ul>` + eq.jugadores.map(j => `<li>${j.nombre} - Tel: ${j.telefono || 'N/A'}</li>`).join('') + `</ul>`;
         } else {
             div.innerHTML = "<p>No hay jugadores registrados en este equipo.</p>";
@@ -158,15 +165,13 @@
             body.classList.remove('modo-visitante');
             ai.style.display = "none"; au.style.display = "block";
             document.getElementById('userEmail').innerText = user.email;
-            document.getElementById('txtEstado').innerText = "⚡ MODO ADMINISTRADOR ACTIVADO";
+            document.getElementById('txtEstado').innerText = "⚡ MODO ADMINISTRADOR (EN LÍNEA)";
         } else {
             body.classList.add('modo-visitante');
             ai.style.display = "block"; au.style.display = "none";
-            document.getElementById('txtEstado').innerText = "👁️ MODO VISITANTE (SOLO LECTURA)";
+            document.getElementById('txtEstado').innerText = "👁️ MODO VISITANTE (TIEMPO REAL)";
         }
     };
-
-    window.onload = render;
 </script>
 <script type="module" src="app.js"></script>
 </body>
