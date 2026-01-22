@@ -3,194 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Fútbol Pro - Sorteos y Playoffs</title>
+    <title>Fútbol Pro - Estadísticas Completas</title>
     <style>
-        :root { --primary: #1a5276; --secondary: #2c3e50; --accent: #e74c3c; --success: #27ae60; }
+        :root { --primary: #1a5276; --secondary: #2c3e50; --accent: #e74c3c; --success: #27ae60; --warning: #f1c40f; }
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
         
-        /* Sistema de Visibilidad */
         body.modo-visitante .solo-admin { display: none !important; }
         header { text-align: center; border-bottom: 3px solid var(--primary); margin-bottom: 30px; }
         
         .section { background: #fff; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 25px; }
         h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 15px; }
         
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        input, select, button { padding: 12px; border-radius: 6px; border: 1px solid #ccc; font-size: 15px; margin-bottom: 10px; }
-        button { cursor: pointer; font-weight: bold; transition: 0.3s; background: var(--primary); color: white; border: none; }
-        button:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn-sorteo { background: var(--success); }
-        .btn-danger { background: var(--accent); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: center; }
+        th { background: var(--secondary); color: white; }
+        tr:nth-child(even) { background: #f9f9f9; }
 
-        .tarjeta-equipo { background: #f8f9fa; border: 1px solid #eee; padding: 10px; margin: 5px 0; border-radius: 5px; display: flex; justify-content: space-between; }
-        .grupo-caja { border: 2px solid var(--primary); padding: 15px; border-radius: 8px; margin-top: 10px; background: #fff; }
-        .badge { background: #ebf5fb; color: var(--primary); padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+        .grid-stats { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; }
+        input, select, button { padding: 10px; border-radius: 6px; border: 1px solid #ccc; }
+        button { cursor: pointer; background: var(--primary); color: white; border: none; font-weight: bold; }
+        
+        .card-amarilla { background: var(--warning); width: 15px; height: 22px; display: inline-block; border-radius: 2px; }
+        .card-roja { background: var(--accent); width: 15px; height: 22px; display: inline-block; border-radius: 2px; }
     </style>
 </head>
 <body class="modo-visitante" id="mainBody">
 
 <div class="container">
     <header>
-        <h1>🏆 Torneo de Fútbol Oficial</h1>
-        <div id="statusLabel" style="color: #666; font-weight: bold; margin-bottom: 10px;">Modo Espectador</div>
+        <h1>🏆 Central de Estadísticas de Fútbol</h1>
+        <div id="statusLabel" style="font-weight: bold; color: #666;">Cargando sistema...</div>
     </header>
 
     <section class="section solo-admin">
-        <h2>1. Registro de Plantillas</h2>
-        <div class="grid-inputs">
-            <div>
-                <label>Nombre del Equipo:</label>
-                <input type="text" id="nombreEquipo" placeholder="Ej: Real Madrid" style="width: 100%;">
-                <button onclick="registrarEquipo()" style="width: 100%;">Registrar Equipo</button>
+        <h2>⚙️ Registrar Eventos del Partido</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="input-group">
+                <label>Equipo:</label>
+                <select id="regEquipo" onchange="actualizarSelectJugadores()"></select>
             </div>
-            <div>
-                <label>Vincular Jugador:</label>
-                <select id="selectEquipos" style="width: 100%;"></select>
-                <input type="text" id="nombreJugador" placeholder="Nombre completo" style="width: 100%;">
-                <input type="tel" id="telJugador" placeholder="Número de Teléfono" style="width: 100%;">
-                <button onclick="registrarJugador()" style="width: 100%;">Añadir Jugador</button>
+            <div class="input-group">
+                <label>Jugador:</label>
+                <select id="regJugador"></select>
+            </div>
+            <div class="input-group">
+                <label>Evento:</label>
+                <select id="tipoEvento">
+                    <option value="gol">⚽ Gol</option>
+                    <option value="amarilla">🟨 Tarjeta Amarilla</option>
+                    <option value="roja">🟥 Tarjeta Roja</option>
+                </select>
+                <button onclick="registrarEvento()" style="background: var(--success); margin-top: 5px;">Grabar Evento</button>
             </div>
         </div>
-        <div id="listaEquiposDiv" style="margin-top: 20px;"></div>
     </section>
 
     <section class="section">
-        <h2>2. Grupos y Fase Clasificatoria</h2>
-        <div class="solo-admin">
-            <p>Selecciona cuántos grupos deseas crear para el sorteo automático:</p>
-            <select id="numGrupos">
-                <option value="2">2 Grupos</option>
-                <option value="4">4 Grupos</option>
-            </select>
-            <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Realizar Sorteo Automático</button>
-        </div>
-        <div id="displayGrupos" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;"></div>
+        <h2>📊 Tabla de Posiciones</h2>
+        <table id="tablaPosiciones">
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>PJ</th>
+                    <th>PG</th>
+                    <th>PE</th>
+                    <th>PP</th>
+                    <th>GF</th>
+                    <th>GC</th>
+                    <th>DG</th>
+                    <th>PTS</th>
+                </tr>
+            </thead>
+            <tbody id="bodyPosiciones"></tbody>
+        </table>
     </section>
 
-    <section class="section">
-        <h2>3. Fase Final (Playoffs)</h2>
-        <div id="cuadroPlayoffs" style="text-align: center; background: #2c3e50; color: white; padding: 20px; border-radius: 8px;">
-            El cuadro de eliminatorias se generará tras la fase de grupos.
-        </div>
-    </section>
+    <div class="grid-stats">
+        <section class="section">
+            <h2>⚽ Goleadores</h2>
+            <table id="tablaGoleadores">
+                <thead><tr><th>Jugador</th><th>Equipo</th><th>Goles</th></tr></thead>
+                <tbody id="bodyGoleadores"></tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <h2>🟨 Amarillas</h2>
+            <table id="tablaAmarillas">
+                <tbody id="bodyAmarillas"></tbody>
+            </table>
+        </section>
+
+        <section class="section">
+            <h2>🟥 Rojas</h2>
+            <table id="tablaRojas">
+                <tbody id="bodyRojas"></tbody>
+            </table>
+        </section>
+    </div>
 
     <section class="section" style="background: #e9ecef;">
-        <h3>🔐 Acceso Administrativo</h3>
         <div id="authPanel">
             <input type="email" id="email" placeholder="Correo">
-            <input type="password" id="password" placeholder="Contraseña">
-            <div style="display: flex; gap: 10px;">
-                <button onclick="login()" style="flex: 1;">Entrar</button>
-                <button onclick="register()" style="flex: 1; background: #6c757d;">Registrarse</button>
-            </div>
+            <input type="password" id="password" placeholder="Pass">
+            <button onclick="login()">Entrar</button>
         </div>
         <div id="adminPanel" style="display:none; text-align: center;">
-            <p>Sesión activa: <b id="userMail"></b></p>
-            <button onclick="publicarTorneo()" style="background: var(--success);">💾 Publicar Todo en la Nube</button>
-            <button onclick="logout()" class="btn-danger">Cerrar Sesión</button>
+            <button onclick="publicarTorneo()" style="background: var(--success);">💾 Sincronizar con Firebase</button>
+            <button onclick="logout()" style="background: var(--accent);">Cerrar Sesión</button>
         </div>
     </section>
 </div>
 
 <script>
-    // Lógica local de datos
-    let dbTorneo = {
+    // Estructura de datos completa
+    let dbTorneo = JSON.parse(localStorage.getItem('futbol_local')) || {
         equipos: [],
-        grupos: {},
-        playoffs: []
+        eventos: [] // Aquí guardamos goles y tarjetas
     };
 
-    function registrarEquipo() {
-        const nombre = document.getElementById('nombreEquipo').value;
-        if(!nombre) return alert("Nombre obligatorio");
-        dbTorneo.equipos.push({ id: Date.now(), nombre: nombre, jugadores: [] });
-        actualizarUI();
-        document.getElementById('nombreEquipo').value = "";
-    }
-
-    function registrarJugador() {
-        const equipoId = document.getElementById('selectEquipos').value;
-        const nombre = document.getElementById('nombreJugador').value;
-        const tel = document.getElementById('telJugador').value;
-        if(!equipoId || !nombre) return alert("Faltan datos");
-
-        const equipo = dbTorneo.equipos.find(e => e.id == equipoId);
-        equipo.jugadores.push({ nombre, tel });
-        actualizarUI();
-        document.getElementById('nombreJugador').value = "";
-        document.getElementById('telJugador').value = "";
-    }
-
-    function actualizarUI() {
-        const select = document.getElementById('selectEquipos');
-        const lista = document.getElementById('listaEquiposDiv');
+    function actualizarSelectJugadores() {
+        const equipoNombre = document.getElementById('regEquipo').value;
+        const equipo = dbTorneo.equipos.find(e => e.nombre === equipoNombre);
+        const selectJ = document.getElementById('regJugador');
         
-        select.innerHTML = dbTorneo.equipos.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
-        lista.innerHTML = dbTorneo.equipos.map(e => `
-            <div class="tarjeta-equipo">
-                <span><b>${e.nombre}</b> (${e.jugadores.length} jugadores)</span>
-                <span class="badge">Registrado</span>
-            </div>
-        `).join('');
+        if (equipo) {
+            selectJ.innerHTML = equipo.jugadores.map(j => `<option value="${j.nombre}">${j.nombre}</option>`).join('');
+        }
+    }
+
+    function registrarEvento() {
+        const equipo = document.getElementById('regEquipo').value;
+        const jugador = document.getElementById('regJugador').value;
+        const tipo = document.getElementById('tipoEvento').value;
+
+        dbTorneo.eventos.push({ equipo, jugador, tipo, fecha: new Date().getTime() });
         localStorage.setItem('futbol_local', JSON.stringify(dbTorneo));
+        renderizarTablas();
     }
 
-    function realizarSorteo() {
-        const n = parseInt(document.getElementById('numGrupos').value);
-        if(dbTorneo.equipos.length < n) return alert("No hay suficientes equipos");
-        
-        dbTorneo.grupos = {};
-        const mezclados = [...dbTorneo.equipos].sort(() => Math.random() - 0.5);
-        
-        for(let i = 0; i < n; i++) dbTorneo.grupos[`Grupo ${String.fromCharCode(65+i)}`] = [];
-        
-        mezclados.forEach((eq, index) => {
-            const grupoKey = `Grupo ${String.fromCharCode(65 + (index % n))}`;
-            dbTorneo.grupos[grupoKey].push(eq.nombre);
+    function renderizarTablas() {
+        // Renderizar Goleadores
+        const goles = {};
+        const amarillas = {};
+        const rojas = {};
+
+        dbTorneo.eventos.forEach(ev => {
+            if (ev.tipo === 'gol') goles[ev.jugador] = (goles[ev.jugador] || 0) + 1;
+            if (ev.tipo === 'amarilla') amarillas[ev.jugador] = (amarillas[ev.jugador] || 0) + 1;
+            if (ev.tipo === 'roja') rojas[ev.jugador] = (rojas[ev.jugador] || 0) + 1;
         });
 
-        renderizarGrupos();
-    }
+        // Dibujar Tablas (Simplificado para el ejemplo)
+        document.getElementById('bodyGoleadores').innerHTML = Object.entries(goles)
+            .sort((a,b) => b[1] - a[1])
+            .map(g => `<tr><td>${g[0]}</td><td>-</td><td>${g[1]}</td></tr>`).join('');
 
-    function renderizarGrupos() {
-        const display = document.getElementById('displayGrupos');
-        display.innerHTML = Object.keys(dbTorneo.grupos).map(key => `
-            <div class="grupo-caja">
-                <h3>${key}</h3>
-                ${dbTorneo.grupos[key].map(name => `<p>⚽ ${name}</p>`).join('')}
-            </div>
+        document.getElementById('bodyAmarillas').innerHTML = Object.entries(amarillas)
+            .map(a => `<tr><td>${a[0]}</td><td><div class="card-amarilla"></div> ${a[1]}</td></tr>`).join('');
+
+        document.getElementById('bodyRojas').innerHTML = Object.entries(rojas)
+            .map(r => `<tr><td>${r[0]}</td><td><div class="card-roja"></div> ${r[1]}</td></tr>`).join('');
+
+        // Llenar select de equipos para el admin
+        document.getElementById('regEquipo').innerHTML = dbTorneo.equipos.map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
+        
+        // Tabla de posiciones (Datos base)
+        document.getElementById('bodyPosiciones').innerHTML = dbTorneo.equipos.map(e => `
+            <tr>
+                <td>${e.nombre}</td>
+                <td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td><b>0</b></td>
+            </tr>
         `).join('');
     }
 
-    window.cambiarModo = function(user) {
-        const body = document.getElementById('mainBody');
-        const auth = document.getElementById('authPanel');
-        const admin = document.getElementById('adminPanel');
-        if(user) {
-            body.classList.remove('modo-visitante');
-            auth.style.display = "none";
-            admin.style.display = "block";
-            document.getElementById('userMail').innerText = user.email;
-            document.getElementById('statusLabel').innerText = "MODO ADMINISTRADOR ACTIVADO";
-        } else {
-            body.classList.add('modo-visitante');
-            auth.style.display = "block";
-            admin.style.display = "none";
-            document.getElementById('statusLabel').innerText = "MODO VISITANTE (SÓLO LECTURA)";
-        }
-    }
-
-    window.onload = () => {
-        const saved = localStorage.getItem('futbol_local');
-        if(saved) {
-            dbTorneo = JSON.parse(saved);
-            actualizarUI();
-            if(Object.keys(dbTorneo.grupos).length > 0) renderizarGrupos();
-        }
-    };
+    window.onload = renderizarTablas;
 </script>
-
 <script type="module" src="app.js"></script>
 </body>
 </html>
