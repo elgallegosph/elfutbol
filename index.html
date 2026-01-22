@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tabla de Posiciones - El Fútbol</title>
     <style>
+        /* Mantenemos tu estilo original */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #1a1a1a;
             color: white;
             text-align: center;
@@ -16,105 +17,96 @@
             background-attachment: fixed;
             transition: background-image 0.5s ease-in-out;
         }
+        .container { max-width: 1000px; margin: auto; }
+        h1 { color: #f1f1f1; text-shadow: 2px 2px 4px #000; }
+        
         table {
-            width: 80%;
+            width: 100%;
             margin: 20px auto;
             border-collapse: collapse;
-            background-color: #2c2c2c;
+            background-color: rgba(44, 44, 44, 0.9);
             border-radius: 10px;
             overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        th, td {
-            padding: 12px;
-            border-bottom: 1px solid #444;
-            text-align: center;
+        th, td { padding: 12px; border-bottom: 1px solid #444; text-align: center; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: rgba(61, 61, 61, 0.8); }
+
+        /* Estilos para las nuevas secciones */
+        .card-panel {
+            background: rgba(255,255,255,0.95);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 40px auto;
+            color: #000;
+            max-width: 800px;
         }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        tr:hover {
-            background-color: #3d3d3d;
-        }
-        input, button {
-            padding: 10px;
-            margin: 5px;
-            border-radius: 5px;
-            border: none;
-        }
-        .admin-btn {
-            background-color: #28a745;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .admin-btn:hover {
-            background-color: #218838;
-        }
+        input { padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; width: 80%; }
+        .btn-main { padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; color: white; }
     </style>
 </head>
 <body>
 
-    <h1>Tabla de Posiciones</h1>
+    <div class="container">
+        <h1>🏆 Mi Torneo de Fútbol</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Pos</th>
-                <th>Equipo</th>
-                <th>PJ</th>
-                <th>G</th>
-                <th>E</th>
-                <th>P</th>
-                <th>Pts</th>
-            </tr>
-        </thead>
-        <tbody id="tabla-cuerpo">
-            <tr>
-                <td>1</td>
-                <td>Equipo A</td>
-                <td>10</td>
-                <td>7</td>
-                <td>2</td>
-                <td>1</td>
-                <td>23</td>
-            </tr>
-        </tbody>
-    </table>
+        <h3>Grupo A</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Pos</th>
+                    <th>Equipo</th>
+                    <th>PJ</th>
+                    <th>G</th>
+                    <th>E</th>
+                    <th>P</th>
+                    <th>Pts</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Equipo Ejemplo 1</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                    <td>0</td>
+                </tr>
+            </tbody>
+        </table>
 
-    <div id="seccion-publica" style="background: rgba(255,255,255,0.95); padding: 25px; border-radius: 15px; margin: 40px auto; color: #000; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 800px;">
-        <h2 style="margin-top:0;">🏆 Torneos Disponibles</h2>
-        <p>Selecciona un torneo para cambiar el fondo de pantalla:</p>
-        <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 15px;">
+        <hr style="opacity: 0.2; margin: 50px 0;">
+
+        <div class="card-panel">
+            <h2 style="margin-top:0;">🌐 Cambiar Fondo de Torneo</h2>
+            <p>Selecciona un torneo guardado para ver su fondo personalizado:</p>
+            <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                </div>
+        </div>
+
+        <div id="auth-container" style="background: #fff; padding: 20px; border: 1px solid #ddd; margin: 20px auto; text-align: center; border-radius: 10px; max-width: 400px; color: #333;">
+            <h3 style="margin-top:0;">🔐 Acceso Administrador</h3>
+            <input type="email" id="email" placeholder="Correo">
+            <input type="password" id="password" placeholder="Contraseña">
+            <div style="margin-top:10px;">
+                <button onclick="login()" style="background: #28a745;" class="btn-main">Entrar</button>
+                <button onclick="register()" style="background: #007bff;" class="btn-main">Registrarse</button>
             </div>
-    </div>
-
-    <hr style="border: 0.5px dashed #ccc; margin: 40px 20px; opacity: 0.3;">
-
-    <div id="auth-container" style="background: #fff; padding: 20px; border: 1px solid #ddd; margin: 20px auto; text-align: center; border-radius: 10px; max-width: 400px; color: #333;">
-        <h3 style="margin-top:0;">🔐 Acceso Administrador</h3>
-        <p style="font-size: 0.9em; color: #666;">Registrate o inicia sesión para gestionar torneos</p>
-        <input type="email" id="email" placeholder="Correo electrónico" style="width: 85%; border: 1px solid #ccc;">
-        <input type="password" id="password" placeholder="Contraseña (min. 6 caracteres)" style="width: 85%; border: 1px solid #ccc;">
-        <div style="margin-top:10px;">
-            <button onclick="login()" style="background: #28a745; color: white; cursor: pointer; font-weight: bold; width: 45%;">Entrar</button>
-            <button onclick="register()" style="background: #007bff; color: white; cursor: pointer; font-weight: bold; width: 45%;">Registrarse</button>
         </div>
-    </div>
 
-    <div id="seccion-privada" style="display:none; background: #e8f5e9; padding: 25px; border: 2px solid #2e7d32; margin: 20px auto; border-radius: 15px; text-align: center; color: #000; max-width: 500px;">
-        <h3 style="color: #2e7d32; margin-top:0;">✨ Panel de Gestión</h3>
-        <p>Publica un nuevo torneo:</p>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <input type="text" id="nombreTorneo" placeholder="Nombre del torneo" style="padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
-            <input type="text" id="urlFondo" placeholder="Link de la imagen de fondo" style="padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
-            <button onclick="crearTorneo()" style="background: #1b5e20; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">🚀 Publicar Torneo</button>
+        <div id="seccion-privada" style="display:none; background: #e8f5e9; padding: 25px; border: 2px solid #2e7d32; margin: 20px auto; border-radius: 15px; text-align: center; color: #000; max-width: 500px;">
+            <h3 style="color: #2e7d32; margin-top:0;">✨ Panel de Control</h3>
+            <p>Guarda el nombre y fondo de este torneo:</p>
+            <input type="text" id="nombreTorneo" placeholder="Nombre (ej: Copa Verano)">
+            <input type="text" id="urlFondo" placeholder="URL de la imagen de fondo">
+            <button onclick="crearTorneo()" style="background: #1b5e20; width: 85%;" class="btn-main">🚀 Guardar Torneo</button>
+            <br><br>
+            <button onclick="logout()" style="background:none; color:red; border:none; cursor:pointer; text-decoration:underline;">Cerrar Sesión</button>
         </div>
-        <br>
-        <button onclick="logout()" style="background: none; border: none; color: #c62828; cursor: pointer; text-decoration: underline;">Cerrar Sesión</button>
-    </div>
 
-    <script type="module" src="app.js"></script>
+    </div> <script type="module" src="app.js"></script>
 
 </body>
 </html>
