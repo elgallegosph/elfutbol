@@ -1,76 +1,49 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Torneo Pro - Registro y Gestión</title>
-    <style>
-        :root { --primary: #1a5276; --success: #27ae60; --danger: #c0392b; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; padding: 20px; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        body.modo-visitante .solo-admin { display: none !important; }
-        input, button { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-reg { background: #7f8c8d; }
-    </style>
-</head>
 <body class="modo-visitante" id="mainBody">
+    <div class="container">
+        <h1>🏆 Gestión de Torneo</h1>
+        <div id="txtEstado">MODO VISITANTE</div>
 
-<div class="container">
-    <h1>🏆 Gestión de Torneo</h1>
-    <div id="txtEstado" style="text-align: center; font-weight: bold; margin-bottom: 20px;">👁️ MODO VISITANTE</div>
+        <section class="solo-admin">
+            <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
+            <button onclick="registrarEquipo()">Añadir Equipo</button>
+            <div id="listaEquipos"></div>
+            <hr>
+            <input type="text" id="nombreTorneo" placeholder="Nombre del torneo">
+            <button onclick="crearTorneo()">Guardar en la Nube</button>
+        </section>
 
-    <section class="solo-admin">
-        <h3>🛠️ Panel de Administración</h3>
-        <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
-        <button onclick="registrarEquipo()">Añadir Equipo</button>
-        <div id="listaEquipos" style="margin: 15px 0; font-weight: bold;"></div>
-        <hr>
-        <input type="text" id="nombreTorneo" placeholder="Nombre para publicar (ej: Torneo2024)">
-        <button onclick="crearTorneo()" style="background:var(--success)">💾 PUBLICAR EN FIREBASE</button>
-    </section>
-
-    <div id="panel-auth" style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin-top: 40px;">
-        <h3>🔐 Iniciar Sesión / Registrarse</h3>
-        <input type="email" id="email" placeholder="Correo electrónico">
-        <input type="password" id="password" placeholder="Contraseña (mín. 6 caracteres)">
-        
-        <div style="display: flex; gap: 10px;">
+        <div id="panel-auth">
+            <input type="email" id="email" placeholder="Correo">
+            <input type="password" id="password" placeholder="Contraseña">
             <button onclick="login()">Entrar</button>
-            <button onclick="register()" class="btn-reg">Crear Cuenta</button>
+            <button onclick="register()">Crear Cuenta</button>
+            <button onclick="logout()" class="solo-admin">Cerrar Sesión</button>
         </div>
-        
-        <button onclick="logout()" class="solo-admin" style="background:var(--danger); margin-top: 10px;">Cerrar Sesión</button>
     </div>
-</div>
 
-<script>
-    // Estas funciones están fuera del módulo para que el HTML las encuentre
-    let datosLocales = { equipos: [] };
+    <script>
+        // ESTO SOLUCIONA EL ERROR DE "NOT DEFINED"
+        let datosLocales = { equipos: [] };
 
-    window.registrarEquipo = function() {
-        const nombre = document.getElementById('nombreEquipo').value;
-        if(!nombre) return;
-        datosLocales.equipos.push(nombre);
-        localStorage.setItem('torneo_data', JSON.stringify(datosLocales));
-        document.getElementById('listaEquipos').innerText = "Equipos: " + datosLocales.equipos.join(', ');
-        document.getElementById('nombreEquipo').value = "";
-    };
+        window.registrarEquipo = function() {
+            const nombre = document.getElementById('nombreEquipo').value;
+            if(!nombre) return;
+            datosLocales.equipos.push(nombre);
+            localStorage.setItem('torneo_data', JSON.stringify(datosLocales));
+            document.getElementById('listaEquipos').innerText = "Equipos: " + datosLocales.equipos.join(', ');
+        };
 
-    window.cambiarModo = function(user) {
-        const body = document.getElementById('mainBody');
-        const txt = document.getElementById('txtEstado');
-        if(user) {
-            body.classList.remove('modo-visitante');
-            txt.innerText = "⚡ MODO ADMINISTRADOR: " + user.email;
-            txt.style.color = "green";
-        } else {
-            body.classList.add('modo-visitante');
-            txt.innerText = "👁️ MODO VISITANTE";
-            txt.style.color = "red";
-        }
-    };
-</script>
+        window.cambiarModo = function(user) {
+            const body = document.getElementById('mainBody');
+            if(user) {
+                body.classList.remove('modo-visitante');
+                document.getElementById('txtEstado').innerText = "MODO ADMIN: " + user.email;
+            } else {
+                body.classList.add('modo-visitante');
+                document.getElementById('txtEstado').innerText = "MODO VISITANTE";
+            }
+        };
+    </script>
 
-<script type="module" src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
-</html>
