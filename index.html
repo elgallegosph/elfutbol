@@ -3,62 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Fútbol - Sincronización Pro</title>
+    <title>El Fútbol - Gestión en Tiempo Real</title>
     <style>
         :root { --primary: #1a5276; --success: #27ae60; --danger: #c0392b; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         body.modo-visitante .solo-admin { display: none !important; }
-        .status-bar { text-align: center; font-weight: bold; margin-bottom: 20px; padding: 10px; border-radius: 5px; background: #eee; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
         button:hover { opacity: 0.8; }
-        .grupo-caja { border: 2px solid var(--primary); padding: 15px; border-radius: 8px; margin-top: 10px; background: #fff; }
-        ul { padding-left: 20px; }
-        .jugador-item { background: #f9f9f9; margin: 5px 0; padding: 8px; border-radius: 4px; border-left: 4px solid var(--primary); list-style: none; }
+        .grupo-caja { border: 2px solid var(--primary); padding: 15px; margin-top: 10px; border-radius: 8px; background: #fff; }
+        .status-bar { text-align: center; font-weight: bold; margin-bottom: 20px; padding: 10px; border-radius: 5px; background: #eee; }
     </style>
 </head>
 <body class="modo-visitante" id="mainBody">
 
 <div class="container">
     <header>
-        <h1>🏆 Gestión de Torneo</h1>
-        <div id="txtEstado" class="status-bar">CONECTANDO A FIREBASE...</div>
+        <h1>🏆 Gestión de Torneo Pro (Sincronizado)</h1>
+        <div id="txtEstado" class="status-bar">MODO VISITANTE</div>
     </header>
 
     <section class="solo-admin">
         <div class="grid">
-            <div style="background: #f0f7ff; padding: 15px; border-radius: 8px;">
-                <h3>1. Equipos</h3>
+            <div>
+                <h3>1. Registrar Equipo</h3>
                 <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
                 <button onclick="registrarEquipo()">Añadir Equipo</button>
             </div>
-            <div style="background: #f0f7ff; padding: 15px; border-radius: 8px;">
-                <h3>2. Jugadores</h3>
-                <select id="selEq" onchange="render()"></select>
-                <input type="text" id="nombreJug" placeholder="Nombre Jugador">
-                <input type="tel" id="telJug" placeholder="Teléfono">
+            <div>
+                <h3>2. Registrar Jugadores</h3>
+                <select id="selEq" onchange="renderJugadores()"></select>
+                <input type="text" id="nombreJug" placeholder="Nombre del Jugador">
+                <input type="tel" id="telJug" placeholder="Número de Teléfono">
                 <button onclick="registrarJugador()">Añadir Jugador</button>
             </div>
         </div>
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button onclick="realizarSorteo()" style="background: var(--success); flex: 2;">🎲 SORTEAR GRUPOS</button>
-            <button onclick="reiniciarTorneo()" style="background: var(--danger); flex: 1;">REINICIAR TODO</button>
-        </div>
         <hr>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="realizarSorteo()" style="background: var(--success); flex: 2;">🎲 Realizar Sorteo de Grupos</button>
+            <button onclick="reiniciarTorneo()" style="background: var(--danger); flex: 1;">🗑️ Reiniciar</button>
+        </div>
     </section>
 
-    <div id="displayGrupos" class="grid" style="margin-top: 20px;"></div>
+    <div id="displayGrupos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;"></div>
     
-    <div id="seccionJugadores" style="margin-top: 20px; background: #fdfdfd; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
-        <h3>📋 Plantilla del Equipo</h3>
+    <div id="seccionJugadores" style="margin-top: 20px;">
+        <h3>📋 Lista de Jugadores por Equipo</h3>
         <div id="listaJugadores"></div>
     </div>
 
-    <div id="authPanel" style="margin-top: 40px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background: #fafafa;">
+    <div id="authPanel" style="margin-top: 40px; padding: 20px; border: 1px solid #ddd; background: #fafafa; border-radius: 8px;">
         <div id="auth-inputs">
-            <h3>🔐 Acceso Administrativo</h3>
+            <h3>🔐 Iniciar Sesión / Registrarse</h3>
             <input type="email" id="email" placeholder="Correo electrónico">
             <input type="password" id="password" placeholder="Contraseña">
             <div style="display: flex; gap: 10px;">
@@ -67,94 +65,111 @@
             </div>
         </div>
         <div id="admin-ui" style="display:none; text-align: center;">
-            <p>Sesión: <b id="userEmail"></b></p>
-            <button onclick="logout()" style="background: var(--danger); width: auto; padding: 10px 30px;">Cerrar Sesión</button>
+            <p>Conectado como: <b id="userEmail"></b></p>
+            <button onclick="logout()" style="background: var(--danger); margin-top: 10px;">Cerrar Sesión</button>
         </div>
     </div>
 </div>
 
 <script>
+    // La variable dbT ahora se actualizará DESDE la nube
     window.dbT = { equipos: [], grupos: {} };
 
-    // RECIBIR DATOS (Desde app.js)
-    window.actualizarDesdeNube = function(datos) {
-        if (datos) {
-            window.dbT = datos;
+    // Función que recibe los datos de app.js (desde Firebase) y actualiza la pantalla
+    window.actualizarDesdeNube = function(datosNube) {
+        if (datosNube) {
+            window.dbT = datosNube;
             render();
-            const esVisitante = document.body.classList.contains('modo-visitante');
-            document.getElementById('txtEstado').innerText = esVisitante ? 
-                "👁️ MODO VISITANTE (TIEMPO REAL)" : "⚡ MODO ADMINISTRADOR (CONECTADO)";
         }
     };
 
     window.registrarEquipo = function() {
-        const n = document.getElementById('nombreEquipo').value.trim();
-        if(!n) return;
+        const n = document.getElementById('nombreEquipo').value;
+        if(!n) return alert("Escribe un nombre para el equipo");
         dbT.equipos.push({ nombre: n, jugadores: [] });
-        subir();
+        sincronizarConNube();
         document.getElementById('nombreEquipo').value = "";
     };
 
     window.registrarJugador = function() {
         const eqN = document.getElementById('selEq').value;
-        const jugN = document.getElementById('nombreJug').value.trim();
-        const tel = document.getElementById('telJug').value.trim();
+        const jugN = document.getElementById('nombreJug').value;
+        const tel = document.getElementById('telJug').value;
+        if(!eqN || !jugN) return alert("Selecciona un equipo e ingresa el nombre del jugador");
+        
         const eq = dbT.equipos.find(e => e.nombre === eqN);
-        if(eq && jugN) {
+        if(eq) {
             eq.jugadores.push({ nombre: jugN, telefono: tel });
-            subir();
+            sincronizarConNube();
             document.getElementById('nombreJug').value = "";
             document.getElementById('telJug').value = "";
         }
     };
 
     window.realizarSorteo = function() {
-        if(dbT.equipos.length < 2) return alert("Mínimo 2 equipos");
+        if(dbT.equipos.length < 2) return alert("Se necesitan al menos 2 equipos");
         dbT.grupos = { "Grupo A": [], "Grupo B": [] };
         const eqs = [...dbT.equipos].sort(() => Math.random() - 0.5);
         eqs.forEach((e, i) => {
             const g = i % 2 === 0 ? "Grupo A" : "Grupo B";
             dbT.grupos[g].push(e.nombre);
         });
-        subir();
+        sincronizarConNube();
     };
 
     window.reiniciarTorneo = function() {
-        if(confirm("¿Borrar todo?")) { dbT = { equipos: [], grupos: {} }; subir(); }
+        if (confirm("¿Borrar todos los datos del torneo en la NUBE?")) {
+            dbT = { equipos: [], grupos: {} };
+            sincronizarConNube();
+        }
     };
 
-    function subir() {
-        if (window.publicarTorneo) window.publicarTorneo(dbT);
+    function sincronizarConNube() {
+        // En lugar de localStorage, llamamos a la función de app.js que sube a Firebase
+        if (window.publicarTorneo) {
+            window.publicarTorneo(dbT); 
+        }
         render();
     }
 
-    function render() {
+    window.render = function() {
         const sel = document.getElementById('selEq');
-        const valActual = sel.value;
+        const eqActual = sel.value; // Guardar selección actual
+        
         sel.innerHTML = dbT.equipos.map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
-        if(valActual) sel.value = valActual;
+        if (eqActual) sel.value = eqActual;
 
         document.getElementById('displayGrupos').innerHTML = Object.keys(dbT.grupos).map(k => `
             <div class="grupo-caja"><h3>${k}</h3>${dbT.grupos[k].map(n => `<p>⚽ ${n}</p>`).join('')}</div>
         `).join('');
 
-        const eqSel = dbT.equipos.find(e => e.nombre === sel.value);
-        document.getElementById('listaJugadores').innerHTML = (eqSel && eqSel.jugadores.length > 0) ? 
-            `<ul>${eqSel.jugadores.map(j => `<li class="jugador-item"><b>${j.nombre}</b> - ${j.telefono || 'Sin tel'}</li>`).join('')}</ul>` : 
-            "<p>No hay jugadores en este equipo.</p>";
-    }
+        renderJugadores();
+    };
+
+    window.renderJugadores = function() {
+        const eqN = document.getElementById('selEq').value;
+        const eq = dbT.equipos.find(e => e.nombre === eqN);
+        const div = document.getElementById('listaJugadores');
+        if(eq && eq.jugadores && eq.jugadores.length > 0) {
+            div.innerHTML = `<ul>` + eq.jugadores.map(j => `<li>${j.nombre} - Tel: ${j.telefono || 'N/A'}</li>`).join('') + `</ul>`;
+        } else {
+            div.innerHTML = "<p>No hay jugadores registrados en este equipo.</p>";
+        }
+    };
 
     window.cambiarModo = function(user) {
         const body = document.getElementById('mainBody');
+        const ai = document.getElementById('auth-inputs');
+        const au = document.getElementById('admin-ui');
         if(user) {
             body.classList.remove('modo-visitante');
-            document.getElementById('auth-inputs').style.display = "none";
-            document.getElementById('admin-ui').style.display = "block";
+            ai.style.display = "none"; au.style.display = "block";
             document.getElementById('userEmail').innerText = user.email;
+            document.getElementById('txtEstado').innerText = "⚡ MODO ADMINISTRADOR (EN LÍNEA)";
         } else {
             body.classList.add('modo-visitante');
-            document.getElementById('auth-inputs').style.display = "block";
-            document.getElementById('admin-ui').style.display = "none";
+            ai.style.display = "block"; au.style.display = "none";
+            document.getElementById('txtEstado').innerText = "👁️ MODO VISITANTE (TIEMPO REAL)";
         }
     };
 </script>
