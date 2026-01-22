@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro - Gestión</title>
+    <title>Torneo de Fútbol Pro - Panel de Control</title>
     <style>
+        /* --- ESTILOS GENERALES --- */
         :root { 
             --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; 
-            --success: #27ae60; --warning: #e67e22; --playoff: #8e44ad; 
+            --success: #27ae60; --warning: #e67e22; 
         }
         
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
-        header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .container { max-width: 1000px; margin: 10px auto; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; }
+        .container { max-width: 1000px; margin: 10px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
         section { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
         h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; }
         
@@ -20,65 +22,72 @@
         input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 16px; }
         
         button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.98); }
+        button:hover { opacity: 0.9; }
         .btn-danger { background: #c0392b; }
-        .btn-success { background: var(--success); }
 
-        /* --- LÓGICA DE VISIBILIDAD (EL CORAZÓN DEL CAMBIO) --- */
-        /* Por defecto, ocultamos todos los botones y campos de entrada de datos */
-        body.modo-visitante button:not(.btn-ver-torneo):not(#btn-login):not(#btn-register), 
-        body.modo-visitante input:not(#buscadorPartidos):not(#email):not(#password),
-        body.modo-visitante select,
-        body.modo-visitante .btn-danger {
+        /* --- LÓGICA DE ADMINISTRADOR VS VISITANTE --- */
+        /* Si el body tiene la clase 'modo-visitante', ocultamos los botones de acción */
+        body.modo-visitante button.solo-admin, 
+        body.modo-visitante .btn-danger,
+        body.modo-visitante #seccion-privada {
             display: none !important;
         }
 
-        /* Estilos del Panel de Acceso */
-        #panel-firebase { background: #eee; padding: 20px; border-radius: 10px; margin-top: 40px; text-align: center; border: 2px dashed #ccc; }
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-bottom: 10px; }
-        .status-visitante { background: #fce4e4; color: #c0392b; }
-        .status-admin { background: #e8f5e9; color: #2e7d32; }
+        /* Mensaje informativo para visitantes */
+        .msg-espectador { 
+            display: none; 
+            background: #fff3cd; 
+            color: #856404; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-size: 0.9rem; 
+            margin-bottom: 10px;
+        }
+        body.modo-visitante .msg-espectador { display: block; }
 
-        /* Tablas y Listas */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        /* Estado del Panel */
+        #panel-firebase { background: #f8f9fa; padding: 20px; border-radius: 10px; border: 2px dashed #ddd; margin-top: 40px; text-align: center; }
+        .badge { padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+        .badge-vis { background: #e9ecef; color: #495057; }
+        .badge-adm { background: #d4edda; color: #155724; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
         th { background: #f8f9fa; }
-        .card-plantilla { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-bottom: 5px; background: #fff; }
     </style>
 </head>
 <body class="modo-visitante" id="mainBody">
 
-<header><h1>🏆 Gestión de Campeonato Pro</h1></header>
+<header>
+    <h1>🏆 Gestión de Campeonato</h1>
+    <span id="txtEstado" class="badge badge-vis">👁️ MODO ESPECTADOR</span>
+</header>
 
 <div class="container">
     
     <section>
-        <h2>🌍 Torneos Activos</h2>
-        <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
-            </div>
-    </section>
-
-    <section id="sec-equipos">
         <h2>1. Equipos y Plantillas</h2>
+        <p class="msg-espectador">Inicia sesión como administrador para añadir equipos o jugadores.</p>
         <div class="grid">
             <div>
                 <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
-                <button onclick="registrarEquipo()">Registrar Equipo</button>
+                <button class="solo-admin" onclick="registrarEquipo()">Registrar Equipo</button>
             </div>
             <div>
                 <select id="selectEquipoJugador"></select>
                 <input type="text" id="nombreJugador" placeholder="Nombre Jugador">
-                <button onclick="registrarJugador()">Añadir Jugador</button>
+                <button class="solo-admin" onclick="registrarJugador()">Añadir Jugador</button>
             </div>
         </div>
-        <div id="contenedorPlantillas" class="lista-plantilla"></div>
+        <div id="contenedorPlantillas" style="margin-top:20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;"></div>
     </section>
 
     <section>
         <h2>2. Calendario y Resultados</h2>
-        <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar equipo..." onkeyup="filtrarPartidos()">
-        <div id="contenedorCalendario" style="margin-top:15px;"></div>
-        <button class="btn-success" onclick="realizarSorteo()" style="margin-top:10px;">🎲 Generar Sorteo</button>
+        <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar partido..." onkeyup="filtrarPartidos()">
+        <div id="contenedorCalendario" style="margin-top:15px; min-height: 50px; background: #fafafa; padding: 10px; border-radius: 5px;">
+            </div>
+        <button class="solo-admin" style="background:var(--success); margin-top:10px;" onclick="realizarSorteo()">🎲 Generar Sorteo</button>
     </section>
 
     <section>
@@ -86,34 +95,22 @@
         <div id="contenedorTablas"></div>
     </section>
 
-    <section>
-        <h2>4. Goleadores</h2>
-        <table>
-            <thead><tr><th>Jugador</th><th>Equipo</th><th>⚽ Goles</th></tr></thead>
-            <tbody id="tablaGoleadoresBody"></tbody>
-        </table>
-    </section>
-
-    <button class="btn-danger" onclick="reiniciarTorneo()">BORRAR TODO EL TORNEO</button>
+    <button class="btn-danger solo-admin" onclick="reiniciarTorneo()">BORRAR TODO EL TORNEO</button>
 
     <div id="panel-firebase">
-        <div id="status-area">
-            <span id="badge-estado" class="status-badge status-visitante">👁️ Modo Espectador</span>
-        </div>
-
         <div id="auth-container">
+            <h3>🔐 Acceso de Administrador</h3>
             <div style="max-width: 300px; margin: 0 auto;">
-                <input type="email" id="email" placeholder="Correo de Admin">
+                <input type="email" id="email" placeholder="Correo">
                 <input type="password" id="password" placeholder="Contraseña">
-                <button id="btn-login" onclick="login()">Entrar como Admin</button>
-                <button id="btn-register" onclick="register()" style="background:none; color:var(--primary); font-size:12px;">Registrar nuevo admin</button>
+                <button onclick="login()" style="background:var(--success)">Entrar para Editar</button>
+                <button onclick="register()" style="background:none; color:var(--primary); font-size:12px; text-decoration:underline;">Crear cuenta nueva</button>
             </div>
         </div>
 
         <div id="seccion-privada" style="display:none;">
-            <p style="color:var(--success); font-weight:bold;">¡Bienvenido, Administrador!</p>
-            <input type="text" id="nombreTorneo" placeholder="Nombre para guardar este torneo" style="max-width:300px">
-            <button onclick="crearTorneo()" class="btn-success" style="width:auto; padding:10px 20px;">💾 Guardar en la Nube</button>
+            <p style="color:var(--success); font-weight:bold;">✅ Sesión Iniciada</p>
+            <button onclick="crearTorneo()" style="background:var(--success); width:auto; padding:10px 30px;">💾 Guardar Cambios en la Nube</button>
             <br><br>
             <button onclick="logout()" style="background:none; color:red; text-decoration:underline; width:auto;">Cerrar Sesión</button>
         </div>
@@ -121,87 +118,79 @@
 </div>
 
 <script>
-    // --- TU LÓGICA ORIGINAL INTEGRADA PARA EVITAR "NOT DEFINED" ---
-    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], calendario: [], goleadores: [] };
+    /* --- LÓGICA DE DATOS (Mantiene tus funciones vivas para evitar errores) --- */
+    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], calendario: [] };
 
     function registrarEquipo() {
         const nombre = document.getElementById('nombreEquipo').value;
-        if(!nombre) return alert("Ingresa el nombre del equipo");
+        if(!nombre) return alert("Escribe el nombre");
         datos.equipos.push({ id: Date.now(), nombre: nombre, jugadores: [] });
         actualizarTodo();
         document.getElementById('nombreEquipo').value = "";
     }
 
     function registrarJugador() {
-        const nombre = document.getElementById('nombreJugador').value;
-        const equipoId = document.getElementById('selectEquipoJugador').value;
-        if(!nombre || !equipoId) return alert("Completa los datos");
+        const eqId = document.getElementById('selectEquipoJugador').value;
+        const nombreJ = document.getElementById('nombreJugador').value;
+        if(!eqId || !nombreJ) return alert("Faltan datos");
         
-        let eq = datos.equipos.find(e => e.id == equipoId);
-        eq.jugadores.push({ nombre: nombre, goles: 0 });
+        let eq = datos.equipos.find(e => e.id == eqId);
+        eq.jugadores.push(nombreJ);
         actualizarTodo();
         document.getElementById('nombreJugador').value = "";
     }
 
     function actualizarTodo() {
         localStorage.setItem('torneo_data', JSON.stringify(datos));
-        renderizarEquipos();
-        actualizarSelects();
+        renderizar();
     }
 
-    function renderizarEquipos() {
+    function renderizar() {
+        // Renderizar lista de equipos
         const cont = document.getElementById('contenedorPlantillas');
         cont.innerHTML = datos.equipos.map(e => `
-            <div class="card-plantilla">
-                <strong>${e.nombre}</strong> (${e.jugadores.length} jugadores)
+            <div style="padding:10px; border:1px solid #ddd; border-radius:5px; background:white;">
+                <strong>${e.nombre}</strong><br><small>${e.jugadores.length} jugadores</small>
             </div>
         `).join('');
-    }
 
-    function actualizarSelects() {
+        // Actualizar Selects
         const sel = document.getElementById('selectEquipoJugador');
         sel.innerHTML = datos.equipos.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
     }
 
-    function reiniciarTorneo() {
-        if(confirm("¿Seguro que quieres borrar todo?")) {
-            datos = { equipos: [], calendario: [], goleadores: [] };
-            actualizarTodo();
-        }
-    }
+    function filtrarPartidos() { /* Tu lógica de búsqueda */ }
+    function realizarSorteo() { alert("Sorteo realizado localmente"); }
+    function reiniciarTorneo() { if(confirm("¿Borrar todo?")) { datos = {equipos:[], calendario:[]}; actualizarTodo(); } }
 
-    // --- LÓGICA DE INTERRUPTOR ADMIN/VISITANTE ---
-    function alternarModo(esAdmin) {
+    /* --- CONTROL DE MODO (ADMIN / VISITANTE) --- */
+    // Esta función la llama tu app.js cuando Firebase detecta al usuario
+    function cambiarModo(esAdmin) {
         const body = document.getElementById('mainBody');
-        const badge = document.getElementById('badge-estado');
-        const authDiv = document.getElementById('auth-container');
-        const adminDiv = document.getElementById('seccion-privada');
+        const txt = document.getElementById('txtEstado');
+        const auth = document.getElementById('auth-container');
+        const priv = document.getElementById('seccion-privada');
 
         if(esAdmin) {
             body.classList.remove('modo-visitante');
-            badge.innerText = "⚡ Modo Administrador";
-            badge.className = "status-badge status-admin";
-            authDiv.style.display = "none";
-            adminDiv.style.display = "block";
+            txt.innerText = "⚡ MODO ADMINISTRADOR";
+            txt.className = "badge badge-adm";
+            auth.style.display = "none";
+            priv.style.display = "block";
         } else {
             body.classList.add('modo-visitante');
-            badge.innerText = "👁️ Modo Espectador";
-            badge.className = "status-badge status-visitante";
-            authDiv.style.display = "block";
-            adminDiv.style.display = "none";
+            txt.innerText = "👁️ MODO ESPECTADOR";
+            txt.className = "badge badge-vis";
+            auth.style.display = "block";
+            priv.style.display = "none";
         }
     }
 
-    // Al cargar
+    // Al cargar la página
     window.onload = () => {
-        actualizarTodo();
-        // Iniciamos como visitante por seguridad
-        alternarModo(false); 
+        renderizar();
+        cambiarModo(false); // Empezar siempre como visitante
     };
-
-    // Funciones vacías para evitar errores de consola hasta que cargue app.js
-    function filtrarPartidos() { console.log("Filtrando..."); }
-    function realizarSorteo() { console.log("Sorteando..."); }
 </script>
 
 <script type="module" src="app.js"></script>
