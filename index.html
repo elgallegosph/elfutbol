@@ -2,94 +2,64 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo Pro - Registro de Admin</title>
+    <title>Torneo Pro - Registro</title>
     <style>
-        :root { --primary: #1a5276; --success: #27ae60; --danger: #c0392b; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        
-        body.modo-visitante .solo-admin { display: none !important; }
-        
-        input, button { padding: 12px; margin: 8px 0; width: 100%; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-secundario { background: #7f8c8d; }
-        
-        .status-bar { padding: 10px; text-align: center; font-weight: bold; margin-bottom: 20px; border-radius: 5px; }
-        .modo-lectura { background: #ffebee; color: #c62828; }
-        .modo-edicion { background: #e8f5e9; color: #2e7d32; }
+        body { font-family: sans-serif; padding: 20px; background: #eee; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+        body.modo-visitante .solo-admin { display: none; }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; box-sizing: border-box; }
+        button { background: #1a5276; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .btn-reg { background: #7f8c8d; }
     </style>
 </head>
 <body class="modo-visitante" id="mainBody">
 
 <div class="container">
-    <header>
-        <h1>🏆 Gestión de Torneo</h1>
-        <div id="txtEstado" class="status-bar modo-lectura">👁️ MODO VISITANTE</div>
-    </header>
+    <h1>🏆 Gestión de Torneo</h1>
+    <div id="status" style="text-align:center; padding:10px;">Modo Espectador</div>
 
-    <section class="solo-admin">
-        <h2>🛠️ Panel de Control</h2>
-        <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
+    <div class="solo-admin">
+        <h3>Panel de Control</h3>
+        <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
         <button onclick="registrarEquipo()">Añadir Equipo</button>
         <div id="listaEquipos"></div>
         <hr>
-        <input type="text" id="nombreTorneo" placeholder="Nombre para publicar torneo">
-        <button onclick="crearTorneo()" style="background:var(--success)">💾 PUBLICAR EN LA NUBE</button>
-    </section>
+        <input type="text" id="nombreTorneo" placeholder="Nombre del Torneo">
+        <button onclick="crearTorneo()" style="background:green">Publicar en Firebase</button>
+    </div>
 
-    <div id="panel-auth" style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin-top: 40px;">
-        <div id="auth-inputs">
-            <h3>🔐 Acceso / Registro</h3>
-            <p>Usa tu correo para entrar o crear una cuenta de administrador.</p>
-            <input type="email" id="email" placeholder="Correo electrónico">
-            <input type="password" id="password" placeholder="Contraseña (mínimo 6 caracteres)">
-            
-            <div style="display: flex; gap: 10px;">
-                <button onclick="login()">Iniciar Sesión</button>
-                <button onclick="register()" class="btn-secundario">Crear Cuenta</button>
-            </div>
-        </div>
-
-        <div id="admin-ui" style="display:none; text-align: center;">
-            <p>Sesión activa: <b id="userEmail"></b></p>
-            <button onclick="logout()" style="background:var(--danger)">Cerrar Sesión</button>
-        </div>
+    <div id="auth-box" style="margin-top:20px; border:1px solid #ccc; padding:15px;">
+        <h3>Registro / Acceso</h3>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="login()">Entrar</button>
+        <button onclick="register()" class="btn-reg">Crear Cuenta Nueva</button>
+        <button onclick="logout()" class="solo-admin" style="background:red">Salir</button>
     </div>
 </div>
 
 <script>
-    // Lógica de datos básica
     let datosLocales = { equipos: [] };
 
     window.registrarEquipo = function() {
-        const nombre = document.getElementById('nombreEquipo').value;
-        if(!nombre) return alert("Escribe un nombre");
-        datosLocales.equipos.push(nombre);
+        const n = document.getElementById('nombreEquipo').value;
+        if(!n) return;
+        datosLocales.equipos.push(n);
         localStorage.setItem('torneo_data', JSON.stringify(datosLocales));
-        document.getElementById('listaEquipos').innerHTML = "<b>Equipos actuales:</b> " + datosLocales.equipos.join(', ');
-        document.getElementById('nombreEquipo').value = "";
+        document.getElementById('listaEquipos').innerText = "Equipos: " + datosLocales.equipos.join(', ');
     };
 
     window.cambiarModo = function(user) {
         const body = document.getElementById('mainBody');
-        const authInputs = document.getElementById('auth-inputs');
-        const adminUI = document.getElementById('admin-ui');
-        const txt = document.getElementById('txtEstado');
-
+        const st = document.getElementById('status');
         if(user) {
             body.classList.remove('modo-visitante');
-            authInputs.style.display = "none";
-            adminUI.style.display = "block";
-            document.getElementById('userEmail').innerText = user.email;
-            txt.innerText = "⚡ MODO ADMINISTRADOR";
-            txt.className = "status-bar modo-edicion";
+            st.innerText = "Bienvenido: " + user.email;
+            st.style.color = "green";
         } else {
             body.classList.add('modo-visitante');
-            authInputs.style.display = "block";
-            adminUI.style.display = "none";
-            txt.innerText = "👁️ MODO VISITANTE";
-            txt.className = "status-bar modo-lectura";
+            st.innerText = "Modo Espectador";
+            st.style.color = "red";
         }
     };
 </script>
