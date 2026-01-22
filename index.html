@@ -3,50 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>El Fútbol - Gestión Pro</title>
+    <title>El Fútbol - Gestión de Torneo</title>
     <style>
         :root { --primary: #1a5276; --success: #27ae60; --danger: #c0392b; }
-        body { font-family: sans-serif; background: #f4f4f4; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 10px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         body.modo-visitante .solo-admin { display: none !important; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .grupo-caja { border: 2px solid var(--primary); padding: 10px; margin-top: 10px; border-radius: 5px; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { opacity: 0.8; }
+        .grupo-caja { border: 2px solid var(--primary); padding: 15px; margin-top: 10px; border-radius: 8px; background: #fff; }
+        .status-bar { text-align: center; font-weight: bold; margin-bottom: 20px; padding: 10px; border-radius: 5px; background: #eee; }
     </style>
 </head>
 <body class="modo-visitante" id="mainBody">
 
 <div class="container">
-    <h1>🏆 Gestión de Torneo</h1>
-    <div id="txtEstado" style="text-align: center; font-weight: bold; margin-bottom: 20px;">MODO VISITANTE</div>
+    <header>
+        <h1>🏆 Gestión de Torneo Pro</h1>
+        <div id="txtEstado" class="status-bar">MODO VISITANTE</div>
+    </header>
 
     <section class="solo-admin">
         <div class="grid">
             <div>
                 <h3>1. Registrar Equipo</h3>
-                <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
+                <input type="text" id="nombreEquipo" placeholder="Nombre del Equipo">
                 <button onclick="registrarEquipo()">Añadir Equipo</button>
             </div>
             <div>
-                <h3>2. Jugadores</h3>
-                <select id="selEq"></select>
-                <input type="text" id="nombreJug" placeholder="Nombre Jugador">
-                <input type="tel" id="telJug" placeholder="Teléfono">
+                <h3>2. Registrar Jugadores</h3>
+                <select id="selEq" onchange="renderJugadores()"></select>
+                <input type="text" id="nombreJug" placeholder="Nombre del Jugador">
+                <input type="tel" id="telJug" placeholder="Número de Teléfono">
                 <button onclick="registrarJugador()">Añadir Jugador</button>
             </div>
         </div>
         <hr>
-        <button onclick="realizarSorteo()" style="background: var(--success);">🎲 Realizar Sorteo de Grupos</button>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="realizarSorteo()" style="background: var(--success); flex: 2;">🎲 Realizar Sorteo de Grupos</button>
+            <button onclick="reiniciarTorneo()" style="background: var(--danger); flex: 1;">🗑️ Reiniciar</button>
+        </div>
     </section>
 
     <div id="displayGrupos" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;"></div>
     
-<button onclick="reiniciarTorneo()" style="background: var(--danger); margin-top: 20px;">🗑️ Borrar Todo y Reiniciar Torneo</button>
-    <div id="authPanel" style="margin-top: 40px; padding: 20px; border: 1px solid #ddd; background: #fafafa;">
+    <div id="seccionJugadores" style="margin-top: 20px;">
+        <h3>📋 Lista de Jugadores por Equipo</h3>
+        <div id="listaJugadores"></div>
+    </div>
+
+    <div id="authPanel" style="margin-top: 40px; padding: 20px; border: 1px solid #ddd; background: #fafafa; border-radius: 8px;">
         <div id="auth-inputs">
             <h3>🔐 Iniciar Sesión / Registrarse</h3>
-            <input type="email" id="email" placeholder="Correo">
+            <input type="email" id="email" placeholder="Correo electrónico">
             <input type="password" id="password" placeholder="Contraseña">
             <div style="display: flex; gap: 10px;">
                 <button onclick="login()">Entrar</button>
@@ -54,64 +65,42 @@
             </div>
         </div>
         <div id="admin-ui" style="display:none; text-align: center;">
-            <p>Admin: <b id="userEmail"></b></p>
-            <button onclick="publicarTorneo()" style="background: var(--success);">💾 Guardar en Firebase</button>
-            <button onclick="logout()" style="background: var(--danger);">Salir</button>
+            <p>Conectado como: <b id="userEmail"></b></p>
+            <button onclick="publicarTorneo()" style="background: var(--success);">💾 Guardar Cambios en la Nube</button>
+            <button onclick="logout()" style="background: var(--danger); margin-top: 10px;">Cerrar Sesión</button>
         </div>
     </div>
 </div>
 
 <script>
-    window.reiniciarTorneo = function() {
-    if (confirm("¿Estás seguro de que quieres borrar todos los equipos, jugadores y grupos? Esta acción no se puede deshacer.")) {
-        // Limpia los datos locales
-        dbT = { equipos: [], grupos: {} };
-        localStorage.removeItem('futbol_local');
-        
-        // Si hay una sesión activa, intenta borrar en Firebase también
-        if (window.borrarTorneoNube) {
-            window.borrarTorneoNube();
-        }
-        
-        // Actualiza la pantalla
-        render();
-        alert("Torneo reiniciado. Ahora puedes empezar de cero.");
-    }
-};
-    let dbT = JSON.parse(localStorage.getItem('futbol_local')) || { equipos: [], grupos: {} };
+    // Estructura de datos global
+    window.dbT = JSON.parse(localStorage.getItem('futbol_local')) || { equipos: [], grupos: {} };
 
     window.registrarEquipo = function() {
         const n = document.getElementById('nombreEquipo').value;
-        if(!n) return;
+        if(!n) return alert("Escribe un nombre para el equipo");
         dbT.equipos.push({ nombre: n, jugadores: [] });
         guardarYRender();
+        document.getElementById('nombreEquipo').value = "";
     };
-<script>
-    // ... otros códigos como registrarEquipo, registrarJugador ...
 
-    // AQUÍ ES DONDE DEBES REEMPLAZAR:
-    function guardarYRender() {
-        localStorage.setItem('futbol_local', JSON.stringify(dbT));
-        render();
-        
-        // Esta parte es la que envía los datos a la nube para que otros dispositivos los vean
-        if (window.publicarTorneo) {
-            window.publicarTorneo(); 
-        }
-    }
-
-    // ... el resto del código como la función render() ...
-</script>
     window.registrarJugador = function() {
         const eqN = document.getElementById('selEq').value;
         const jugN = document.getElementById('nombreJug').value;
         const tel = document.getElementById('telJug').value;
+        if(!eqN || !jugN) return alert("Selecciona un equipo e ingresa el nombre del jugador");
+        
         const eq = dbT.equipos.find(e => e.nombre === eqN);
-        if(eq) eq.jugadores.push({ nombre: jugN, tel });
-        guardarYRender();
+        if(eq) {
+            eq.jugadores.push({ nombre: jugN, telefono: tel });
+            guardarYRender();
+            document.getElementById('nombreJug').value = "";
+            document.getElementById('telJug').value = "";
+        }
     };
 
     window.realizarSorteo = function() {
+        if(dbT.equipos.length < 2) return alert("Se necesitan al menos 2 equipos");
         dbT.grupos = { "Grupo A": [], "Grupo B": [] };
         const eqs = [...dbT.equipos].sort(() => Math.random() - 0.5);
         eqs.forEach((e, i) => {
@@ -121,17 +110,45 @@
         guardarYRender();
     };
 
+    window.reiniciarTorneo = function() {
+        if (confirm("¿Borrar todos los datos del torneo?")) {
+            dbT = { equipos: [], grupos: {} };
+            guardarYRender();
+        }
+    };
+
     function guardarYRender() {
         localStorage.setItem('futbol_local', JSON.stringify(dbT));
         render();
+        // Sincronización automática con Firebase si es Admin
+        if (window.publicarTorneo && !document.body.classList.contains('modo-visitante')) {
+            window.publicarTorneo(); 
+        }
     }
 
-    function render() {
-        document.getElementById('selEq').innerHTML = dbT.equipos.map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
+    window.render = function() {
+        // Actualizar Select de equipos
+        const sel = document.getElementById('selEq');
+        sel.innerHTML = dbT.equipos.map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
+        
+        // Renderizar Grupos
         document.getElementById('displayGrupos').innerHTML = Object.keys(dbT.grupos).map(k => `
             <div class="grupo-caja"><h3>${k}</h3>${dbT.grupos[k].map(n => `<p>⚽ ${n}</p>`).join('')}</div>
         `).join('');
-    }
+
+        renderJugadores();
+    };
+
+    window.renderJugadores = function() {
+        const eqN = document.getElementById('selEq').value;
+        const eq = dbT.equipos.find(e => e.nombre === eqN);
+        const div = document.getElementById('listaJugadores');
+        if(eq && eq.jugadores.length > 0) {
+            div.innerHTML = `<ul>` + eq.jugadores.map(j => `<li>${j.nombre} - Tel: ${j.telefono || 'N/A'}</li>`).join('') + `</ul>`;
+        } else {
+            div.innerHTML = "<p>No hay jugadores registrados en este equipo.</p>";
+        }
+    };
 
     window.cambiarModo = function(user) {
         const body = document.getElementById('mainBody');
@@ -141,13 +158,14 @@
             body.classList.remove('modo-visitante');
             ai.style.display = "none"; au.style.display = "block";
             document.getElementById('userEmail').innerText = user.email;
-            document.getElementById('txtEstado').innerText = "⚡ MODO ADMINISTRADOR";
+            document.getElementById('txtEstado').innerText = "⚡ MODO ADMINISTRADOR ACTIVADO";
         } else {
             body.classList.add('modo-visitante');
             ai.style.display = "block"; au.style.display = "none";
-            document.getElementById('txtEstado').innerText = "👁️ MODO VISITANTE";
+            document.getElementById('txtEstado').innerText = "👁️ MODO VISITANTE (SOLO LECTURA)";
         }
     };
+
     window.onload = render;
 </script>
 <script type="module" src="app.js"></script>
