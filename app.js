@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// Configuración extraída de tu imagen de Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDea95aNqXhCuIOHPyrFwJKPX1sRAQBbEg",
   authDomain: "elfutbolapp.firebaseapp.com",
@@ -16,28 +15,37 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Carga pública de torneos para todos
+// Función para cargar torneos (Pública)
 async function cargarTorneos() {
-    const querySnapshot = await getDocs(collection(db, "torneos"));
-    const lista = document.getElementById('listaTorneosPublicos');
-    lista.innerHTML = "";
-    querySnapshot.forEach((doc) => {
-        const t = doc.data();
-        const btn = document.createElement('button');
-        btn.innerText = t.nombre;
-        btn.onclick = () => document.body.style.backgroundImage = `url('${t.fondoUrl}')`;
-        lista.appendChild(btn);
-    });
+    try {
+        const querySnapshot = await getDocs(collection(db, "torneos"));
+        const lista = document.getElementById('listaTorneosPublicos');
+        if (!lista) return;
+        lista.innerHTML = "";
+        querySnapshot.forEach((doc) => {
+            const t = doc.data();
+            const btn = document.createElement('button');
+            btn.innerText = t.nombre;
+            btn.style = "padding: 10px 15px; cursor: pointer; border-radius: 5px; border: 1px solid #333; background: #fff;";
+            btn.onclick = () => {
+                document.body.style.backgroundImage = `url('${t.fondoUrl}')`;
+                document.body.style.backgroundSize = "cover";
+                document.body.style.backgroundAttachment = "fixed";
+            };
+            lista.appendChild(btn);
+        });
+    } catch (e) { console.error("Error cargando torneos:", e); }
 }
+
+// Ejecutar carga al inicio
 cargarTorneos();
 
-// Funciones globales para los botones del HTML
 window.register = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     try {
         await createUserWithEmailAndPassword(auth, email, pass);
-        alert("Admin registrado");
+        alert("¡Registro exitoso!");
     } catch (e) { alert("Error: " + e.message); }
 };
 
@@ -53,13 +61,17 @@ window.logout = () => signOut(auth).then(() => location.reload());
 window.crearTorneo = async () => {
     const nombre = document.getElementById('nombreTorneo').value;
     const fondo = document.getElementById('urlFondo').value;
-    await addDoc(collection(db, "torneos"), { nombre, fondoUrl: fondo, userId: auth.currentUser.uid });
-    alert("Torneo creado");
-    cargarTorneos();
+    if(!nombre) return alert("Escribe un nombre");
+    try {
+        await addDoc(collection(db, "torneos"), { nombre, fondoUrl: fondo, userId: auth.currentUser.uid });
+        alert("Torneo publicado");
+        cargarTorneos();
+    } catch (e) { alert("Error: " + e.message); }
 };
 
-// Control de vistas según estado de sesión
 onAuthStateChanged(auth, (user) => {
-    document.getElementById('seccion-privada').style.display = user ? 'block' : 'none';
-    document.getElementById('auth-container').style.display = user ? 'none' : 'block';
+    const priv = document.getElementById('seccion-privada');
+    const pub = document.getElementById('auth-container');
+    if (priv) priv.style.display = user ? 'block' : 'none';
+    if (pub) pub.style.display = user ? 'none' : 'block';
 });
