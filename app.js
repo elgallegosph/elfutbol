@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 1. TU CONFIGURACIÓN DE FIREBASE (Cópiala de tu consola de Firebase)
+// 1. CONFIGURACIÓN (Asegúrate de que estos datos coincidan con tu consola Firebase)
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
   authDomain: "TU_PROYECTO.firebaseapp.com",
@@ -16,30 +16,62 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- 2. VIGILANTE DE SESIÓN (ESTO ES LO MÁS IMPORTANTE) ---
-// Detecta si eres tú (admin) o un visitante
+// --- 2. CARGA AUTOMÁTICA PARA VISITANTES ---
+async function cargarTorneosPublicos() {
+    const listaContenedor = document.getElementById('listaTorneosPublicos');
+    if (!listaContenedor) return;
+
+    try {
+        const querySnapshot = await getDocs(collection(db, "torneos"));
+        listaContenedor.innerHTML = ""; // Limpiar carga
+
+        querySnapshot.forEach((docSnap) => {
+            const btn = document.createElement('button');
+            btn.className = "btn-ver-torneo";
+            btn.style.width = "auto";
+            btn.style.margin = "5px";
+            btn.innerText = `Ver: ${docSnap.id}`;
+            btn.onclick = () => cargarDatosTorneo(docSnap.id);
+            listaContenedor.appendChild(btn);
+        });
+    } catch (e) {
+        console.error("Error cargando torneos:", e);
+    }
+}
+
+async function cargarDatosTorneo(idTorneo) {
+    const docRef = doc(db, "torneos", idTorneo);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+        const datos = docSnap.data().config;
+        // Guardamos en el almacenamiento local del navegador del visitante para que el HTML lo use
+        localStorage.setItem('torneo_data', JSON.stringify(datos));
+        // Forzamos al HTML a redibujar las tablas (Función que está en tu <script> del HTML)
+        if (window.actualizarTodo) {
+            window.actualizarTodo(); 
+        } else {
+            location.reload(); // Si no encuentra la función, recarga para aplicar
+        }
+        alert("Cargando datos de: " + idTorneo);
+    }
+}
+
+// --- 3. VIGILANTE DE SESIÓN ---
 onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // Si hay usuario, llamamos a la función del HTML para mostrar botones
-    window.cambiarModo(true); 
-    console.log("Admin conectado:", user.email);
-  } else {
-    // Si no hay usuario, ocultamos todo lo de edición
-    window.cambiarModo(false);
-    console.log("Modo visitante activo");
-  }
+  const esAdmin = !!user;
+  window.cambiarModo(esAdmin); 
+  cargarTorneosPublicos(); // Cargamos la lista de torneos para todos
 });
 
-// --- 3. FUNCIONES DE LOGIN Y REGISTRO ---
-
+// --- 4. FUNCIONES DE ACCESO ---
 window.login = async () => {
   const email = document.getElementById('email').value;
   const pass = document.getElementById('password').value;
   try {
     await signInWithEmailAndPassword(auth, email, pass);
-    alert("¡Bienvenido Administrador!");
   } catch (error) {
-    alert("Error al entrar: " + error.message);
+    alert("Error: " + error.message);
   }
 };
 
@@ -48,36 +80,29 @@ window.register = async () => {
   const pass = document.getElementById('password').value;
   try {
     await createUserWithEmailAndPassword(auth, email, pass);
-    alert("Cuenta de administrador creada con éxito");
+    alert("Admin creado");
   } catch (error) {
-    alert("Error al registrar: " + error.message);
+    alert("Error: " + error.message);
   }
 };
 
-window.logout = async () => {
-  try {
-    await signOut(auth);
-    alert("Sesión cerrada. Ahora eres visitante.");
-  } catch (error) {
-    console.error("Error al salir", error);
-  }
-};
+window.logout = () => signOut(auth);
 
-// --- 4. FUNCIÓN PARA GUARDAR EL TORNEO EN LA NUBE ---
+// --- 5. GUARDAR CAMBIOS (SOLO ADMIN) ---
 window.crearTorneo = async () => {
   const nombreT = document.getElementById('nombreTorneo').value;
-  if(!nombreT) return alert("Ponle un nombre al torneo para guardarlo");
+  if(!nombreT) return alert("Escribe el nombre del torneo para guardar");
   
-  // Obtenemos los datos que tienes en el LocalStorage (los que llenaste en el HTML)
   const datosLocales = JSON.parse(localStorage.getItem('torneo_data'));
 
   try {
     await setDoc(doc(db, "torneos", nombreT), {
       config: datosLocales,
       admin: auth.currentUser.email,
-      fechaActualizacion: new Date()
+      ultimaVez: new Date()
     });
-    alert("¡Torneo guardado en la base de datos de Firebase!");
+    alert("¡Torneo guardado en la nube! Los visitantes ya pueden verlo.");
+    cargarTorneosPublicos(); 
   } catch (error) {
     alert("Error al guardar: " + error.message);
   }
