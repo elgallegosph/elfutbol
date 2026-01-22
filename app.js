@@ -41,12 +41,15 @@ window.logout = () => signOut(auth);
 window.publicarTorneo = async () => {
     const data = JSON.parse(localStorage.getItem('futbol_local'));
     try {
+        // Referencia a tu colección 'campeonatos'
         await setDoc(doc(db, "campeonatos", "torneo_actual"), {
             data: data,
             ultimaActualizacion: new Date().toISOString()
         });
-        alert("¡Datos sincronizados con éxito en la nube!");
-    } catch (e) { alert("Error al guardar: " + e.message); }
+        alert("¡Tablas y Goleadores actualizados en la nube!");
+    } catch (e) { 
+        alert("Error al sincronizar: " + e.message); 
+    }
 };
 
 // VIGILANTE
