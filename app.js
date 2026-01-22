@@ -47,3 +47,16 @@ window.publicarTorneo = async () => {
 onAuthStateChanged(auth, (user) => {
     if (window.cambiarModo) window.cambiarModo(user);
 });
+
+window.borrarTorneoNube = async () => {
+    try {
+        // Sobrescribe el documento con datos vacíos
+        await setDoc(doc(db, "campeonatos", "torneo_actual"), { 
+            data: { equipos: [], grupos: {} },
+            ultimaActualizacion: new Date().toISOString()
+        });
+        console.log("Datos borrados en la nube");
+    } catch (e) {
+        console.error("Error al limpiar nube: " + e.message);
+    }
+};
