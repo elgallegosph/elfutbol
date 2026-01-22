@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro - Panel de Control</title>
+    <title>Torneo de Fútbol Pro</title>
     <style>
-        /* --- ESTILOS GENERALES --- */
         :root { 
             --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; 
             --success: #27ae60; --warning: #e67e22; 
@@ -25,30 +24,25 @@
         button:hover { opacity: 0.9; }
         .btn-danger { background: #c0392b; }
 
-        /* --- LÓGICA DE ADMINISTRADOR VS VISITANTE --- */
-        /* Si el body tiene la clase 'modo-visitante', ocultamos los botones de acción */
-        body.modo-visitante button.solo-admin, 
-        body.modo-visitante .btn-danger,
-        body.modo-visitante #seccion-privada {
+        /* --- CONTROL DE VISIBILIDAD --- */
+        /* Ocultamos botones de gestión si el body tiene 'modo-visitante' */
+        body.modo-visitante .solo-admin, 
+        body.modo-visitante .btn-danger {
             display: none !important;
         }
 
-        /* Mensaje informativo para visitantes */
-        .msg-espectador { 
-            display: none; 
-            background: #fff3cd; 
-            color: #856404; 
-            padding: 10px; 
-            border-radius: 5px; 
-            font-size: 0.9rem; 
-            margin-bottom: 10px;
+        /* El Panel de Acceso SIEMPRE debe ser visible */
+        #panel-firebase { 
+            background: #f8f9fa; 
+            padding: 20px; 
+            border-radius: 10px; 
+            border: 2px dashed #ddd; 
+            margin-top: 40px; 
+            text-align: center; 
         }
-        body.modo-visitante .msg-espectador { display: block; }
 
-        /* Estado del Panel */
-        #panel-firebase { background: #f8f9fa; padding: 20px; border-radius: 10px; border: 2px dashed #ddd; margin-top: 40px; text-align: center; }
         .badge { padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
-        .badge-vis { background: #e9ecef; color: #495057; }
+        .badge-vis { background: #fce4e4; color: #c0392b; }
         .badge-adm { background: #d4edda; color: #155724; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -60,14 +54,13 @@
 
 <header>
     <h1>🏆 Gestión de Campeonato</h1>
-    <span id="txtEstado" class="badge badge-vis">👁️ MODO ESPECTADOR</span>
+    <span id="txtEstado" class="badge badge-vis">MODO VISITANTE (SOLO LECTURA)</span>
 </header>
 
 <div class="container">
     
     <section>
         <h2>1. Equipos y Plantillas</h2>
-        <p class="msg-espectador">Inicia sesión como administrador para añadir equipos o jugadores.</p>
         <div class="grid">
             <div>
                 <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
@@ -85,13 +78,12 @@
     <section>
         <h2>2. Calendario y Resultados</h2>
         <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar partido..." onkeyup="filtrarPartidos()">
-        <div id="contenedorCalendario" style="margin-top:15px; min-height: 50px; background: #fafafa; padding: 10px; border-radius: 5px;">
-            </div>
+        <div id="contenedorCalendario" style="margin-top:15px; background: #fafafa; padding: 10px;"></div>
         <button class="solo-admin" style="background:var(--success); margin-top:10px;" onclick="realizarSorteo()">🎲 Generar Sorteo</button>
     </section>
 
     <section>
-        <h2>3. Tabla de Posiciones</h2>
+        <h2>3. Clasificación</h2>
         <div id="contenedorTablas"></div>
     </section>
 
@@ -100,25 +92,31 @@
     <div id="panel-firebase">
         <div id="auth-container">
             <h3>🔐 Acceso de Administrador</h3>
+            <p style="font-size: 0.8rem; color: #666;">Inicia sesión para habilitar los botones de registro.</p>
             <div style="max-width: 300px; margin: 0 auto;">
-                <input type="email" id="email" placeholder="Correo">
+                <input type="email" id="email" placeholder="Correo electrónico">
                 <input type="password" id="password" placeholder="Contraseña">
-                <button onclick="login()" style="background:var(--success)">Entrar para Editar</button>
-                <button onclick="register()" style="background:none; color:var(--primary); font-size:12px; text-decoration:underline;">Crear cuenta nueva</button>
+                
+                <button type="button" onclick="login()" style="background:var(--success); margin-bottom: 5px;">
+                    Entrar para Editar
+                </button>
+                <button type="button" onclick="register()" style="background:var(--primary); font-size: 14px;">
+                    Registrarse como Admin
+                </button>
             </div>
         </div>
 
         <div id="seccion-privada" style="display:none;">
             <p style="color:var(--success); font-weight:bold;">✅ Sesión Iniciada</p>
-            <button onclick="crearTorneo()" style="background:var(--success); width:auto; padding:10px 30px;">💾 Guardar Cambios en la Nube</button>
+            <button onclick="crearTorneo()" style="background:var(--success); width:auto; padding:10px 30px;">💾 Guardar Torneo en Nube</button>
             <br><br>
-            <button onclick="logout()" style="background:none; color:red; text-decoration:underline; width:auto;">Cerrar Sesión</button>
+            <button onclick="logout()" style="background:none; color:red; text-decoration:underline; border:none; width:auto;">Cerrar Sesión</button>
         </div>
     </div>
 </div>
 
 <script>
-    /* --- LÓGICA DE DATOS (Mantiene tus funciones vivas para evitar errores) --- */
+    // Lógica mínima para evitar errores de consola
     let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], calendario: [] };
 
     function registrarEquipo() {
@@ -126,18 +124,15 @@
         if(!nombre) return alert("Escribe el nombre");
         datos.equipos.push({ id: Date.now(), nombre: nombre, jugadores: [] });
         actualizarTodo();
-        document.getElementById('nombreEquipo').value = "";
     }
 
     function registrarJugador() {
         const eqId = document.getElementById('selectEquipoJugador').value;
         const nombreJ = document.getElementById('nombreJugador').value;
         if(!eqId || !nombreJ) return alert("Faltan datos");
-        
         let eq = datos.equipos.find(e => e.id == eqId);
         eq.jugadores.push(nombreJ);
         actualizarTodo();
-        document.getElementById('nombreJugador').value = "";
     }
 
     function actualizarTodo() {
@@ -146,25 +141,17 @@
     }
 
     function renderizar() {
-        // Renderizar lista de equipos
         const cont = document.getElementById('contenedorPlantillas');
-        cont.innerHTML = datos.equipos.map(e => `
-            <div style="padding:10px; border:1px solid #ddd; border-radius:5px; background:white;">
-                <strong>${e.nombre}</strong><br><small>${e.jugadores.length} jugadores</small>
-            </div>
-        `).join('');
-
-        // Actualizar Selects
+        cont.innerHTML = datos.equipos.map(e => `<div style="padding:10px; border:1px solid #ddd; background:white;">${e.nombre}</div>`).join('');
         const sel = document.getElementById('selectEquipoJugador');
         sel.innerHTML = datos.equipos.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
     }
 
-    function filtrarPartidos() { /* Tu lógica de búsqueda */ }
-    function realizarSorteo() { alert("Sorteo realizado localmente"); }
-    function reiniciarTorneo() { if(confirm("¿Borrar todo?")) { datos = {equipos:[], calendario:[]}; actualizarTodo(); } }
+    function filtrarPartidos() {}
+    function realizarSorteo() {}
+    function reiniciarTorneo() { if(confirm("¿Borrar todo?")) { datos = {equipos:[], calendario:[]}; actualizarTodo(); }}
 
-    /* --- CONTROL DE MODO (ADMIN / VISITANTE) --- */
-    // Esta función la llama tu app.js cuando Firebase detecta al usuario
+    // FUNCIÓN QUE LLAMA TU APP.JS AL LOGUEARSE
     function cambiarModo(esAdmin) {
         const body = document.getElementById('mainBody');
         const txt = document.getElementById('txtEstado');
@@ -173,24 +160,20 @@
 
         if(esAdmin) {
             body.classList.remove('modo-visitante');
-            txt.innerText = "⚡ MODO ADMINISTRADOR";
+            txt.innerText = "MODO ADMINISTRADOR ACTIVO";
             txt.className = "badge badge-adm";
             auth.style.display = "none";
             priv.style.display = "block";
         } else {
             body.classList.add('modo-visitante');
-            txt.innerText = "👁️ MODO ESPECTADOR";
+            txt.innerText = "MODO VISITANTE (SOLO LECTURA)";
             txt.className = "badge badge-vis";
             auth.style.display = "block";
             priv.style.display = "none";
         }
     }
 
-    // Al cargar la página
-    window.onload = () => {
-        renderizar();
-        cambiarModo(false); // Empezar siempre como visitante
-    };
+    window.onload = () => { renderizar(); cambiarModo(false); };
 </script>
 
 <script type="module" src="app.js"></script>
