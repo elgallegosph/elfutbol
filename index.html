@@ -86,7 +86,22 @@
         dbT.equipos.push({ nombre: n, jugadores: [] });
         guardarYRender();
     };
+<script>
+    // ... otros códigos como registrarEquipo, registrarJugador ...
 
+    // AQUÍ ES DONDE DEBES REEMPLAZAR:
+    function guardarYRender() {
+        localStorage.setItem('futbol_local', JSON.stringify(dbT));
+        render();
+        
+        // Esta parte es la que envía los datos a la nube para que otros dispositivos los vean
+        if (window.publicarTorneo) {
+            window.publicarTorneo(); 
+        }
+    }
+
+    // ... el resto del código como la función render() ...
+</script>
     window.registrarJugador = function() {
         const eqN = document.getElementById('selEq').value;
         const jugN = document.getElementById('nombreJug').value;
