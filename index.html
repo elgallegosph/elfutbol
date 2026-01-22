@@ -22,7 +22,7 @@
 <div class="container">
     <header>
         <h1>🏆 Gestión de Torneo Pro (Sincronizado)</h1>
-        <div id="txtEstado" class="status-bar">MODO VISITANTE</div>
+        <div id="txtEstado" class="status-bar">CONECTANDO A LA NUBE...</div>
     </header>
 
     <section class="solo-admin">
@@ -72,19 +72,23 @@
 </div>
 
 <script>
-    // La variable dbT ahora se actualizará DESDE la nube
+    // Fuente de verdad única
     window.dbT = { equipos: [], grupos: {} };
 
-    // Función que recibe los datos de app.js (desde Firebase) y actualiza la pantalla
+    // RECIBIR: Esta función la llama app.js automáticamente cuando la nube cambia
     window.actualizarDesdeNube = function(datosNube) {
         if (datosNube) {
             window.dbT = datosNube;
             render();
+            // Actualizar mensaje de estado
+            const statusTxt = document.body.classList.contains('modo-visitante') ? 
+                "👁️ MODO VISITANTE (TIEMPO REAL)" : "⚡ MODO ADMINISTRADOR (EN LÍNEA)";
+            document.getElementById('txtEstado').innerText = statusTxt;
         }
     };
 
     window.registrarEquipo = function() {
-        const n = document.getElementById('nombreEquipo').value;
+        const n = document.getElementById('nombreEquipo').value.trim();
         if(!n) return alert("Escribe un nombre para el equipo");
         dbT.equipos.push({ nombre: n, jugadores: [] });
         sincronizarConNube();
@@ -93,9 +97,9 @@
 
     window.registrarJugador = function() {
         const eqN = document.getElementById('selEq').value;
-        const jugN = document.getElementById('nombreJug').value;
-        const tel = document.getElementById('telJug').value;
-        if(!eqN || !jugN) return alert("Selecciona un equipo e ingresa el nombre del jugador");
+        const jugN = document.getElementById('nombreJug').value.trim();
+        const tel = document.getElementById('telJug').value.trim();
+        if(!eqN || !jugN) return alert("Faltan datos del jugador");
         
         const eq = dbT.equipos.find(e => e.nombre === eqN);
         if(eq) {
@@ -107,7 +111,7 @@
     };
 
     window.realizarSorteo = function() {
-        if(dbT.equipos.length < 2) return alert("Se necesitan al menos 2 equipos");
+        if(dbT.equipos.length < 2) return alert("Mínimo 2 equipos");
         dbT.grupos = { "Grupo A": [], "Grupo B": [] };
         const eqs = [...dbT.equipos].sort(() => Math.random() - 0.5);
         eqs.forEach((e, i) => {
@@ -118,14 +122,14 @@
     };
 
     window.reiniciarTorneo = function() {
-        if (confirm("¿Borrar todos los datos del torneo en la NUBE?")) {
+        if (confirm("¿Borrar definitivamente todo el torneo en la nube?")) {
             dbT = { equipos: [], grupos: {} };
             sincronizarConNube();
         }
     };
 
     function sincronizarConNube() {
-        // En lugar de localStorage, llamamos a la función de app.js que sube a Firebase
+        // Enviar a la nube (Solo si somos Admin, app.js se encarga)
         if (window.publicarTorneo) {
             window.publicarTorneo(dbT); 
         }
@@ -134,7 +138,7 @@
 
     window.render = function() {
         const sel = document.getElementById('selEq');
-        const eqActual = sel.value; // Guardar selección actual
+        const eqActual = sel.value;
         
         sel.innerHTML = dbT.equipos.map(e => `<option value="${e.nombre}">${e.nombre}</option>`).join('');
         if (eqActual) sel.value = eqActual;
@@ -151,9 +155,9 @@
         const eq = dbT.equipos.find(e => e.nombre === eqN);
         const div = document.getElementById('listaJugadores');
         if(eq && eq.jugadores && eq.jugadores.length > 0) {
-            div.innerHTML = `<ul>` + eq.jugadores.map(j => `<li>${j.nombre} - Tel: ${j.telefono || 'N/A'}</li>`).join('') + `</ul>`;
+            div.innerHTML = `<ul>` + eq.jugadores.map(j => `<li><b>${j.nombre}</b> - Tel: ${j.telefono || 'N/A'}</li>`).join('') + `</ul>`;
         } else {
-            div.innerHTML = "<p>No hay jugadores registrados en este equipo.</p>";
+            div.innerHTML = "<p>Sin jugadores registrados.</p>";
         }
     };
 
@@ -165,11 +169,9 @@
             body.classList.remove('modo-visitante');
             ai.style.display = "none"; au.style.display = "block";
             document.getElementById('userEmail').innerText = user.email;
-            document.getElementById('txtEstado').innerText = "⚡ MODO ADMINISTRADOR (EN LÍNEA)";
         } else {
             body.classList.add('modo-visitante');
             ai.style.display = "block"; au.style.display = "none";
-            document.getElementById('txtEstado').innerText = "👁️ MODO VISITANTE (TIEMPO REAL)";
         }
     };
 </script>
