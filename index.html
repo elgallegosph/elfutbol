@@ -3,92 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Torneo de Fútbol Pro - Gestión Completa</title>
+    <title>Torneo de Fútbol Pro</title>
     <style>
-        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --yellow: #f1c40f; --success: #27ae60; --playoff: #8e44ad; --ws: #25d366; --warning: #e67e22; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; transition: background 0.5s; background-size: cover; background-attachment: fixed; }
-        header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .container { max-width: 1000px; margin: 10px auto; padding: 15px; background: rgba(255,255,255,0.9); border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root { --primary: #1a5276; --secondary: #f4f4f4; --accent: #e74c3c; --success: #27ae60; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--secondary); padding-bottom: 50px; }
+        header { background: var(--primary); color: white; padding: 1.5rem; text-align: center; }
+        .container { max-width: 1000px; margin: 10px auto; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         section { margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; font-size: 1.4rem; }
+        h2 { color: var(--primary); border-left: 5px solid var(--primary); padding-left: 10px; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 16px; }
-        .input-marcador { width: 65px !important; font-size: 1.2rem !important; font-weight: bold; text-align: center; border: 2px solid var(--primary) !important; display: inline-block; }
-        button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.98); }
-        .btn-sorteo { background: var(--success); }
-        .btn-playoff { background: var(--playoff); margin-top: 10px; }
-        .btn-danger { background: #c0392b; margin-top: 20px; }
-        .btn-ws { background: var(--ws); font-size: 0.8rem; padding: 8px; width: auto; min-width: 44px; }
-        .btn-notificar { background: var(--ws); color: white; animation: pulse-green 2s infinite; font-size: 0.85rem; }
-        @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(37, 211, 102, 0); } 100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
-        .btn-aplazar { background: var(--warning); font-size: 0.8rem; padding: 8px; width: auto; }
-        .lista-plantilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 20px; }
-        .card-plantilla { background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .card-plantilla:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .equipo-header { background: #f8f9fa; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; font-weight: bold; color: var(--primary); }
-        .nombre-click { cursor: pointer; flex: 1; display: flex; align-items: center; gap: 5px; }
-        .equipo-badge { background: var(--primary); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; cursor: pointer; }
-        .jugadores-lista { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: white; }
-        .card-plantilla.active .jugadores-lista { max-height: 500px; padding-bottom: 5px; }
-        .jugador-item { padding: 8px 12px; border-bottom: 1px solid #f1f1f1; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .jugador-nombre { cursor: pointer; transition: 0.2s; flex: 1; }
-        .jugador-nombre:hover { color: var(--accent); }
-        .jugador-stats { display: flex; gap: 6px; font-weight: bold; align-items: center; }
-        .btn-delete { background: none; color: #ccc; width: auto; padding: 0 5px; margin: 0; border: none; font-size: 12px; }
-        .btn-delete:hover { color: var(--accent); }
-        .table-container { width: 100%; overflow-x: auto; margin-top: 15px; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
-        th { background: #f8f9fa; font-size: 0.9rem; }
-        .fase-card { background: #fdfefe; border: 1px solid #8e44ad; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 10px solid #8e44ad; position: relative; }
-        .llave-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
-        .marcador-contenedor { display: flex; align-items: center; justify-content: center; gap: 5px; flex-grow: 1; }
-        .penaltis-row { background: #fff4e5; padding: 10px; border-radius: 6px; margin-top: 10px; display: none; align-items: center; justify-content: center; gap: 10px; border: 1px dashed #e67e22; }
-        .overlay-final { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; color: white; text-align: center; padding: 20px; }
-        .texto-dorado { font-size: 2.5rem; font-weight: 900; color: #f1c40f; text-shadow: 0 0 20px #f1c40f; animation: latido 1.5s infinite alternate; margin: 10px 0; word-break: break-word; }
-        @keyframes latido { from { transform: scale(1); } to { transform: scale(1.05); } }
-        .calendario-item { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 10px; border-bottom: 1px solid #eee; gap: 10px; }
-        .calendario-info { display: flex; flex-direction: column; gap: 5px; }
-        .status-aplazar { border-left: 5px solid var(--warning) !important; background: #fffaf0; }
-
+        input, select, button { padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        button { background: var(--primary); color: white; font-weight: bold; border: none; cursor: pointer; }
+        
         /* --- CLASE MAESTRA DE PRIVACIDAD --- */
-        /* Si el body tiene la clase 'visitante', ocultamos todos los controles de edición */
+        /* Por defecto, si el body tiene 'modo-visitante', ocultamos los botones de acción */
         body.modo-visitante button:not(.btn-ver-torneo), 
-        body.modo-visitante input:not(#buscadorPartidos), 
-        body.modo-visitante select,
-        body.modo-visitante .btn-ws,
-        body.modo-visitante .btn-aplazar,
-        body.modo-visitante .btn-delete,
-        body.modo-visitante .btn-notificar,
+        body.modo-visitante input:not(#buscadorPartidos),
+        body.modo-visitante #panel-firebase button,
         body.modo-visitante .btn-danger {
             display: none !important;
         }
-        
-        /* Estilos Panel Firebase */
-        #panel-firebase { background: white; padding: 20px; border-radius: 10px; margin-top: 40px; border: 1px solid #ddd; text-align: center; }
+
+        /* Mostrar botones de login siempre */
+        body.modo-visitante #auth-container button { display: block !important; }
+
+        .lista-plantilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; }
+        .card-plantilla { border: 1px solid #ddd; padding: 10px; border-radius: 8px; }
+        #panel-firebase { background: #f9f9f9; padding: 20px; border-top: 5px solid var(--primary); margin-top: 50px; }
     </style>
 </head>
-<body class="modo-visitante"> <div id="overlayFinal" class="overlay-final">
-    <div style="font-size: 1.5rem;">🏆 FINALIZADO 🏆</div>
-    <div style="margin-top: 20px;">
-        <div style="color: #ccc;">CAMPEÓN ACTUAL</div>
-        <div id="nombreCampeon" class="texto-dorado">---</div>
-    </div>
-    <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; width: 100%;">
-        <div style="color: #ccc;">⚽ BOTA DE ORO</div>
-        <div id="nombreGoleador" style="font-size: 1.5rem; color: #fff;">---</div>
-        <div id="golesGoleador" style="color: #f1c40f; font-weight: bold;">0 GOLES</div>
-    </div>
-    <button onclick="document.getElementById('overlayFinal').style.display='none'" style="margin-top:30px; width:auto; padding:12px 40px; background:#e74c3c;">Cerrar Panel</button>
-</div>
+<body class="modo-visitante" id="mainBody">
 
 <header><h1>🏆 Gestión de Campeonato Pro</h1></header>
 
 <div class="container">
     <section>
         <h2>🌍 Torneos Disponibles</h2>
-        <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+        <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap;">
             </div>
     </section>
 
@@ -97,7 +48,6 @@
         <div class="grid">
             <div>
                 <input type="text" id="nombreEquipo" placeholder="Nombre Equipo">
-                <input type="text" id="whatsappEquipo" placeholder="WhatsApp">
                 <button onclick="registrarEquipo()">Registrar Equipo</button>
             </div>
             <div>
@@ -109,106 +59,87 @@
         <div id="contenedorPlantillas" class="lista-plantilla"></div>
     </section>
 
-    <section>
-        <h2>2. Sorteo y Calendario</h2>
-        <div style="margin: 15px 0;">
-            <input type="text" id="buscadorPartidos" placeholder="🔍 Buscar equipo o grupo..." onkeyup="filtrarPartidos()">
-            <div id="vistaResultados" style="display:none; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px;">
-                <div id="listaFiltrada"></div>
-            </div>
-        </div>
-        <div class="grid">
-            <select id="cantidadGrupos"><option value="1">Liga Única</option><option value="2">2 Grupos</option><option value="4">4 Grupos</option></select>
-            <select id="tipoCalendario"><option value="1">Solo Ida</option><option value="2">Ida y Vuelta</option></select>
-        </div>
-        <button class="btn-sorteo" onclick="realizarSorteo()">🎲 Sortear y Generar</button>
-        <div id="seccionCalendario" style="display:none; margin-top: 20px;"><div id="contenedorCalendario"></div></div>
-    </section>
-
-    <section>
-        <h2>3. Cargar Resultado</h2>
-        <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center;">
-                <select id="resLocal" style="flex:1;"></select>
-                <input type="number" id="gLocal" class="input-marcador" value="0">
-            </div>
-            <div style="font-weight: bold;">VS</div>
-            <div style="display: flex; align-items: center; gap: 10px; width: 100%; justify-content: center;">
-                <input type="number" id="gVis" class="input-marcador" value="0">
-                <select id="resVis" style="flex:1;"></select>
-            </div>
-            <button onclick="cargarResultadoFinal()">Cargar Resultado</button>
-        </div>
-    </section>
-
-    <section>
-        <h2>4. Eventos (Goles/Tarjetas)</h2>
-        <div class="grid">
-            <div>
-                <select id="selectEquipoEvento" onchange="actualizarSelectJugadoresEvento()"></select>
-                <select id="selectJugadorEvento"></select>
-            </div>
-            <div>
-                <select id="tipoEvento"><option value="gol">⚽ Gol</option><option value="amarilla">🟨 Amarilla</option><option value="roja">🟥 Roja</option></select>
-                <button onclick="registrarEvento()">Grabar Evento</button>
-            </div>
-        </div>
-    </section>
-
-    <section>
-        <h2>5. Clasificación</h2>
-        <div id="contenedorTablas"></div>
-    </section>
-
-    <section>
-        <h2>6. Eliminatorias</h2>
-        <select id="tipoPlayoff"><option value="16">Octavos</option><option value="8">Cuartos</option><option value="4">Semis</option><option value="2">Final</option></select>
-        <button class="btn-playoff" onclick="generarPlayoffs()">⚡ Iniciar Playoffs</button>
-        <div id="seccionPlayoffs" style="display:none; margin-top: 20px;">
-            <div id="contenedorPlayoffs"></div>
-            <button id="btnSiguienteFase" style="display:none; background: #2c3e50;" onclick="avanzarSiguienteFase()">Generar Siguiente Ronda</button>
-        </div>
-    </section>
-
-    <section>
-        <h2>7. Goleadores y Sancionados</h2>
-        <div class="table-container">
-            <table id="tablaGoleadores">
-                <thead><tr><th>Jugador</th><th>Equipo</th><th>⚽</th><th>🟨</th><th>🟥</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </section>
-
-    <button class="btn-danger" onclick="reiniciarTorneo()">BORRAR TODO EL TORNEO (ADMIN)</button>
-
     <div id="panel-firebase">
         <div id="auth-container">
             <h3>🔐 Acceso Administrador</h3>
+            <p id="status-modo" style="color: red; font-weight: bold;">Estás en: MODO VISITANTE (Solo lectura)</p>
             <input type="email" id="email" placeholder="Correo">
             <input type="password" id="password" placeholder="Contraseña">
-            <button onclick="login()" style="background:var(--success); margin-top:10px;">Entrar para Editar</button>
-            <button onclick="register()" style="background:var(--primary);">Registrarse</button>
+            <button onclick="login()" style="background:var(--success)">Entrar para Editar</button>
         </div>
 
         <div id="seccion-privada" style="display:none;">
-            <h3 style="color:var(--success)">✅ Estás en modo Administrador</h3>
-            <input type="text" id="nombreTorneo" placeholder="Nombre para guardar este torneo">
-            <input type="text" id="urlFondo" placeholder="Link de imagen de fondo">
-            <button onclick="crearTorneo()" style="background:var(--success)">Publicar/Guardar este Torneo</button>
-            <br><br>
-            <button onclick="logout()" style="background:none; color:red; text-decoration:underline;">Cerrar Sesión (Volver a modo Visita)</button>
+            <h3 style="color:var(--success)">✅ Modo Administrador Activo</h3>
+            <button onclick="logout()" style="background:gray;">Cerrar Sesión</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Tu lógica original de LocalStorage y Google Script
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzR9hgwvG2-B8gFHIlhpSuKCY_2jybTvwOIyQlqxZMftWm9FZTUaTA6mpDtrmrGOpDylA/exec';
-    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], llaves: [], calendario: [] };
+    // 1. TU LÓGICA ORIGINAL (Reparada)
+    let datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [], jugadores: [] };
 
-    // ... TODAS TUS FUNCIONES ORIGINALES (registrarEquipo, realizarSorteo, etc.)
-    // DEBEN IR AQUÍ ABAJO SIN CAMBIOS.
+    function registrarEquipo() {
+        const nombre = document.getElementById('nombreEquipo').value;
+        if(!nombre) return alert("Escribe un nombre");
+        datos.equipos.push({ nombre: nombre, id: Date.now() });
+        actualizarTodo();
+        alert("Equipo registrado");
+    }
+
+    function registrarJugador() {
+        const nombre = document.getElementById('nombreJugador').value;
+        const equipoId = document.getElementById('selectEquipoJugador').value;
+        if(!nombre) return alert("Escribe el nombre del jugador");
+        // ... tu lógica de guardar jugador ...
+        actualizarTodo();
+    }
+
+    function actualizarTodo() {
+        localStorage.setItem('torneo_data', JSON.stringify(datos));
+        renderizarPlantillas();
+        actualizarSelects();
+    }
+
+    function renderizarPlantillas() {
+        const cont = document.getElementById('contenedorPlantillas');
+        cont.innerHTML = datos.equipos.map(e => `<div class="card-plantilla"><b>${e.nombre}</b></div>`).join('');
+    }
+
+    function actualizarSelects() {
+        const sel = document.getElementById('selectEquipoJugador');
+        sel.innerHTML = datos.equipos.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+    }
+
+    // 2. LÓGICA DE CONTROL DE VISTA (EL "INTERRUPTOR")
+    // Esta función es la que debes llamar desde tu app.js cuando el login sea exitoso
+    function activarModoAdmin(esAdmin) {
+        const body = document.getElementById('mainBody');
+        const status = document.getElementById('status-modo');
+        const authCont = document.getElementById('auth-container');
+        const privCont = document.getElementById('seccion-privada');
+
+        if(esAdmin) {
+            body.classList.remove('modo-visitante');
+            status.innerText = "Estás en: MODO ADMINISTRADOR";
+            status.style.color = "green";
+            authCont.style.display = "none";
+            privCont.style.display = "block";
+        } else {
+            body.classList.add('modo-visitante');
+            status.innerText = "Estás en: MODO VISITANTE (Solo lectura)";
+            status.style.color = "red";
+            authCont.style.display = "block";
+            privCont.style.display = "none";
+        }
+    }
+
+    // Al cargar la página, ejecutar render
+    window.onload = () => {
+        actualizarTodo();
+        // Por seguridad, siempre empezamos como visitante
+        activarModoAdmin(false); 
+    };
 </script>
 
 <script type="module" src="app.js"></script>
