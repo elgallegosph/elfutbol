@@ -1,3 +1,12 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyDea95aNqXhCuIOHPyrFwJKPX1sRAQBbEg", // Verifica que no tenga espacios
+  authDomain: "elfutbolapp.firebaseapp.com",
+  projectId: "elfutbolapp",
+  storageBucket: "elfutbolapp.firebasestorage.app",
+  messagingSenderId: "68652520852",
+  appId: "1:68652520852:web:c6f274a48c57de05e5eb81"
+};
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
