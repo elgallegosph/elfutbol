@@ -563,40 +563,37 @@
     }
 
     actualizarInterfaces();
-</script>
-    <hr>
-
-<div id="seccion-publica" style="background: rgba(255,255,255,0.9); padding: 20px; border-radius: 15px; margin: 20px; color: #000; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-    <h3 style="text-align: center;">Torneos Disponibles</h3>
-    <p style="text-align: center;">Haz clic en un torneo para cambiar el fondo y ver la tabla:</p>
-    <div id="listaTorneosPublicos" style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin-top: 15px;">
+<div id="seccion-publica" style="background: rgba(255,255,255,0.9); padding: 25px; border-radius: 15px; margin: 20px; color: #000; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+    <h2 style="color: #1a1a1a;">🏆 Torneos Disponibles</h2>
+    <p>Haz clic en un torneo para cambiar el fondo de la página:</p>
+    <div id="listaTorneosPublicos" style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 15px;">
         </div>
 </div>
 
-<div style="text-align: center; margin-bottom: 20px;">
-    <button id="btn-mostrar-login" onclick="document.getElementById('auth-container').style.display='block'" style="background: none; border: 1px solid gray; color: gray; padding: 5px 10px; cursor: pointer; border-radius: 5px; font-size: 12px;">
-        Acceso Administrador
-    </button>
-</div>
+<hr style="margin: 40px 20px; border: 1px dashed #ccc;">
 
-<div id="auth-container" style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border: 2px solid #333; border-radius: 10px; z-index: 1000; box-shadow: 0 0 20px rgba(0,0,0,0.5); color: #000; width: 300px;">
-    <h2 style="margin-top: 0;">Iniciar Sesión</h2>
-    <input type="email" id="email" placeholder="Correo" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc;">
-    <input type="password" id="password" placeholder="Contraseña" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc;">
-    <button onclick="login()" style="width: 100%; background: #28a745; color: white; padding: 10px; border: none; cursor: pointer; margin-bottom: 5px;">Entrar</button>
-    <button onclick="register()" style="width: 100%; background: #007bff; color: white; padding: 10px; border: none; cursor: pointer;">Registrarse</button>
-    <button onclick="document.getElementById('auth-container').style.display='none'" style="width: 100%; background: none; border: none; color: gray; cursor: pointer; margin-top: 10px;">Cancelar</button>
-</div>
-
-<div id="seccion-privada" style="display:none; background: #e2f3f5; padding: 20px; border-radius: 10px; margin: 20px; border: 1px dashed #22d1ee; color: #000;">
-    <h3>Panel de Control: Agregar Torneo</h3>
-    <div style="display: grid; gap: 10px;">
-        <input type="text" id="nombreTorneo" placeholder="Nombre (ej: Copa Libertadores)" style="padding: 10px;">
-        <input type="text" id="urlFondo" placeholder="URL de la imagen de fondo" style="padding: 10px;">
-        <button onclick="crearTorneo()" style="background: #17a2b8; color: white; padding: 12px; border: none; cursor: pointer; font-weight: bold;">Publicar Nuevo Torneo</button>
+<div id="auth-container" style="background: #ffffff; padding: 25px; border: 1px solid #ddd; margin: 20px; text-align: center; border-radius: 15px; color: #333; max-width: 500px; margin-left: auto; margin-right: auto;">
+    <h3 style="margin-top: 0;">🔐 Registro y Acceso Administrador</h3>
+    <p style="font-size: 14px; color: #666;">Crea una cuenta o inicia sesión para gestionar tus torneos.</p>
+    
+    <input type="email" id="email" placeholder="Correo electrónico" style="width: 90%; padding: 12px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 8px;">
+    <input type="password" id="password" placeholder="Contraseña (mínimo 6 caracteres)" style="width: 90%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 8px;">
+    
+    <div style="display: flex; gap: 10px; justify-content: center;">
+        <button onclick="login()" style="background: #28a745; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold;">Entrar</button>
+        <button onclick="register()" style="background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold;">Registrarse</button>
     </div>
-    <hr>
-    <button onclick="logout()" style="background: #dc3545; color: white; padding: 5px 10px; border: none; cursor: pointer; font-size: 12px;">Cerrar Sesión Admin</button>
+</div>
+
+<div id="seccion-privada" style="display:none; background: #f0fdf4; padding: 25px; border: 2px solid #bbf7d0; margin: 20px; border-radius: 15px; color: #166534; text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">
+    <h3>✨ Panel de Control</h3>
+    <p>¡Hola! Ya puedes publicar un nuevo torneo:</p>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="nombreTorneo" placeholder="Nombre del torneo (ej: Copa de Oro)" style="padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+        <input type="text" id="urlFondo" placeholder="URL de la imagen de fondo (ej: https://...)" style="padding: 12px; border: 1px solid #ccc; border-radius: 8px;">
+        <button onclick="crearTorneo()" style="background: #10b981; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;">🚀 Publicar Torneo</button>
+        <button onclick="logout()" style="background: none; border: none; color: #ef4444; cursor: pointer; text-decoration: underline; margin-top: 10px;">Cerrar Sesión</button>
+    </div>
 </div>
 
 <script type="module" src="app.js"></script>
