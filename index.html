@@ -62,6 +62,22 @@
 </div>
 
 <script>
+    window.reiniciarTorneo = function() {
+    if (confirm("¿Estás seguro de que quieres borrar todos los equipos, jugadores y grupos? Esta acción no se puede deshacer.")) {
+        // Limpia los datos locales
+        dbT = { equipos: [], grupos: {} };
+        localStorage.removeItem('futbol_local');
+        
+        // Si hay una sesión activa, intenta borrar en Firebase también
+        if (window.borrarTorneoNube) {
+            window.borrarTorneoNube();
+        }
+        
+        // Actualiza la pantalla
+        render();
+        alert("Torneo reiniciado. Ahora puedes empezar de cero.");
+    }
+};
     let dbT = JSON.parse(localStorage.getItem('futbol_local')) || { equipos: [], grupos: {} };
 
     window.registrarEquipo = function() {
