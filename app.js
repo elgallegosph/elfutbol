@@ -1,8 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// REEMPLAZA ESTO CON TUS CREDENCIALES REALES DE FIREBASE
+// !!! REEMPLAZA ESTO CON TUS CREDENCIALES !!!
 const firebaseConfig = {
   apiKey: "TU_API_KEY",
   authDomain: "TU_PROYECTO.firebaseapp.com",
@@ -16,40 +16,54 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Funciones globales para que el HTML las reconozca
+// FUNCION DE REGISTRO (Nueva)
+window.register = async () => {
+    const email = document.getElementById('email').value;
+    const pass = document.getElementById('password').value;
+    
+    if(pass.length < 6) return alert("La contraseña debe tener al menos 6 caracteres");
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        alert("¡Cuenta creada con éxito! Bienvenido administrador.");
+    } catch (error) {
+        if (error.code === 'auth/email-already-in-use') alert("Este correo ya tiene cuenta.");
+        else alert("Error al registrar: " + error.message);
+    }
+};
+
+// FUNCION DE LOGIN
 window.login = async () => {
     const email = document.getElementById('email').value;
     const pass = document.getElementById('password').value;
     try {
         await signInWithEmailAndPassword(auth, email, pass);
-        alert("¡Bienvenido!");
-    } catch (e) { alert("Error al entrar: " + e.message); }
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
 };
 
-window.register = async () => {
-    const email = document.getElementById('email').value;
-    const pass = document.getElementById('password').value;
-    try {
-        await createUserWithEmailAndPassword(auth, email, pass);
-        alert("Usuario creado correctamente");
-    } catch (e) { alert("Error al registrar: " + e.message); }
-};
-
+// FUNCION DE CERRAR SESIÓN
 window.logout = () => signOut(auth);
 
+// PUBLICAR TORNEO
 window.crearTorneo = async () => {
     const nombreT = document.getElementById('nombreTorneo').value;
-    if(!nombreT) return alert("Escribe un nombre para guardar el torneo");
-    const datosLocales = JSON.parse(localStorage.getItem('torneo_data'));
+    if(!nombreT) return alert("Escribe un nombre para el torneo");
+    const datos = JSON.parse(localStorage.getItem('torneo_data')) || { equipos: [] };
+
     try {
-        await setDoc(doc(db, "torneos", nombreT), { config: datosLocales });
-        alert("Torneo guardado en la nube exitosamente");
-    } catch (e) { alert("Error al guardar: " + e.message); }
+        await setDoc(doc(db, "torneos", nombreT), {
+            config: datos,
+            propietario: auth.currentUser.email
+        });
+        alert("Torneo publicado correctamente.");
+    } catch (e) {
+        alert("Error al publicar: " + e.message);
+    }
 };
 
-// Vigilante de sesión: Activa o desactiva el modo administrador
+// VIGILANTE DE ESTADO
 onAuthStateChanged(auth, (user) => {
-    if (window.cambiarModo) {
-        window.cambiarModo(!!user);
-    }
+    window.cambiarModo(user);
 });
