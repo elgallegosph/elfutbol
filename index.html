@@ -106,17 +106,15 @@
 
     <section class="section" style="background: #e9ecef;">
         <div id="authPanel">
-            <input type="email" id="email" placeholder="Correo">
-            <input type="password" id="password" placeholder="Pass">
-            <button onclick="login()">Entrar</button>
-        </div>
-        <div id="adminPanel" style="display:none; text-align: center;">
-            <button onclick="publicarTorneo()" style="background: var(--success);">💾 Sincronizar con Firebase</button>
-            <button onclick="logout()" style="background: var(--accent);">Cerrar Sesión</button>
-        </div>
-    </section>
+    <h3>🔐 Acceso Administrativo</h3>
+    <input type="email" id="email" placeholder="Correo (mateosax1998@gmail.com)">
+    <input type="password" id="password" placeholder="Tu contraseña">
+    
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button onclick="login()" style="flex: 1;">Entrar</button>
+        <button onclick="register()" style="flex: 1; background: #6c757d;">Crear Cuenta</button>
+    </div>
 </div>
-
 <script>
     // Estructura de datos completa
     let dbTorneo = JSON.parse(localStorage.getItem('futbol_local')) || {
